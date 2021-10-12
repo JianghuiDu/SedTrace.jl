@@ -3,6 +3,29 @@ uuid = "0b159db6-2024-4e32-bf0c-bc27db10b4ed"
 authors = ["Jianghui Du <31140772+JianghuiDu@users.noreply.github.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+Chain = "8be319e6-bccf-4806-a6f7-6fae938471bc"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
+DiffEqOperators = "9fdde737-9c7f-55bf-ade8-46b3f136cc48"
+FastBroadcast = "7034ab61-46d4-4ed7-9d0f-46aef9175898"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+ILUZero = "88f59080-6952-5380-9ea5-54057fb9a43f"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PreallocationTools = "d236fae5-4411-538c-8e31-a6e3d9e00b46"
+RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
+SciMLBase = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SparseDiffTools = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+Sundials = "c3572dad-4567-51f8-b174-8c6c989267f4"
+SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
+
 [compat]
 julia = "1"
 
