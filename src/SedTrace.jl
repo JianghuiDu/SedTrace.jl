@@ -22,4 +22,12 @@ using Plots
 using StatsPlots
 using JuliaFormatter
 
+export generate_code
+export modelrun
+include("config.jl")
+include("generate_code.jl")
+include("generate_jacobian.jl")
+include("generate_preconditioner.jl")
+include("generate_problem.jl")
+
 end
