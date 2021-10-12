@@ -1,0 +1,13 @@
+name = "SedTrace"
+uuid = "0b159db6-2024-4e32-bf0c-bc27db10b4ed"
+authors = ["Jianghui Du <31140772+JianghuiDu@users.noreply.github.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
