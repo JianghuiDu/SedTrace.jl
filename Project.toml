@@ -29,6 +29,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+SparseDiffTools = "1"
 PreallocationTools = "0.1"
 FiniteDiff = "2"
 ForwardDiff = "0.10"
