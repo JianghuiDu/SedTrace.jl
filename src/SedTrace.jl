@@ -24,6 +24,7 @@ using Plots
 using StatsPlots
 
 using RCall
+using Conda
 using SymPy
 
 
