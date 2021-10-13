@@ -15,9 +15,9 @@ jobs:
         version:
 #           - '1.0'
           - '1.6'
-          - 'nightly'
+#           - 'nightly'
         os:
-          - ubuntu-latest
+#           - ubuntu-latest
           - windows-latest
           - macOS-latest
         arch:
