@@ -106,16 +106,16 @@ end
 
 
 
-# helper functions
-function mymatch(reg, str, nothing_replace = nothing)
-    # find a single match of a string using regex
-    res = match(reg, str)
-    if isnothing(res) # no match
-        return nothing_replace
-    else
-        return getfield(res, :match) # return matched string
-    end
-end
+# # helper functions
+# function mymatch(reg, str, nothing_replace = nothing)
+#     # find a single match of a string using regex
+#     res = match(reg, str)
+#     if isnothing(res) # no match
+#         return nothing_replace
+#     else
+#         return getfield(res, :match) # return matched string
+#     end
+# end
 
 function setval!(df, coltoindex, rowtoindex, coltosetval, val)
     rowID = findfirst(x -> x .== rowtoindex, df[!, coltoindex])
