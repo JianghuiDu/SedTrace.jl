@@ -1,4 +1,4 @@
-function generat_parameter_template(input_path)
+function generat_parameter_template(input_path::String)
     template_path = replace(input_path, r".xlsx" => "_parameter_template.xlsx")
     if template_path in readdir()
             throw(
@@ -11,7 +11,7 @@ function generat_parameter_template(input_path)
         end
 end
 
-function generat_template(input_path)
+function generat_template(input_path::String)
 
     model_config = XLSX.readxlsx(input_path)
 

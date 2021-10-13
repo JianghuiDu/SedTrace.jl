@@ -1,33 +1,23 @@
-module CodeGeneration
-using Base: Real
-using ..Config
-ENV["R_HOME"] = "C:\\Program Files\\R\\R-4.0.5"
-using XLSX,
-    CSV,
-    DataFrames,
-    DataFramesMeta,
-    Chain,
-    SymPy,
-    RCall,
-    Printf,
-    SpecialFunctions,
-    LinearAlgebra,
-    JuliaFormatter
+# module CodeGeneration
+# using Base: Real
+# using ..Config
+# ENV["R_HOME"] = "C:\\Program Files\\R\\R-4.0.5"
+# using XLSX,
+#     # CSV,
+#     DataFrames,
+#     DataFramesMeta,
+#     Chain,
+#     SymPy,
+#     RCall,
+#     Printf,
+#     # SpecialFunctions,
+#     LinearAlgebra,
+#     JuliaFormatter
 
 
-include("helpers.jl")
-include("moleculardiff.jl")
-include("generate_reaction.jl")
-include("generate_transport.jl")
-include("generate_parameter.jl")
-include("generate_parameter_template.jl")
-include("generate_struct.jl")
-include("generate_initval.jl")
-include("generate_jacprototype.jl")
-include("pH_helpers.jl")
 
-export generate_code
-function generate_code(modelconfig::Config.ModelConfig)
+# export generate_code
+function generate_code(modelconfig::ModelConfig)
     if !(modelconfig.JacType in [:banded, :sparse_banded, :sparse])
         throw(
             error(
@@ -36,8 +26,8 @@ function generate_code(modelconfig::Config.ModelConfig)
         )
     end
 
-    model_config = XLSX.readxlsx(modelconfig.InputPath)
-    modelName = split(modelconfig.InputPath, ".")[2]
+    model_config = XLSX.readxlsx(modelconfig.ModelPath)
+    # modelName = split(modelconfig.ModelPath, ".")[2]
 
     if modelconfig.UpdateParamOnly
         ord = [
@@ -100,14 +90,14 @@ function generate_code(modelconfig::Config.ModelConfig)
 
         
         if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-            inival = initval_code("banded", substances)
+            initval_code("banded", substances,params_code)
         elseif modelconfig.JacType == :sparse
-            inival = initval_code("Notbanded", substances)
+            initval_code("Notbanded", substances,params_code)
         end
 
 
         open("parm.$modelName.jl", "w") do io
-            for i in vcat("include(\"fvcf_discretization.jl\")",params_code, inival)
+            for i in params_code
                 write(io, i * "\n")
             end
             write(io, "nothing")
@@ -221,9 +211,9 @@ function generate_code(modelconfig::Config.ModelConfig)
 
 
     if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-        inival = initval_code("banded", substances)
+        initval_code("banded", substances,params_code)
     elseif modelconfig.JacType == :sparse
-        inival = initval_code("Notbanded", substances)
+        initval_code("Notbanded", substances,params_code)
     end
 
 
@@ -238,10 +228,10 @@ function generate_code(modelconfig::Config.ModelConfig)
     end
 
     if modelconfig.Template
-        params = generat_parameter_template(modelconfig.InputPath)
+        params = generat_parameter_template(modelconfig.ModelPath)
         param_all = append!(params, react_parameters)
         template_path =
-            replace(modelconfig.InputPath, r".xlsx" => "_parameter_template.xlsx")
+            replace(modelconfig.ModelPath, r".xlsx" => "_parameter_template.xlsx")
 
         XLSX.writetable(
             template_path,
@@ -253,18 +243,18 @@ function generate_code(modelconfig::Config.ModelConfig)
         )
     end
 
-    modelName = split(modelconfig.InputPath, ".")[2]
+    # modelName = split(modelconfig.ModelPath, ".")[2]
 
-    open("parm.$modelName.jl", "w") do io
-        for i in vcat("include(\"fvcf_discretization.jl\")",params_code, inival)
+    open("parm.$(modelconfig.ModelName).jl", "w") do io
+        for i in params_code
             write(io, i * "\n")
         end
         write(io, "nothing")
     end
-    format_file("parm.$modelName.jl", overwrite = true, verbose = true, margin = 80)
+    format_file("parm.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
 
     if !modelconfig.AutoDiff
-        open("cache.$modelName.jl", "w") do io
+        open("cache.$(modelconfig.ModelName).jl", "w") do io
             for i in cache
                 # write(io, "const $i = @MVector(zeros(Ngrid)) \n")
                 write(io, "const $i = zeros(Ngrid) \n")
@@ -275,18 +265,18 @@ function generate_code(modelconfig::Config.ModelConfig)
         header = "function reactran_fvcf_auto(dC,C,parms,t)"
         footer = ["return nothing", "end"]
 
-        open("reactran.$modelName.jl", "w") do io
+        open("reactran.$(modelconfig.ModelName).jl", "w") do io
             for i in vcat(header, code, footer)
                 write(io, i * "\n")
             end
         end
 
-        format_file("cache.$modelName.jl", overwrite = true, verbose = true, margin = 80)
-        format_file("reactran.$modelName.jl", overwrite = true, verbose = true, margin = 80)
+        format_file("cache.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
+        format_file("reactran.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
     else
         cache_code = struct_code(cache)
 
-        open("cache.$modelName.jl", "w") do io
+        open("cache.$(modelconfig.ModelName).jl", "w") do io
             for i in vcat(
                 "module Cache",
                 "using PreallocationTools,ForwardDiff",
@@ -300,14 +290,14 @@ function generate_code(modelconfig::Config.ModelConfig)
 
         header = "function (f::Cache.Reactran)(dC,C,parms,t)"
         footer = ["return nothing", "end"]
-        open("reactran.$modelName.jl", "w") do io
+        open("reactran.$(modelconfig.ModelName).jl", "w") do io
             for i in vcat(header, cache_struct, code, footer)
                 write(io, i * "\n")
             end
         end
 
-        format_file("cache.$modelName.jl", overwrite = true, verbose = true, margin = 80)
-        format_file("reactran.$modelName.jl", overwrite = true, verbose = true, margin = 80)
+        format_file("cache.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
+        format_file("reactran.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
     end
 
     jp_str = generate_jacprototype(
@@ -316,14 +306,14 @@ function generate_code(modelconfig::Config.ModelConfig)
         react_jp,
         modelconfig.CompleteFlux,
     )
-    open("jactype.$modelName.jl", "w") do io
+    open("jactype.$(modelconfig.ModelName).jl", "w") do io
         for i in jp_str
             write(io, i * "\n")
         end
     end
-    format_file("jactype.$modelName.jl", overwrite = true, verbose = true, margin = 80)
+    format_file("jactype.$(modelconfig.ModelName).jl", overwrite = true, verbose = true, margin = 80)
 
     return nothing
 end
 
-end
+# end

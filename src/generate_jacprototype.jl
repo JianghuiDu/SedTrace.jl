@@ -1,4 +1,4 @@
-function generate_jacprototype(jac_type, substances, react_jp, cf)
+function generate_jacprototype(jac_type::Symbol, substances::DataFrame, react_jp::DataFrame, cf::Bool)
     substances = leftjoin(substances, react_jp, on = :substance)
 
     jp_str = String[]
@@ -7,7 +7,7 @@ function generate_jacprototype(jac_type, substances, react_jp, cf)
     if jac_type == :banded
         push!(
             jp_str,
-            "return BandedMatrix(Ones(Ngrid*nspec,Ngrid*nspec),(Lwbdwth,Upbdwth))",
+            "return BandedMatrix(ones(Nmat,Nmat),(Lwbdwth,Upbdwth))",
         )
     elseif jac_type == :sparse_banded || jac_type == :sparse
 

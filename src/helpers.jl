@@ -144,23 +144,27 @@ end
 
 
 function appendtostr!(str, df, comment)
-    push!(str, "")
-    push!(str, "#----------------------------------------------")
-    push!(str, "# " * comment)
-    push!(str, "#----------------------------------------------")
-    append!(
-        str,
-        "const " .* df.parameter .*
-        # ifelse.(df.type .== "function"," "," = ") .*
-        # string.(df.value) .*
-        # ifelse.(df.type .== "function"," end","") .*
-        " = " .*
-        ifelse.(
-            df.type .== "function",
-            "broadcast(x->" .* string.(df.value) .* ",x)",
-            string.(df.value),
-        ) .* " # " .* string.(df.unit) .* " # " .* string.(df.comment),
-    )
+    if isempty(df)
+        return nothing
+    else
+        push!(str, "")
+        push!(str, "#----------------------------------------------")
+        push!(str, "# " * comment)
+        push!(str, "#----------------------------------------------")
+        append!(
+            str,
+            "const " .* df.parameter .*
+            # ifelse.(df.type .== "function"," "," = ") .*
+            # string.(df.value) .*
+            # ifelse.(df.type .== "function"," end","") .*
+            " = " .*
+            ifelse.(
+                df.type .== "function",
+                "broadcast(x->" .* string.(df.value) .* ",x)",
+                string.(df.value),
+            ) .* " # " .* string.(df.unit) .* " # " .* string.(df.comment),
+        )
+    end
 end
 
 function densitySW(depth, temp, salinity)

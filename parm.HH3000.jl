@@ -1,4 +1,3 @@
-include("fvcf_discretization.jl")
 
 #----------------------------------------------
 # Number of substances
@@ -534,7 +533,7 @@ const kChlorite_pre = 1.0e-18 # missing # missing
 const KspChlorite = 3.95640731525403e57 # missing # missing
 
 #----------------------------------------------
-# Reaction parameters
+# Inital values
 #----------------------------------------------
 const C_ini = [
     FPOC0 / (phis[1] * us[1]),
@@ -569,40 +568,73 @@ const C_ini = [
     TH3BO3BW,
     TH3PO4BW,
 ] #  # initial conditions
+const C_uni = repeat(C_ini, outer = Ngrid) # initial conditions
 
 #----------------------------------------------
-# Tolerance parameters
+# Indices
 #----------------------------------------------
-const C_uni = repeat(C_ini, outer = Ngrid); # initial conditions
-const POCID = ((1:Ngrid) .- 1)nspec .+ 1 # POC index
-const MnO2ID = ((1:Ngrid) .- 1)nspec .+ 2 # MnO2 index
-const FeOOHID = ((1:Ngrid) .- 1)nspec .+ 3 # FeOOH index
-const FeSID = ((1:Ngrid) .- 1)nspec .+ 4 # FeS index
-const FeS2ID = ((1:Ngrid) .- 1)nspec .+ 5 # FeS2 index
-const CaCO3ID = ((1:Ngrid) .- 1)nspec .+ 6 # CaCO3 index
-const MnCO3ID = ((1:Ngrid) .- 1)nspec .+ 7 # MnCO3 index
-const FeCO3ID = ((1:Ngrid) .- 1)nspec .+ 8 # FeCO3 index
-const AgeID = ((1:Ngrid) .- 1)nspec .+ 9 # Age index
-const BSiID = ((1:Ngrid) .- 1)nspec .+ 10 # BSi index
-const BasaltID = ((1:Ngrid) .- 1)nspec .+ 11 # Basalt index
-const NdnrPO4ID = ((1:Ngrid) .- 1)nspec .+ 12 # NdnrPO4 index
-const NdrPO4ID = ((1:Ngrid) .- 1)nspec .+ 13 # NdrPO4 index
-const MnID = ((1:Ngrid) .- 1)nspec .+ 14 # Mn index
-const FeID = ((1:Ngrid) .- 1)nspec .+ 15 # Fe index
-const NH4ID = ((1:Ngrid) .- 1)nspec .+ 16 # NH4 index
-const O2ID = ((1:Ngrid) .- 1)nspec .+ 17 # O2 index
-const NO3ID = ((1:Ngrid) .- 1)nspec .+ 18 # NO3 index
-const CH4ID = ((1:Ngrid) .- 1)nspec .+ 19 # CH4 index
-const NO2ID = ((1:Ngrid) .- 1)nspec .+ 20 # NO2 index
-const CaID = ((1:Ngrid) .- 1)nspec .+ 21 # Ca index
-const AlID = ((1:Ngrid) .- 1)nspec .+ 22 # Al index
-const SO4ID = ((1:Ngrid) .- 1)nspec .+ 23 # SO4 index
-const NdnrID = ((1:Ngrid) .- 1)nspec .+ 24 # Ndnr index
-const NdrID = ((1:Ngrid) .- 1)nspec .+ 25 # Ndr index
-const HID = ((1:Ngrid) .- 1)nspec .+ 26 # H index
-const TH4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 27 # TH4SiO4 index
-const TCO2ID = ((1:Ngrid) .- 1)nspec .+ 28 # TCO2 index
-const TH2SID = ((1:Ngrid) .- 1)nspec .+ 29 # TH2S index
-const TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 30 # TH3BO3 index
-const TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 31 # TH3PO4 index
+const POCID = ((1:Ngrid) .- 1)nspec .+ 1 #  # POC index
+const MnO2ID = ((1:Ngrid) .- 1)nspec .+ 2 #  # MnO2 index
+const FeOOHID = ((1:Ngrid) .- 1)nspec .+ 3 #  # FeOOH index
+const FeSID = ((1:Ngrid) .- 1)nspec .+ 4 #  # FeS index
+const FeS2ID = ((1:Ngrid) .- 1)nspec .+ 5 #  # FeS2 index
+const CaCO3ID = ((1:Ngrid) .- 1)nspec .+ 6 #  # CaCO3 index
+const MnCO3ID = ((1:Ngrid) .- 1)nspec .+ 7 #  # MnCO3 index
+const FeCO3ID = ((1:Ngrid) .- 1)nspec .+ 8 #  # FeCO3 index
+const AgeID = ((1:Ngrid) .- 1)nspec .+ 9 #  # Age index
+const BSiID = ((1:Ngrid) .- 1)nspec .+ 10 #  # BSi index
+const BasaltID = ((1:Ngrid) .- 1)nspec .+ 11 #  # Basalt index
+const NdnrPO4ID = ((1:Ngrid) .- 1)nspec .+ 12 #  # NdnrPO4 index
+const NdrPO4ID = ((1:Ngrid) .- 1)nspec .+ 13 #  # NdrPO4 index
+const MnID = ((1:Ngrid) .- 1)nspec .+ 14 #  # Mn index
+const FeID = ((1:Ngrid) .- 1)nspec .+ 15 #  # Fe index
+const NH4ID = ((1:Ngrid) .- 1)nspec .+ 16 #  # NH4 index
+const O2ID = ((1:Ngrid) .- 1)nspec .+ 17 #  # O2 index
+const NO3ID = ((1:Ngrid) .- 1)nspec .+ 18 #  # NO3 index
+const CH4ID = ((1:Ngrid) .- 1)nspec .+ 19 #  # CH4 index
+const NO2ID = ((1:Ngrid) .- 1)nspec .+ 20 #  # NO2 index
+const CaID = ((1:Ngrid) .- 1)nspec .+ 21 #  # Ca index
+const AlID = ((1:Ngrid) .- 1)nspec .+ 22 #  # Al index
+const SO4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # SO4 index
+const NdnrID = ((1:Ngrid) .- 1)nspec .+ 24 #  # Ndnr index
+const NdrID = ((1:Ngrid) .- 1)nspec .+ 25 #  # Ndr index
+const HID = ((1:Ngrid) .- 1)nspec .+ 26 #  # H index
+const TH4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TH4SiO4 index
+const TCO2ID = ((1:Ngrid) .- 1)nspec .+ 28 #  # TCO2 index
+const TH2SID = ((1:Ngrid) .- 1)nspec .+ 29 #  # TH2S index
+const TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 30 #  # TH3BO3 index
+const TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 31 #  # TH3PO4 index
+const IDdict = Dict(
+    "POC" => POCID,
+    "MnO2" => MnO2ID,
+    "FeOOH" => FeOOHID,
+    "FeS" => FeSID,
+    "FeS2" => FeS2ID,
+    "CaCO3" => CaCO3ID,
+    "MnCO3" => MnCO3ID,
+    "FeCO3" => FeCO3ID,
+    "Age" => AgeID,
+    "BSi" => BSiID,
+    "Basalt" => BasaltID,
+    "NdnrPO4" => NdnrPO4ID,
+    "NdrPO4" => NdrPO4ID,
+    "Mn" => MnID,
+    "Fe" => FeID,
+    "NH4" => NH4ID,
+    "O2" => O2ID,
+    "NO3" => NO3ID,
+    "CH4" => CH4ID,
+    "NO2" => NO2ID,
+    "Ca" => CaID,
+    "Al" => AlID,
+    "SO4" => SO4ID,
+    "Ndnr" => NdnrID,
+    "Ndr" => NdrID,
+    "H" => HID,
+    "TH4SiO4" => TH4SiO4ID,
+    "TCO2" => TCO2ID,
+    "TH2S" => TH2SID,
+    "TH3BO3" => TH3BO3ID,
+    "TH3PO4" => TH3PO4ID,
+)
 nothing

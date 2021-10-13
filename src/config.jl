@@ -1,13 +1,9 @@
-const ⊕ = +
-const ⊗ = *
-
-module Config
-using SciMLBase, Sundials, DiffEqCallbacks, Sundials
 
 abstract type TEIConfig end
 
 struct ModelConfig <: TEIConfig
-    InputPath::String
+    ModelPath::String
+    ModelName::String
     UpdateParamOnly::Bool
     JacType::Symbol
     Template::Bool
@@ -20,7 +16,8 @@ struct ModelConfig <: TEIConfig
 end
 
 function ModelConfig(
-    InputPath;
+    ModelPath,
+    ModelName;
     UpdateParamOnly = true,
     JacType = :sparse_banded,
     Template = false,
@@ -32,7 +29,8 @@ function ModelConfig(
     MTK = false,
 )
     return ModelConfig(
-        InputPath,
+        ModelPath,
+        ModelName,
         UpdateParamOnly,
         JacType,
         Template,
@@ -100,6 +98,3 @@ function SolverConfig(
     )
 end
 
-export SolverConfig, JacConfig, ModelConfig
-end
-nothing

@@ -34,13 +34,13 @@
 
 # end
 
-function generate_ODESolver(solverconfig::Config.SolverConfig)
+function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
 
-    OdeFun = Cache.init(zeros(Nmat), Ngrid, Val(solverconfig.chunk_size))
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        JacPrototype = JacType()
+        # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+        Upbdwth,Lwbdwth = bandwidths(JacPrototype)
         return (
             ODEFunction{true,false}(OdeFun),
             CVODE_BDF(
@@ -52,7 +52,7 @@ function generate_ODESolver(solverconfig::Config.SolverConfig)
     end
 
     if solverconfig.linsolve == :KLU
-        JacPrototype = JacType()
+        # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         return (
             ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
@@ -61,7 +61,7 @@ function generate_ODESolver(solverconfig::Config.SolverConfig)
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES]
-        JacPrototype = JacType()
+        # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
@@ -80,8 +80,8 @@ function generate_ODESolver(solverconfig::Config.SolverConfig)
 
 end
 
-function modelrun(solverconfig::Config.SolverConfig)
-    OdeFun, solver = generate_ODESolver(solverconfig);
+function modelrun(OdeFun,JacPrototype,solverconfig::SolverConfig)
+    OdeFun, solver = generate_ODESolver(OdeFun,JacPrototype,solverconfig);
     prob = ODEProblem{true}(OdeFun, solverconfig.u0, solverconfig.tspan, nothing)
 
     @time sol = SciMLBase.solve(

@@ -7,6 +7,7 @@ function generate_jacobian(
 ) where {T}
     f_ = (du, u) -> f(du, u, nothing, 0.0)
     colors = SparseDiffTools.matrix_colors(jp)
+    Nmat = size(jp,1)
     utmp = zeros(T,Nmat)
     dutmp = zeros(T,Nmat)
     jac_cache =
@@ -21,6 +22,7 @@ function generate_jacobian(
 ) where {T}
     f_ = (y, x) -> f(y, x, nothing, 0.0)
     colors = SparseDiffTools.matrix_colors(jp)
+    Nmat = size(jp,1)
     utmp = zeros(T,Nmat)
     dutmp = zeros(T,Nmat)
     dutmp1 = zeros(T,Nmat)
@@ -34,6 +36,7 @@ function generate_jacobian(
     chunk_size::Int,
 ) where {T}
     f_ = (y, x) -> f(y, x, nothing, 0.0)
+    Nmat = size(jp,1)
     utmp = zeros(T,Nmat)
     dutmp = zeros(T,Nmat)
     conf = ForwardDiff.JacobianConfig(f_, dutmp, utmp, ForwardDiff.Chunk{chunk_size}())

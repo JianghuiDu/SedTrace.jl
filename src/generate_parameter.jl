@@ -1186,16 +1186,10 @@ function parameter_code(param_model, substances, options,cf)
         push!(initialvec, ini)
     end
 
-    # if jac_type == "banded"
-    #     ini_type = "outer"
-    # elseif jac_type == "sparse"
-    #     ini_type = "inner"
-    # end
 
     initialParam = @chain begin
         newdf()
         push!(["const", "C_ini", "[$(join(initialvec,","))]", "", "initial conditions"],)
-        # push!(["const", "C_uni", "repeat(C_ini,$ini_type=Ngrid)", "", "initial conditions"],)
     end
 
     abtolParam = @chain begin
@@ -1204,27 +1198,9 @@ function parameter_code(param_model, substances, options,cf)
 
     if "abtol" ∈ names(substances)
         push!(abtolParam,["const", "abtol0", "[$(join(substances.abtol,","))]", "", "absolute tolerance"],)
-        # push!(abtolParam,["const", "abtol", "repeat(abtol0,Ngrid)", "", "absolute tolerance"],)
     end
 
 
-    # indexParam = @chain begin
-    #     newdf()
-    # end
-
-    # for i in eachrow(substances)
-    #     if jac_type == "banded"
-    #     push!(
-    #         indexParam,
-    #         ["const", "$(i.substance)ID", "((1:Ngrid).-1)nspec.+$(i.order)", "", "index"],
-    #     )
-    #     elseif jac_type == "sparse"
-    #     push!(
-    #         indexParam,
-    #         ["const", "$(i.substance)ID", "($((i.order)-1)*Ngrid+1):1:($(i.order)*Ngrid)", "", "index"],
-    #     )
-    #     end
-    # end
 
     param_str = String[]
     appendtostr!(param_str, NspeciesParam, "Number of substances")
@@ -1241,7 +1217,7 @@ function parameter_code(param_model, substances, options,cf)
     appendtostr!(param_str, tranIntParam, "Interior transport matrix")
     appendtostr!(param_str, KpHParam, "Acid dissociation constants")
     appendtostr!(param_str, reactionParam, "Reaction parameters")
-    appendtostr!(param_str, initialParam, "Reaction parameters")
+    appendtostr!(param_str, initialParam, "Inital values")
     appendtostr!(param_str, abtolParam, "Tolerance parameters")
     # appendtostr!(param_str, indexParam, "Indices")
 
