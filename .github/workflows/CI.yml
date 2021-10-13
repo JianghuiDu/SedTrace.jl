@@ -38,6 +38,10 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
+      - if: matrix.os == 'ubuntu-latest'
+        run: > 
+          sudo apt-get install --no-install-recommends gfortran python3-setuptools python3-wheel
+          && pip3 install sympy
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
