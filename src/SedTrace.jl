@@ -1,43 +1,42 @@
 module SedTrace
 
+using Reexport
 using SciMLBase
 using Sundials
 
-using SparseDiffTools
-# using FastBroadcast
-using PreallocationTools
+@reexport using SparseDiffTools
+@reexport using FastBroadcast
+@reexport using PreallocationTools
 
-using SparseArrays
-using BandedMatrices
-using LinearAlgebra
+@reexport using SparseArrays
+@reexport using BandedMatrices
+@reexport using LinearAlgebra
 using ILUZero
 
 
-using Chain
+@reexport using Chain
 using DataFrames
 using DataFramesMeta
-using XLSX
+@reexport using XLSX
 using Printf
 using JuliaFormatter
 
-using Plots
-using StatsPlots
+@reexport using Plots
+@reexport using StatsPlots
 
 using RCall
 using Conda
 using SymPy
 
 
-# using DiffEqCallbacks
+@reexport using DiffEqCallbacks
 # using DiffEqOperators
 # using Preconditioners
 # using FiniteDiff
-# using ForwardDiff
-# using SpecialFunctions
+@reexport using ForwardDiff
+@reexport using SpecialFunctions
 
-# using DataFramesMeta
-# using DataFrames
-# using XLSX
+
 
 export SolverConfig, ModelConfig
 

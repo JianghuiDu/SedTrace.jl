@@ -2,16 +2,16 @@
 set_zero_subnormals(true)
 cd(@__DIR__)
 pwd()
-using SpecialFunctions
-using FastBroadcast
-using SparseArrays
-using ForwardDiff,SparseDiffTools
-using BandedMatrices
-using DiffEqCallbacks
-using PreallocationTools
-using Plots, StatsPlots
-using LinearAlgebra
-using Chain
+# using SpecialFunctions
+# using FastBroadcast
+# using SparseArrays
+# using ForwardDiff,SparseDiffTools
+# using BandedMatrices
+# using DiffEqCallbacks
+# using PreallocationTools
+# using Plots, StatsPlots
+# using LinearAlgebra
+# using Chain
 BLAS.set_num_threads(8)
 gr(; size = (400, 1000))
 
@@ -53,7 +53,7 @@ OdeFun = Cache.init(zeros(Nmat), Ngrid, Val(chunk_size));
 solverconfig = SolverConfig(
     chunk_size,
     C_uni,
-    (0.0, 3000.0),
+    (0.0, 30.0),
     :LapackBand,
     reltol = 1e-6,
     abstol = 1e-16,
@@ -66,6 +66,6 @@ sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
 
 
-generate_output(input_path,sol,["HH3000"],IDdict,["POC","Mn"], L, true)
+generate_output(input_path,sol,["HH3000"],L, true)
 
-
+IDdict,["POC","Mn"],

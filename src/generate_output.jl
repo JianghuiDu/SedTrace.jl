@@ -31,7 +31,8 @@ function generate_output(
         [sol.u[j][m] for j = 1:nt,
         # m = ((1:Ngrid) .- 1)nspec .+ i.order]
         # m = eval(Meta.parse("$(i.substance)ID"))]
-         m in IndexDict[i.substance]] for i in eachrow(substances)
+         m = IDdict[i.substance]]
+         for i in eachrow(substances)
     )
 
     # compute the output variables using the input profile data
