@@ -30,6 +30,22 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
 DiffEqOperators = "4"
+XLSX = "0.7"
+SymPy = "1"
+DataFrames = "1"
+OrdinaryDiffEq = "5"
+FastBroadcast = "0.1"
+ILUZero = "0.1"
+SparseDiffTools = "1"
+PreallocationTools = "0.1"
+FiniteDiff = "2"
+ForwardDiff = "0.10"
+JuliaFormatter = "0.18"
+RCall = "0.13"
+SciMLBase = "1"
+Sundials = "4"
+DataFramesMeta = "0.9"
+SpecialFunctions = "1"
 julia = "1.6"
 
 [extras]
