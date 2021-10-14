@@ -1,7 +1,7 @@
 
 
 function generate_output(
-    input_path::String,
+    modelconfig::ModelConfig,
     sol::SciMLBase.ODESolution,
     site::Vector{String},
     ylim = L,
@@ -9,6 +9,7 @@ function generate_output(
 )
 
     nt = length(sol.t)
+    input_path =  modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
         DataFrame(XLSX.gettable(model_config["substances"])...)
@@ -319,16 +320,6 @@ function generate_output(
 end
 
 
-function generate_output(
-    input_path::String,
-    sol::SciMLBase.ODESolution,
-    site::Vector{String},
-    IndexDict::Dict,
-    vars::Vector{String},
-    ylim = L,
-    saveplt = false,
-)
-end
 
 function calc_flux_top(φ, D, u, x, C, BC)
     α⁰, β⁰, γ⁰ = BC

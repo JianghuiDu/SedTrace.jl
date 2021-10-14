@@ -602,33 +602,6 @@ function pH_rate(species_join)
         unique
     end
 
-    # possible summed species
-
-    # TCO2 = summed_species("TCO2", ["HCO3", "CO3"], ["1", "2"])
-    # TNH4 = summed_species("TNH4", ["NH3"], ["1"])
-    # TH3PO4 = summed_species("TH3PO4", ["H3PO4", "HPO4", "PO4"], ["-1", "1", "2"])
-    # TH2S = summed_species("TH2S", ["HS"], ["1"])
-    # THSO4 = summed_species("THSO4", ["HSO4"], ["-1"])
-    # TH3BO3 = summed_species("TH3BO3", ["H4BO4"], ["1"])
-    # THF = summed_species("THF", ["HF"], ["-1"])
-    # TH4SiO4 = summed_species("TH4SiO4", ["H3SiO4"], ["1"])
-    # proton = summed_species("H", ["H", "OH"], ["-1", "1"])
-
-    # list = [TCO2, TNH4, TH3PO4, TH2S, THSO4, TH3BO3, THF, TH4SiO4, proton]
-    # list_name = [i.name for i in list]
-
-    # # if "dissolved_summed" model sustance not in the list report error
-    # list_no = .![i in list_name for i in species_summed]
-    # if any(list_no)
-    #     throw(
-    #         error(
-    #             join(
-    #                 "input :" .* string.(species_summed[list_no]) .* " is incorrect",
-    #                 "; ",
-    #             ),
-    #         ),
-    #     )
-    # end
 
     dTAdt_str = String[] # contains the dTAdt (rate change of TA) expressions
     dHdt_str = String[]  # contains the dHdt (rate change of H) expression
@@ -681,20 +654,6 @@ function convfac(df)
     # RULES: if model species is dissolved and reaction is solid, multiply reaction rate by "dstopw"
     # RULES: if model species is solid and reaction is dissolved, multiply reaction rate by "pwtods"
     conversion_fac = Array{String}(undef, size(df, 1))
-    # for j = 1:size(df, 1)
-    #     if occursin("solid", df.substance_type[j]) & occursin("solid", df.reaction_type[j])
-    #         conversion_fac[j] = ""
-    #     elseif occursin("dissolved", df.substance_type[j]) &
-    #            occursin("dissolved", df.reaction_type[j])
-    #         conversion_fac[j] = ""
-    #     elseif occursin("solid", df.substance_type[j]) &
-    #            occursin("dissolved", df.reaction_type[j])
-    #         conversion_fac[j] = "* pwtods"
-    #     elseif occursin("dissolved", df.substance_type[j]) &
-    #            occursin("solid", df.reaction_type[j])
-    #         conversion_fac[j] = "* dstopw"
-    #     end
-    # end
     for j = 1:size(df, 1)
         if df.substance_type[j] == df.reaction_type[j]
             conversion_fac[j] = ""
@@ -868,17 +827,6 @@ function speciation_code(speciation_df)
         transform!(:Eq => (x -> SymPy.sympify.(x)), renamecols = false)
     end
 
-    # substance_free = @chain begin
-    #     speciation_Eq
-    #     SymPy.solve.(_.Eq, SymPy.symbols.(_.label))
-    #     sum
-    #     /(symbols(substance_model * "_free"))
-    #     _[1]
-    #     +1
-    #     # simplify
-    #     symbols(substance_model) / _
-    #     simplify
-    # end
     var1 = SymPy.solve.(speciation_Eq.Eq, SymPy.symbols.(speciation_Eq.label))
     var2 = sum(var1) / (symbols(substance_model * "_free"))
     var3 = SymPy.symbols(substance_model) / (var2[1] + 1)
@@ -890,94 +838,6 @@ end
 
 
 
-
-# function parse_parameters(spec_expr, ads_expr, rate_expr,omega_expr,species_rate,species_join,species_extra,cache_str)
-#     expr_all = @chain begin
-#         vcat(spec_expr, ads_expr, rate_expr,omega_expr,species_rate)
-#         replace.(r"\s"=>"")
-#         split.(r"[\+\-\*\/]?\=")
-#     end
-
-#     # preallocate = [i[1] for i in expr_all]
-
-#     param = DataFrame(label = String[], variable = String[],isparam=Bool[])
-
-#     for i in expr_all
-#         variable = myeachmatch(r"\b[A-Za-zΑ-Ωα-ω_][\wΑ-Ωα-ω]*\b(?!\()", i[2])
-#         if !isnothing(variable)
-#             variable = unique(variable)
-#             # variable = filter(x->!(x in preallocate),variable)
-#             append!(param.variable, variable)
-#             append!(param.label, fill(i[1], length(variable)))
-#             append!(param.isparam,fill(false,length(variable)))
-#         end
-#     end
-
-
-#     # all the modelled species from species_joi and _extra
-#     species_modelled = @chain begin
-#         species_extra
-#         @subset(:comment .== "modelled but not in chemical equation")
-#         _.species
-#         vcat(species_join.species_modelled)
-#         unique
-#         split.(",")
-#         reduce(vcat,_)
-#         split.("/")
-#         reduce(vcat,_)
-#         split.("{")
-#     end
-
-#     for i in species_modelled
-#         if length(i)>1
-#             deleteat!(i,2)
-#         end
-#     end
-
-#     species_modelled = unique(reduce(vcat,species_modelled))
-
-
-
-#     # find which are species (also Omegas) and which are parameters
-#     for i in eachrow(param)
-#         # regex to match the species in species_modelled list
-#         # reg = Regex("(?<!\\w)" * "\\Q" * i.variable * "\\E" * "(?!\\w)")
-#         # if !any(.!isnothing.(mymatch.(reg, species_modelled)))
-#         if !in(i.variable,species_modelled)
-#             i.isparam = true
-#         end
-#     end
-
-
-#     parameters = @chain begin
-#         param
-#         unique()
-#         # insertcols!(:comment => comment)
-#         @subset(:isparam) # only parameters
-#         @subset(.!in.(:variable,Ref(cache_str)))
-#         # @subset(.!occursin.(r"[Oo]mega_" .* :label, :variable)) # exclude Omega exprs
-#         select(:label, :variable)
-#         rename(:variable => :parameter)
-#         groupby(:parameter)
-#         combine(:label => x -> join(x, ",")) # join the reactions of each parameter
-#         rename(:label_function => :comment)
-#         @transform(class = "reaction")
-#         @transform(type = "")
-#         @transform(value="")
-#         @transform(unit="")
-#         select(:class, :type, :parameter, :value,:unit,:comment)
-#     end
-
-#     # react_dependence = @chain begin
-#     #     param
-#     #     @subset(:isparam.==false)
-#     #     @transform(:label = replace.(:label,"Omega_"=>""))
-#     #     select(:label,:variable)
-#     #     unique
-#     # end
-
-#     return parameters,react_dependence
-# end
 
 
 function species_in_model(species_join, species_extra)
@@ -1005,38 +865,6 @@ function species_in_model(species_join, species_extra)
     return species_modelled
 end
 
-function find_param_in_expr(expr_str, species_modelled, cache_str)
-
-
-    param = DataFrame(label = String[], variable = String[], isparam = Bool[])
-
-    expr_str_split = @chain begin
-        expr_str
-        replace.(r"\s" => "")
-        split.(r"[\+\-\*\/]?\=")
-    end
-
-
-    for i in expr_str_split
-        variable = myeachmatch(r"\b[A-Za-zΑ-Ωα-ω_][\wΑ-Ωα-ω]*\b(?!\()", i[2])
-        if !isnothing(variable)
-            variable = unique(variable)
-            # variable = filter(x->!(x in preallocate),variable)
-            append!(param.variable, variable)
-            append!(param.label, fill(i[1], length(variable)))
-            append!(param.isparam, fill(false, length(variable)))
-        end
-    end
-
-    # find which are species (also Omegas) and which are parameters
-    for i in eachrow(param)
-        if !in(i.variable, species_modelled) && !in(i.variable, cache_str)
-            i.isparam = true
-        end
-    end
-
-    return param
-end
 
 
 function jac_ract_dependence(
@@ -1050,13 +878,13 @@ function jac_ract_dependence(
     pHspecies,
 )
     p_other = @chain begin
-        find_param_in_expr(vcat(spec_expr, ads_expr), species_modelled, cache_str)
+        find_param_in_expr(species_modelled,vcat(spec_expr, ads_expr),  cache_str,"react")
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
 
     p_omega = @chain begin
-        find_param_in_expr(omega_expr, species_modelled, cache_str)
+        find_param_in_expr(species_modelled, omega_expr,  cache_str,"react")
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
@@ -1069,7 +897,7 @@ function jac_ract_dependence(
     end
 
     p_rate = @chain begin
-        find_param_in_expr(rate_expr, species_modelled, cache_str)
+        find_param_in_expr(species_modelled, rate_expr, cache_str, "react")
         @subset(.!:isparam)
         @select!(:label, :variable)
         leftjoin(_, _, on = [:variable => :label], renamecols = "" => "_tmp")
@@ -1225,59 +1053,29 @@ function reaction_code(
 
     species_modelled = species_in_model(species_join, species_extra)
 
-    expr_all = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
+    # expr_all = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
 
-    parameters = @chain begin
-        find_param_in_expr(expr_all, species_modelled, cache_str)
-        unique()
-        @subset(:isparam) # only parameters
-        select(:label, :variable)
-        rename(:variable => :parameter)
-        groupby(:parameter)
-        combine(:label => x -> join(x, ",")) # join the reactions of each parameter
-        rename(:label_function => :comment)
-        @transform(:class = "reaction")
-        @transform(:type = "")
-        @transform(:value = "")
-        @transform(:unit = "")
-        select(:class, :type, :parameter, :value, :unit, :comment)
-    end
+    # parameters = @chain begin
+    #     find_param_in_expr(expr_all, species_modelled, cache_str)
+    #     unique()
+    #     @subset(:isparam) # only parameters
+    #     select(:label, :variable)
+    #     rename(:variable => :parameter)
+    #     groupby(:parameter)
+    #     combine(:label => x -> join(x, ",")) # join the reactions of each parameter
+    #     rename(:label_function => :comment)
+    #     @transform(:class = "reaction")
+    #     @transform(:type = "")
+    #     @transform(:value = "")
+    #     @transform(:unit = "")
+    #     select(:class, :type, :parameter, :value, :unit, :comment)
+    # end
+
+    reac_expr = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
 
 
     _, pHspecies = pH_rate(species_join)
 
-    # react_graph = DataFrame(label = String[],dependence=String[])
-    # for i in unique(species_join.label)
-    #     push!(react_graph.label,i)
-    #     depvar = react_dependence.variable[findall(x->x==i,react_dependence.label)]
-    #     for j in depvar
-    #         if j in react_dependence.label
-    #             depvar2 = react_dependence.variable[findall(x->x==j,react_dependence.label)]
-    #             append!(depvar,depvar2)
-    #             deleteat!(depvar,depvar.==j)
-    #         end
-    #     end
-    #     depvar3=String[]
-    #     for m in unique(depvar)
-    #         if m in pHspecies.subspecies
-    #             append!(depvar3,pHspecies.sumspecies[pHspecies.subspecies.==m])
-    #             push!(depvar3,"H")
-    #         else
-    #             push!(depvar3,m)
-    #         end
-    #     end
-    #     push!(react_graph.dependence,join(unique(depvar3),","))
-    # end
-
-    # react_jp = @chain begin
-    #     leftjoin(species_join,react_graph,on=:label)
-    #     select(:substance,:dependence)
-    #     groupby(:substance)
-    #     combine(:dependence=>(x->join(x,",")),renamecols=false)
-    # end
-    # for i in eachrow(react_jp)
-    #     i.dependence = join(unique(string.(split(i.dependence,","))),",")
-    # end
 
     react_jp = jac_ract_dependence(
         species_join,
@@ -1291,37 +1089,39 @@ function reaction_code(
     )
 
 
-    XLSX.writetable(
-        "reaction_species.xlsx",
-        overwrite = true,
-        rate = (
-            [
-                vcat(
-                    "# reaction rates",
-                    vcat(omega_expr, rate_expr),
-                    "",
-                    "",
-                    "# species rates",
-                    species_rate,
-                ),
-            ],
-            [""],
-        ),
-        species = (
-            collect(DataFrames.eachcol(species_join)),
-            DataFrames.names(species_join),
-        ),
-        species_extra = (
-            collect(DataFrames.eachcol(species_extra)),
-            DataFrames.names(species_extra),
-        ),
-        react_jp = (collect(DataFrames.eachcol(react_jp)), DataFrames.names(react_jp)),
-        element = (collect(DataFrames.eachcol(element_eq)), DataFrames.names(element_eq)),
-        # parameters = (
-        #     collect(DataFrames.eachcol(parameters)),
-        #     DataFrames.names(parameters),
-        # ),
-    )
+    # XLSX.writetable(
+    #     "reaction_species.xlsx",
+    #     overwrite = true,
+    #     rate = (
+    #         [
+    #             vcat(
+    #                 "# reaction rates",
+    #                 vcat(omega_expr, rate_expr),
+    #                 "",
+    #                 "",
+    #                 "# species rates",
+    #                 species_rate,
+    #             ),
+    #         ],
+    #         [""],
+    #     ),
+    #     species = (
+    #         collect(DataFrames.eachcol(species_join)),
+    #         DataFrames.names(species_join),
+    #     ),
+    #     species_extra = (
+    #         collect(DataFrames.eachcol(species_extra)),
+    #         DataFrames.names(species_extra),
+    #     ),
+    #     react_jp = (collect(DataFrames.eachcol(react_jp)), DataFrames.names(react_jp)),
+    #     element = (collect(DataFrames.eachcol(element_eq)), DataFrames.names(element_eq)),
+    #     # parameters = (
+    #     #     collect(DataFrames.eachcol(parameters)),
+    #     #     DataFrames.names(parameters),
+    #     # ),
+    # )
 
-    return code, parameters, cache_str, react_jp
+    # return code, parameters, cache_str, react_jp
+    return code, species_modelled, reac_expr, cache_str, react_jp
+
 end

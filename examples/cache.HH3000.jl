@@ -205,10 +205,6 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
-    Omega_RBSi_dis::PreallocationTools.DiffCache{
-        Array{T,1},
-        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
-    }
     Omega_RNdnrPO4_pre::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
@@ -349,10 +345,6 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
-    RBSi_dis::PreallocationTools.DiffCache{
-        Array{T,1},
-        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
-    }
     RMnO2POC_Nd::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
@@ -473,14 +465,6 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
-    S_BSi::PreallocationTools.DiffCache{
-        Array{T,1},
-        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
-    }
-    S_TH4SiO4::PreallocationTools.DiffCache{
-        Array{T,1},
-        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
-    }
     S_Ndnr::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
@@ -576,8 +560,6 @@ function init(
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RFeCO3_pre =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
-    Omega_RBSi_dis =
-        PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RNdnrPO4_pre =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RNdrPO4_pre =
@@ -615,7 +597,6 @@ function init(
     RMnCO3_pre = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RFeCO3_dis = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RFeCO3_pre = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
-    RBSi_dis = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RMnO2POC_Nd = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RMnO2H2S_Nd = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RFeOOHPOC_Nd =
@@ -649,8 +630,6 @@ function init(
     S_Ca = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_MnCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_FeCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
-    S_BSi = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
-    S_TH4SiO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_Ndnr = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_Ndr = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_NdnrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
@@ -711,7 +690,6 @@ function init(
         Omega_RMnCO3_pre,
         Omega_RFeCO3_dis,
         Omega_RFeCO3_pre,
-        Omega_RBSi_dis,
         Omega_RNdnrPO4_pre,
         Omega_RNdrPO4_pre,
         RO2POC,
@@ -747,7 +725,6 @@ function init(
         RMnCO3_pre,
         RFeCO3_dis,
         RFeCO3_pre,
-        RBSi_dis,
         RMnO2POC_Nd,
         RMnO2H2S_Nd,
         RFeOOHPOC_Nd,
@@ -778,8 +755,6 @@ function init(
         S_Ca,
         S_MnCO3,
         S_FeCO3,
-        S_BSi,
-        S_TH4SiO4,
         S_Ndnr,
         S_Ndr,
         S_NdnrPO4,

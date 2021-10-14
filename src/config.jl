@@ -2,10 +2,12 @@
 abstract type TEIConfig end
 
 struct ModelConfig <: TEIConfig
-    ModelPath::String
+    ModelDirectory::String
+    ModelFile::String
     ModelName::String
     UpdateParamOnly::Bool
     JacType::Symbol
+    AssembleParam::Bool
     Template::Bool
     AutoDiff::Bool
     CompleteFlux::Bool
@@ -16,10 +18,12 @@ struct ModelConfig <: TEIConfig
 end
 
 function ModelConfig(
-    ModelPath,
+    ModelDirectory,
+    ModelFile,
     ModelName;
     UpdateParamOnly = true,
     JacType = :sparse_banded,
+    AssembleParam = false,
     Template = false,
     AutoDiff = true,
     CompleteFlux = false,
@@ -29,10 +33,12 @@ function ModelConfig(
     MTK = false,
 )
     return ModelConfig(
-        ModelPath,
+        ModelDirectory,
+        ModelFile,
         ModelName,
         UpdateParamOnly,
         JacType,
+        AssembleParam,
         Template,
         AutoDiff,
         CompleteFlux,

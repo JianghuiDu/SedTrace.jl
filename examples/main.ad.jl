@@ -1,17 +1,5 @@
 
 set_zero_subnormals(true)
-cd(@__DIR__)
-pwd()
-# using SpecialFunctions
-# using FastBroadcast
-# using SparseArrays
-# using ForwardDiff,SparseDiffTools
-# using BandedMatrices
-# using DiffEqCallbacks
-# using PreallocationTools
-# using Plots, StatsPlots
-# using LinearAlgebra
-# using Chain
 BLAS.set_num_threads(8)
 gr(; size = (400, 1000))
 
@@ -20,39 +8,40 @@ gr(; size = (400, 1000))
 # include("generate_jacobian.jl")
 # include("generate_preconditioner.jl")
 # include("generate_problem.jl")
+using SedTrace
+using JLD2
 
-
-input_path = (@__DIR__)*"\\examples\\model_config.HH3000.workingversionnew.xlsx"
+modeldirectory = (@__DIR__)*"\\examples\\"
+modelfile = "model_config.HH3000.workingversionnew.xlsx"
 modelname = "HH3000"
+
 modelconfig = ModelConfig(
-    input_path,
+    modeldirectory,
+    modelfile,
     modelname,
     UpdateParamOnly = false,
     JacType = :sparse_banded,
-    Template = false,
+    Template = true,
     AutoDiff = true,
     CompleteFlux = false,
+    AssembleParam = false
 )
 
 generate_code(modelconfig)
 
+IncludeFiles(modelconfig)
 
-include("parm.$modelname.jl");
-include("cache.$modelname.jl");
-include("reactran.$modelname.jl"); # ode
-include("jactype.$modelname.jl"); # ode
-
-JacPrototype = JacType();
+JacPrototype = SedTrace.JacType();
 
 ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
 
 chunk_size = 12;
 
-OdeFun = Cache.init(zeros(Nmat), Ngrid, Val(chunk_size));
+OdeFun = SedTrace.Cache.init(SedTrace.C_uni, SedTrace.Ngrid, Val(chunk_size));
 
 solverconfig = SolverConfig(
     chunk_size,
-    C_uni,
+    SedTrace.C_uni,
     (0.0, 30.0),
     :LapackBand,
     reltol = 1e-6,
@@ -65,7 +54,4 @@ solverconfig = SolverConfig(
 sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
 
-
-generate_output(input_path,sol,["HH3000"],L, true)
-
-IDdict,["POC","Mn"],
+generate_output(modelconfig,sol,["HH3000"],SedTrace.L, true)
