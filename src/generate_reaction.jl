@@ -101,8 +101,7 @@ function parse_equation(reaction)
     # capture species charge and sign in side {}
     # charge must be a number, the order of sign and nuber is flexible (like {-},{2+},{2-})
     reg_charge = r"(?<=\{)\d+(?=[\+\-]\})|(?<=\{[\+\-])\d+(?=\})"
-    reg_charge_sign =
-        r"(?<=\{\d|\d\d)[\+\-](?=\})|(?<=\{)[\+\-](?=\d|\d\d\})|(?<=\{)[\+\-](?=\})"
+    reg_charge_sign = r"(?<=\{\d|\d\d)[\+\-](?=\})|(?<=\{)[\+\-](?=\d|\d\d\})|(?<=\{)[\+\-](?=\})"
 
     for j in strs[1] # loop over reactants
         # check if there is a coefficient before the species formula, indicated by "*"
@@ -594,13 +593,18 @@ function pH_rate(species_join)
     # @. S_H /= dTA_dH
 
     # only select "dissolved_summed" sustance
-    species_summed_df =
-        @subset(species_join, occursin.("dissolved_summed", :substance_type))
-    species_summed = @chain begin
-        species_summed_df
-        select(:substance, :substance_type)
-        unique
+    # species_summed_df =
+    #     @subset(species_join, occursin.("dissolved_summed", :substance_type))
+    # species_summed = @chain begin
+    #     species_summed_df
+    #     select(:substance, :substance_type)
+    #     unique
+    # end
+
+    species_summed_df = @chain begin
+        @subset(species_join, :substance_type.=="dissolved_summed_pH")
     end
+
 
 
     dTAdt_str = String[] # contains the dTAdt (rate change of TA) expressions
@@ -614,7 +618,7 @@ function pH_rate(species_join)
     # 4. Multiply these coefficients by the coefficients of the species in TA
     # 5. Sum up the reaction rates for TA and H
     # Species can be written with or without charges, CO3/CO3{2-}
-    pHspecies = DataFrame(sumspecies = String[], subspecies = String[])
+    # pHspecies = DataFrame(sumspecies = String[], subspecies = String[])
     # for i in list
     #     if i.name in species_summed
     #         dTA_dH_rate(i, species_summed_df, dTAdt_str, dHdt_str)
@@ -623,7 +627,7 @@ function pH_rate(species_join)
     #     end
     # end
 
-    for i in eachrow(species_summed)
+    for i in eachrow(species_summed_df)
         if !(i.substance in list_summed_species)
             throw(
                 error(
@@ -632,11 +636,11 @@ function pH_rate(species_join)
             )
         else
             tmp = EquilibriumInvariant(i.substance)
-            if i.substance_type == "dissolved_summed_pH"
+            # if i.substance_type == "dissolved_summed_pH"
                 dTA_dH_rate(tmp, species_summed_df, dTAdt_str, dHdt_str)
-            end
-            append!(pHspecies.sumspecies, fill(tmp.name, length(tmp.species)))
-            append!(pHspecies.subspecies, tmp.species)
+            # end
+            # append!(pHspecies.sumspecies, fill(tmp.name, length(tmp.species)))
+            # append!(pHspecies.subspecies, tmp.species)
         end
     end
 
@@ -646,8 +650,60 @@ function pH_rate(species_join)
 
     push!(dHdt_str, "S_H = S_H/dTA_dH")
 
-    return vcat(dTAdt_str, dHdt_str), pHspecies
+    return vcat(dTAdt_str, dHdt_str)#, pHspecies
 end
+
+
+function pH_rate_species(species_join)
+    # Total reaction rates of  proton and total alkalinity
+    # Rates of the summed sustance are calculated like other species
+    # TA = HCO3{-} + 2*CO3{2-} + B(OH)4{-} + OH{-} + HPO4{2-} +
+    #      2*PO4{3-} + H3SiO4{-} + NH3 + HS{-}
+    #      - H{+} - HSO4{-} + HF - H3PO4
+
+    # Total reaction rate of TA (dTAdt):
+    # Sum of all the species contributing to TA (= HCO3 + 2CO3 + etc.)
+    # 1. Gather all the contributing species and the reaction rates that affect them
+    # 2. Sum up these rates according to coefficients of these species in TA
+    #    (dTAdt = R_HCO3 + 2*R_CO3 + etc.)
+
+    # Total reaction rate of proton (S_H):
+    # @. S_H = S_TA
+    # @. S_H -= S_TCO2 * dTA_dTCO2
+    # @. S_H -= S_TNH4 * dTA_dTNH4
+    # @. S_H -= S_TH3PO4 * dTA_dTH3PO4
+    # @. S_H -= S_TH2S * dTA_dTH2S
+    # @. S_H -= S_THSO4 * dTA_dTHSO4
+    # @. S_H -= S_TH4SiO4 * dTA_dTH4SiO4
+    # @. S_H /= dTA_dH
+
+    # only select "dissolved_summed" sustance
+    species_summed_df = @chain begin
+        @subset(species_join, occursin.("dissolved_summed", :substance_type))
+        select(:substance, :substance_type)
+        unique
+    end
+
+    pHspecies = DataFrame(sumspecies = String[], subspecies = String[])
+  
+
+    for i in eachrow(species_summed_df)
+        if !(i.substance in list_summed_species)
+            throw(
+                error(
+                    "dissolved_summed species must be from this list: $list_summed_species. $(i.substance) is not in the list.",
+                ),
+            )
+        else
+            tmp = EquilibriumInvariant(i.substance)
+            append!(pHspecies.sumspecies, fill(tmp.name, length(tmp.species)))
+            append!(pHspecies.subspecies, tmp.species)
+        end
+    end
+
+    return  pHspecies
+end
+
 
 function convfac(df)
     # conversion factor, between dissolved and solid rates
@@ -714,7 +770,7 @@ function species_rate_expr(species_join, species_extra, MTK)
     end
 
     if "H" in uni_species # for proton
-        dH_code, pHspecies = pH_rate(species_join)
+        dH_code = pH_rate(species_join)
         append!(dCdt, dH_code)
     end
 
@@ -878,21 +934,21 @@ function jac_ract_dependence(
     pHspecies,
 )
     p_other = @chain begin
-        find_param_in_expr(species_modelled,vcat(spec_expr, ads_expr),  cache_str,"react")
+        find_param_in_expr(species_modelled, vcat(spec_expr, ads_expr), cache_str, "react")
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
 
     p_omega = @chain begin
-        find_param_in_expr(species_modelled, omega_expr,  cache_str,"react")
+        find_param_in_expr(species_modelled, omega_expr, cache_str, "react")
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
 
 
     for i in eachrow(pHspecies)
-        if i.sumspecies!="H"
-            append!(pHspecies,DataFrame(sumspecies="H",subspecies=i.subspecies))
+        if i.sumspecies != "H"
+            append!(pHspecies, DataFrame(sumspecies = "H", subspecies = i.subspecies))
         end
     end
 
@@ -919,16 +975,16 @@ function jac_ract_dependence(
 
     species_join_H = @chain begin
         species_join
-        @subset(:substance_type.=="dissolved_summed_pH")
-        @select(:label,:substance)
-        @transform(:substance="H")
+        @subset(:substance_type .== "dissolved_summed_pH")
+        @select(:label, :substance)
+        @transform(:substance = "H")
         unique()
     end
 
     react_dependence = @chain begin
         species_join
         @select(:substance, :label)
-        outerjoin(species_join_H, on = [:label,:substance])
+        outerjoin(species_join_H, on = [:label, :substance])
         unique()
         leftjoin(p_rate, on = :label)
         @select!(:substance, :dependence)
@@ -945,27 +1001,6 @@ end
 #-------------------------------------------------------------------------------------------
 # Generate reaction code
 #-------------------------------------------------------------------------------------------
-# function reaction_code(reactions_model, substance, speciation,rateParam)
-
-#     # get rid of some bad characters (empty space and incorrect minus signs)
-#     # \u002D is the julia minus sign, others are lookalikes
-#     df_str_replace!(reactions_model, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-#     df_str_replace!(substance, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-#     df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
-#     check_illegal_char(reactions_model)
-#     check_illegal_char(substance)
-#     check_illegal_char(speciation)
-
-#     # parse species from the chemical reaction equations
-#     species_eq, element_eq = species_from_equation(reactions_model)
-#     # join that to the modelled species list
-#     species_join, species_extra = join_eq_to_model(species_eq, substance)
-
-#     # parse the parameters from the reaction rate expressions
-#     return parameters = parse_parameters(reactions_model, species_join, species_extra)
-
-# end
 
 function reaction_code(
     reactions,
@@ -975,6 +1010,7 @@ function reaction_code(
     cf,
     MTK,
     discontinuity,
+    inputpath
 )
 
     # parse species from the chemical reaction equations
@@ -1051,30 +1087,29 @@ function reaction_code(
     #     spec_expr, ads_expr, vcat(rate_expr,omega_expr),species_rate,species_join,species_extra,cache_str)
 
 
+
+    speciation_new = @chain begin
+        speciation
+        @transform(:label = :substance .* "_" .* :type)
+        select(:label, :equation)
+    end
+
+
+    species_eq_specition, element_eq_speciation = species_from_equation(speciation_new)
+    # join that to the modelled species list
+    species_join_specition, species_extra_specition =
+        join_eq_to_model(species_eq_specition, substances)
+
+
+    species_join_all = vcat(species_join,species_join_specition)
+    species_extra_all = vcat(species_extra,species_extra_specition)
+
     species_modelled = species_in_model(species_join, species_extra)
-
-    # expr_all = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
-
-    # parameters = @chain begin
-    #     find_param_in_expr(expr_all, species_modelled, cache_str)
-    #     unique()
-    #     @subset(:isparam) # only parameters
-    #     select(:label, :variable)
-    #     rename(:variable => :parameter)
-    #     groupby(:parameter)
-    #     combine(:label => x -> join(x, ",")) # join the reactions of each parameter
-    #     rename(:label_function => :comment)
-    #     @transform(:class = "reaction")
-    #     @transform(:type = "")
-    #     @transform(:value = "")
-    #     @transform(:unit = "")
-    #     select(:class, :type, :parameter, :value, :unit, :comment)
-    # end
 
     reac_expr = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
 
 
-    _, pHspecies = pH_rate(species_join)
+    pHspecies = pH_rate_species(species_join_all)
 
 
     react_jp = jac_ract_dependence(
@@ -1089,39 +1124,43 @@ function reaction_code(
     )
 
 
-    # XLSX.writetable(
-    #     "reaction_species.xlsx",
-    #     overwrite = true,
-    #     rate = (
-    #         [
-    #             vcat(
-    #                 "# reaction rates",
-    #                 vcat(omega_expr, rate_expr),
-    #                 "",
-    #                 "",
-    #                 "# species rates",
-    #                 species_rate,
-    #             ),
-    #         ],
-    #         [""],
-    #     ),
-    #     species = (
-    #         collect(DataFrames.eachcol(species_join)),
-    #         DataFrames.names(species_join),
-    #     ),
-    #     species_extra = (
-    #         collect(DataFrames.eachcol(species_extra)),
-    #         DataFrames.names(species_extra),
-    #     ),
-    #     react_jp = (collect(DataFrames.eachcol(react_jp)), DataFrames.names(react_jp)),
-    #     element = (collect(DataFrames.eachcol(element_eq)), DataFrames.names(element_eq)),
-    #     # parameters = (
-    #     #     collect(DataFrames.eachcol(parameters)),
-    #     #     DataFrames.names(parameters),
-    #     # ),
-    # )
+    XLSX.writetable(
+        inputpath*"ParsingDiagnostics.xlsx",
+        overwrite = true,
+        rate = (
+            [
+                vcat(
+                    "# reaction rates",
+                    vcat(omega_expr, rate_expr),
+                    "",
+                    "",
+                    "# species rates",
+                    species_rate,
+                ),
+            ],
+            [""],
+        ),
+        species = (
+            collect(DataFrames.eachcol(species_join_all)),
+            DataFrames.names(species_join),
+        ),
+        species_extra = (
+            collect(DataFrames.eachcol(species_extra_all)),
+            DataFrames.names(species_extra),
+        ),
+        react_jp = (collect(DataFrames.eachcol(react_jp)), DataFrames.names(react_jp)),
+        element = (collect(DataFrames.eachcol(element_eq)), DataFrames.names(element_eq)),
+        # parameters = (
+        #     collect(DataFrames.eachcol(parameters)),
+        #     DataFrames.names(parameters),
+        # ),
+    )
 
     # return code, parameters, cache_str, react_jp
     return code, species_modelled, reac_expr, cache_str, react_jp
 
 end
+
+
+
+

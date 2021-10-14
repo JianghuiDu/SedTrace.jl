@@ -1,13 +1,7 @@
 
 set_zero_subnormals(true)
 BLAS.set_num_threads(8)
-gr(; size = (400, 1000))
 
-# include("config.jl")
-# include("generate_code.jl")
-# include("generate_jacobian.jl")
-# include("generate_preconditioner.jl")
-# include("generate_problem.jl")
 using SedTrace
 using JLD2
 
@@ -53,5 +47,5 @@ solverconfig = SolverConfig(
 
 sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
-
-generate_output(modelconfig,sol,["HH3000"],SedTrace.L, true)
+gr(; size = (400, 1000))
+generate_output(modelconfig,sol,["HH3000"],SedTrace.L, false)

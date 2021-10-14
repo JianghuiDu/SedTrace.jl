@@ -4,8 +4,8 @@ function generate_output(
     modelconfig::ModelConfig,
     sol::SciMLBase.ODESolution,
     site::Vector{String},
-    ylim = L,
-    saveplt = false,
+    ylim = L::Real,
+    saveplt::Bool = false,
 )
 
     nt = length(sol.t)
@@ -195,7 +195,7 @@ function generate_output(
             )
             display(p)
             if saveplt
-                savefig(p,"$key.pdf")
+                savefig(p,modelconfig.ModelDirectory*"$key.pdf")
             end
 
         end

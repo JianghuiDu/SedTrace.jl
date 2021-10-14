@@ -69,7 +69,7 @@ function IncludeFiles(modelconfig::ModelConfig)
     include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
     include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
     include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
-
+    return nothing
 end
 
 const ⊕ = +
