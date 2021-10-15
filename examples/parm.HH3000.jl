@@ -59,8 +59,8 @@ const Dbt0 = 0.37212703274831377 # cm2/yr # bioturbation coefficient
 const aO2bt = 1.0e-5 # mmol/cm3 # constant used in calculating oxygen dependence of bioturbation
 const bO2bt = 5.0e-7 # mmol/cm3 # constant used in calculating oxygen dependence of bioturbation
 const fO2bt = 0.5 + 0.5 * erf((O2BW - aO2bt) / bO2bt) # missing # oxygen dependence of bioturbation
-const xbt = 2.0 # cm # attentuation scale of bioturbation
-const Ds = broadcast(x -> Dbt0 * fO2bt * exp(-x / xbt), x) # cm^2 yr^-1 # Bioturbation coefficient
+const xbt = 1.0 # cm # attentuation scale of bioturbation
+const Ds = broadcast(x -> Dbt0 * fO2bt * exp(-x^2 / (2 * xbt^2)), x) # cm^2 yr^-1 # Bioturbation coefficient
 
 #----------------------------------------------
 # bioirrigation parameters
@@ -69,7 +69,7 @@ const Dbir0 = 28.42212793142007 # yr^-1 # bioirrigation constant
 const aO2bir = 1.0e-5 # mmol/cm3 # constant used in calculating oxygen dependence of bioirrigation
 const bO2bir = 5.0e-7 # mmol/cm3 # constant used in calculating oxygen dependence of bioirrigation
 const fO2bir = 0.5 + 0.5 * erf((O2BW - aO2bir) / bO2bir) # missing # oxygen dependence of irrigation
-const xbir = 2.0 # cm # attentuation scale of bioirrigation
+const xbir = 1.0 # cm # attentuation scale of bioirrigation
 const alpha = broadcast(x -> Dbir0 * fO2bir * exp(-x / xbir), x) # cm^2 yr^-1 # Bioirrigation coefficient
 
 #----------------------------------------------
@@ -97,7 +97,7 @@ const DNdr = 1.0763975632520105E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1
 const DH = 1.8564498889096735E+03 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DOH = 9.3665996003371845E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DH4SiO4 = 1.7771493723450564E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
-const DH3SiO4 = 0.0000000000000000E+00 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
+const DH3SiO4 = 2.4111599225962418E-307 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DCO2 = 3.3679572156139625E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DHCO3 = 1.9213920442515075E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DCO3 = 1.5899631135414575E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -181,7 +181,7 @@ const betaNdr = 2.1527951265040210E+03 # cm yr^-1 # solute mass transfer velocit
 const betaH = 3.7128997778193465E+04 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaOH = 1.8733199200674368E+04 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaH4SiO4 = 3.5542987446901125E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-const betaH3SiO4 = 0.0000000000000000E+00 # cm yr^-1 # solute mass transfer velocity across SWI
+const betaH3SiO4 = 4.8223198451924836E-306 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaCO2 = 6.7359144312279250E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaHCO3 = 3.8427840885030150E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaCO3 = 3.1799262270829149E+03 # cm yr^-1 # solute mass transfer velocity across SWI

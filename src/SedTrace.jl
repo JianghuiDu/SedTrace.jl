@@ -3,6 +3,7 @@ module SedTrace
 using Reexport
 using SciMLBase
 using Sundials
+@reexport using BenchmarkTools
 
 @reexport using SparseDiffTools
 @reexport using FastBroadcast
@@ -61,6 +62,8 @@ include("generate_initval.jl")
 include("generate_jacprototype.jl")
 include("generate_output.jl")
 
+include("benchmark.jl")
+
 using .CodeGeneration: generate_code
 
 function IncludeFiles(modelconfig::ModelConfig)
@@ -90,4 +93,8 @@ export generate_output
 
 export IncludeFiles
 
+export TestJacobian
+export BenchmarkJacobian
+export BenchmarkPreconditioner
+export BenchmarkReactran
 end

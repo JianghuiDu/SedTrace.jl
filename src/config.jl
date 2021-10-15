@@ -1,6 +1,8 @@
 
 abstract type TEIConfig end
 
+
+
 struct ModelConfig <: TEIConfig
     ModelDirectory::String
     ModelFile::String

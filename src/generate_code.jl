@@ -39,7 +39,6 @@ function generate_code(modelconfig::ModelConfig)
 
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
-    # modelName = split(modelconfig.ModelPath, ".")[2]
 
     if modelconfig.UpdateParamOnly
         ord = [
@@ -104,14 +103,14 @@ function generate_code(modelconfig::ModelConfig)
         end
 
 
-        open(modelconfig.ModelDirectory * "parm.$modelName.jl", "w") do io
+        open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
             for i in params_code
                 write(io, i * "\n")
             end
             write(io, "nothing")
         end
         format_file(
-            modelconfig.ModelDirectory * "parm.$modelName.jl",
+            modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
             overwrite = true,
             verbose = true,
             margin = 80,

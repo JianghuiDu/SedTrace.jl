@@ -33,7 +33,8 @@ end
 # ForwardDiff AD without sparsity pattern
 function generate_jacobian(
     f,
-    chunk_size::Int,
+    jp::Matrix{T},
+    chunk_size::Int
 ) where {T}
     f_ = (y, x) -> f(y, x, nothing, 0.0)
     Nmat = size(jp,1)

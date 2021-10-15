@@ -34,7 +34,7 @@
 
 # end
 
-function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
+function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
@@ -42,7 +42,7 @@ function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         Upbdwth,Lwbdwth = bandwidths(JacPrototype)
         return (
-            ODEFunction{true,false}(OdeFun),
+            ODEFunction{true,true}(OdeFun),
             CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 jac_upper = Upbdwth,
@@ -55,7 +55,7 @@ function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
         # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         return (
-            ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
+            ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
             CVODE_BDF(linear_solver = solverconfig.linsolve),
         )
     end
@@ -67,7 +67,7 @@ function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
         prec = default_prec(p_prec)
         return (
-            ODEFunction{true,false}(OdeFun),
+            ODEFunction{true,true}(OdeFun),
             CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 prec = prec,
@@ -80,9 +80,9 @@ function generate_ODESolver(OdeFun,JacPrototype,solverconfig::SolverConfig)
 
 end
 
-function modelrun(OdeFun,JacPrototype,solverconfig::SolverConfig)
-    OdeFun, solver = generate_ODESolver(OdeFun,JacPrototype,solverconfig);
-    prob = ODEProblem{true}(OdeFun, solverconfig.u0, solverconfig.tspan, nothing)
+function modelrun(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
+    OdeFunction, solver = generate_ODESolver(OdeFun,JacPrototype,solverconfig);
+    prob = ODEProblem{true}(OdeFunction, solverconfig.u0, solverconfig.tspan, nothing)
 
     @time sol = SciMLBase.solve(
         prob,
@@ -96,6 +96,7 @@ function modelrun(OdeFun,JacPrototype,solverconfig::SolverConfig)
         maxiters = solverconfig.maxiters,
     )
 
+    println("$(sol.retcode) at t = $(sol.t[end]).")
     return sol
 end
 

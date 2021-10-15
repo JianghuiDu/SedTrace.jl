@@ -50,6 +50,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     Omega_RMnCO3_pre = PreallocationTools.get_tmp(f.Omega_RMnCO3_pre, C)
     Omega_RFeCO3_dis = PreallocationTools.get_tmp(f.Omega_RFeCO3_dis, C)
     Omega_RFeCO3_pre = PreallocationTools.get_tmp(f.Omega_RFeCO3_pre, C)
+    Omega_RBSi_dis = PreallocationTools.get_tmp(f.Omega_RBSi_dis, C)
     Omega_RNdnrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdnrPO4_pre, C)
     Omega_RNdrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdrPO4_pre, C)
     RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
@@ -85,6 +86,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     RMnCO3_pre = PreallocationTools.get_tmp(f.RMnCO3_pre, C)
     RFeCO3_dis = PreallocationTools.get_tmp(f.RFeCO3_dis, C)
     RFeCO3_pre = PreallocationTools.get_tmp(f.RFeCO3_pre, C)
+    RBSi_dis = PreallocationTools.get_tmp(f.RBSi_dis, C)
     RMnO2POC_Nd = PreallocationTools.get_tmp(f.RMnO2POC_Nd, C)
     RMnO2H2S_Nd = PreallocationTools.get_tmp(f.RMnO2H2S_Nd, C)
     RFeOOHPOC_Nd = PreallocationTools.get_tmp(f.RFeOOHPOC_Nd, C)
@@ -115,6 +117,8 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     S_Ca = PreallocationTools.get_tmp(f.S_Ca, C)
     S_MnCO3 = PreallocationTools.get_tmp(f.S_MnCO3, C)
     S_FeCO3 = PreallocationTools.get_tmp(f.S_FeCO3, C)
+    S_BSi = PreallocationTools.get_tmp(f.S_BSi, C)
+    S_TH4SiO4 = PreallocationTools.get_tmp(f.S_TH4SiO4, C)
     S_Ndnr = PreallocationTools.get_tmp(f.S_Ndnr, C)
     S_Ndr = PreallocationTools.get_tmp(f.S_Ndr, C)
     S_NdnrPO4 = PreallocationTools.get_tmp(f.S_NdnrPO4, C)
@@ -496,6 +500,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. Omega_RMnCO3_pre = Mn ⊗ CO3 / KspMnCO3
     @.. Omega_RFeCO3_dis = Fe ⊗ CO3 / KspFeCO3
     @.. Omega_RFeCO3_pre = Fe ⊗ CO3 / KspFeCO3
+    @.. Omega_RBSi_dis = H4SiO4 / H4SiO4_dis_sat
     @.. Omega_RNdnrPO4_pre = Ndnr_free ⊗ PO4 / (KspNdPO4 ⊗ fNdnr)
     @.. Omega_RNdrPO4_pre = Ndr_free ⊗ PO4 / (KspNdPO4 ⊗ Ndr / Ndnr ⊗ fNdnr)
     @.. RO2POC = O2 / (KO2 ⊕ O2) ⊗ nu / (a ⊕ Age) ⊗ POC
@@ -562,6 +567,9 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. RFeCO3_pre =
         (tanh(100.0 ⊗ (Omega_RFeCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeCO3pre ⊗ (Omega_RFeCO3_pre - 1))
+    @.. RBSi_dis =
+        (-tanh(100.0 ⊗ (Omega_RBSi_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        ((1 - Omega_RBSi_dis) ⊗ BSi ⊗ nuBSi / (aBSi ⊕ Age))
     @.. RMnO2POC_Nd = RMnO2POC ⊗ 2
     @.. RMnO2H2S_Nd = RMnO2H2S
     @.. RFeOOHPOC_Nd = RFeOOHPOC
@@ -655,6 +663,8 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. S_Ca = 1 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -1 ⊗ RCaCO3_pre ⊗ dstopw
     @.. S_MnCO3 = -1 ⊗ RMnCO3_dis ⊕ 1 ⊗ RMnCO3_pre
     @.. S_FeCO3 = -1 ⊗ RFeCO3_dis ⊕ 1 ⊗ RFeCO3_pre
+    @.. S_BSi = -1 ⊗ RBSi_dis
+    @.. S_TH4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw
     @.. S_Ndnr =
         rNdnrMn ⊗ RMnO2POC_Nd ⊕ rNdnrMn ⊗ RMnO2H2S_Nd ⊕ rNdnrFe ⊗ RFeOOHPOC_Nd ⊕
         rNdnrFe ⊗ RFeOOHH2S_Nd ⊕ -1 ⊗ RO2Mn_Ndnr ⊕ -1 ⊗ RO2Fe_Ndnr ⊕
@@ -680,323 +690,12 @@ function (f::Cache.Reactran)(dC, C, parms, t)
         2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
         2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
     @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
     @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
-        (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 8) ⊗ RFeOOHPOC ⊗ dstopw ⊕
-        (rNC - rPC ⊕ 1) ⊗ RSO4POC ⊗ dstopw ⊕ (rNC - rPC) ⊗ RCH4POC ⊗ dstopw ⊕
-        -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -1 ⊗ RO2Mn_ads ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕
-        -8 / 5 ⊗ RNO3Mn ⊕ -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕
-        -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA +=
-        2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
-        2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊗ dstopw
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
-    @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
     @.. S_H = S_TA
     @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
     @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
     @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TH2S ⊗ dTA_dTH2S
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
-    @.. S_H -= S_TH3PO4 ⊗ dTA_dTH3PO4
+    @.. S_H -= S_TH4SiO4 ⊗ dTA_dTH4SiO4
     @.. S_H = S_H / dTA_dH
     @.. S_Age = 1
 
@@ -1009,6 +708,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dMnCO3 += S_MnCO3
     @.. dFeCO3 += S_FeCO3
     @.. dAge += S_Age
+    @.. dBSi += S_BSi
     @.. dNdnrPO4 += S_NdnrPO4
     @.. dNdrPO4 += S_NdrPO4
     @.. dMn += S_Mn
@@ -1023,10 +723,10 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dNdnr += S_Ndnr
     @.. dNdr += S_Ndr
     @.. dH += S_H
+    @.. dTH4SiO4 += S_TH4SiO4
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S
     @.. dTH3PO4 += S_TH3PO4
-
 
     return nothing
 end

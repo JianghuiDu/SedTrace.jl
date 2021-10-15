@@ -592,18 +592,9 @@ function pH_rate(species_join)
     # @. S_H -= S_TH4SiO4 * dTA_dTH4SiO4
     # @. S_H /= dTA_dH
 
-    # only select "dissolved_summed" sustance
-    # species_summed_df =
-    #     @subset(species_join, occursin.("dissolved_summed", :substance_type))
-    # species_summed = @chain begin
-    #     species_summed_df
-    #     select(:substance, :substance_type)
-    #     unique
-    # end
 
-    species_summed_df = @chain begin
-        @subset(species_join, :substance_type.=="dissolved_summed_pH")
-    end
+    species_summed_df = @subset(species_join, :substance_type.=="dissolved_summed_pH")
+    species_summed = unique(species_summed_df.substance)
 
 
 
@@ -627,15 +618,15 @@ function pH_rate(species_join)
     #     end
     # end
 
-    for i in eachrow(species_summed_df)
-        if !(i.substance in list_summed_species)
+    for i in species_summed
+        if !(i in list_summed_species)
             throw(
                 error(
-                    "dissolved_summed species must be from this list: $list_summed_species. $(i.substance) is not in the list.",
+                    "dissolved_summed species must be from this list: $list_summed_species. $i is not in the list.",
                 ),
             )
         else
-            tmp = EquilibriumInvariant(i.substance)
+            tmp = EquilibriumInvariant(i)
             # if i.substance_type == "dissolved_summed_pH"
                 dTA_dH_rate(tmp, species_summed_df, dTAdt_str, dHdt_str)
             # end
@@ -817,7 +808,7 @@ function dCdt_expr(substances, reacspec, cf, MTK)
             push!(dCdt_expr_adv, "d" * i * "[Ngrid]+=BcBm" * i * "[2]*S_" * i * "[Ngrid]")
         end
     end
-    return vcat("@. " .* dCdt_expr, "", dCdt_expr_adv)
+    return vcat(dCdt_expr, dCdt_expr_adv)
 end
 
 
@@ -1037,6 +1028,8 @@ function reaction_code(
     # append reaction rate expressions to total rate expressions
     dCdt = dCdt_expr(substances, reacspec, cf, MTK)
 
+    reac_expr = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
+
     if !MTK
         code = vcat(
             "# speciation",
@@ -1049,7 +1042,7 @@ function reaction_code(
             "# species rates",
             "@. " .* species_rate,
             "",
-            dCdt,
+            "@. " .* dCdt,
             "",
         )
     else
@@ -1064,7 +1057,7 @@ function reaction_code(
             "# species rates",
             replace.(species_rate, r"\=" => "= @."),
             "",
-            dCdt,
+            replace.(dCdt, r"\=" => "= @."),
             "",
         )
     end
@@ -1082,10 +1075,6 @@ function reaction_code(
     cache_str = split.(cache_str, r"\=|\+\=|\*\=|\-\=|\/\=")
     cache_str = unique([replace(i[1], r"\s" => "") for i in cache_str])
     cache_str = vcat(cache_str, tran_cache)
-
-    # parameters,react_dependence = parse_parameters(
-    #     spec_expr, ads_expr, vcat(rate_expr,omega_expr),species_rate,species_join,species_extra,cache_str)
-
 
 
     speciation_new = @chain begin
@@ -1106,7 +1095,6 @@ function reaction_code(
 
     species_modelled = species_in_model(species_join, species_extra)
 
-    reac_expr = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
 
 
     pHspecies = pH_rate_species(species_join_all)
