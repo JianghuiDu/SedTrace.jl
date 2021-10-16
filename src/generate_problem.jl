@@ -33,12 +33,11 @@
 #     cb = jacconfig.callback
 
 # end
-
+# using OrdinaryDiffEq
 function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         Upbdwth,Lwbdwth = bandwidths(JacPrototype)
         return (
@@ -52,7 +51,6 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
     end
 
     if solverconfig.linsolve == :KLU
-        # JacPrototype = JacType()
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         return (
             ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
@@ -60,8 +58,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
         )
     end
 
-    if solverconfig.linsolve in [:GMRES, :FGMRES]
-        # JacPrototype = JacType()
+    if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
@@ -77,6 +74,18 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
             ),
         )
     end
+
+    
+    # if solverconfig.linsolve in [:QNDF,:QBDF,:TRBDF2,:FBDF]
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+    #     return (
+    #         ODEFunction{true,true}(OdeFun;jac=JacFun,jac_prototype=JacPrototype),
+    #         FBDF(
+    #             autodiff = false,
+    #             # chunk_size = solverconfig.chunk_size
+    #         ),
+    #     )
+    # end
 
 end
 
