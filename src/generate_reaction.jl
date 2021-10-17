@@ -465,7 +465,7 @@ end
 # dissolution/precipitation requires special treatment
 # Final results are expressions like R_reaction = rate expr
 #-------------------------------------------------------------------------------------------
-function format_rate_expr(react_df, discontinuity)
+function format_rate_expr(react_df, discontinuity,MTK)
     n_react = size(react_df, 1)
     rate_expr = String[]
     omega_expr = String[]
@@ -491,7 +491,7 @@ function format_rate_expr(react_df, discontinuity)
                     ")" :
                     i.label *
                     " = " *
-                    "(-tanh(100.0*(Omega" *
+                    "(-tanh$(MTK ? "." : "")(100.0*(Omega" *
                     "_" *
                     i.label *
                     " - 1.0))/2+0.5) * (" *
@@ -512,7 +512,7 @@ function format_rate_expr(react_df, discontinuity)
                     ")" :
                     i.label *
                     " = " *
-                    "(tanh(100.0*(Omega" *
+                    "(tanh$(MTK ? "." : "")(100.0*(Omega" *
                     "_" *
                     i.label *
                     " - 1.0))/2+0.5) * (" *
@@ -1020,7 +1020,7 @@ function reaction_code(
     end
 
     # formate rate expressions
-    rate_expr, omega_expr = format_rate_expr(reactions, discontinuity)
+    rate_expr, omega_expr = format_rate_expr(reactions, discontinuity,MTK)
 
     # rate expression for each species
     species_rate, reacspec = species_rate_expr(species_join, species_extra, MTK)
@@ -1048,16 +1048,16 @@ function reaction_code(
     else
         code = vcat(
             "# speciation",
-            replace.(spec_expr, r"\=" => "= @."),
+            replace.(spec_expr, r"(?<!\de)[\+\-\*\/\^](?!\=)" => s" .\g<0>"),
             "",
             "# reaction rates",
-            replace.(omega_expr, r"\=" => "= @."),
-            replace.(rate_expr, r"\=" => "= @."),
+            replace.(omega_expr, r"(?<!\de)[\+\-\*\/\^](?!\=)" => s" .\g<0>"),
+            replace.(rate_expr, r"(?<!\de)[\+\-\*\/\^](?!\=)" => s" .\g<0>"),
             "",
             "# species rates",
-            replace.(species_rate, r"\=" => "= @."),
+            replace.(species_rate, r"(?<!\de)[\+\-\*\/\^](?!\=)" => s" .\g<0>"),
             "",
-            replace.(dCdt, r"\=" => "= @."),
+            replace.(dCdt, r"(?<!\de)[\+\-\*\/\^](?!\=)" => s" .\g<0>"),
             "",
         )
     end

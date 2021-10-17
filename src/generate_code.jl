@@ -19,6 +19,8 @@ include("helpers.jl")
 include("moleculardiff.jl")
 include("generate_reaction.jl")
 include("generate_transport.jl")
+include("generate_transport_MTK.jl")
+
 include("generate_parameter.jl")
 include("generate_parameter_template.jl")
 include("generate_struct.jl")
@@ -192,7 +194,7 @@ function generate_code(modelconfig::ModelConfig)
     check_illegal_char(select(options, :options, :value))
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
-    tran_code, tran_expr, tran_cache = transport_code(substances, options, modelconfig.MTK)
+    tran_code, tran_expr, tran_cache = transport_code(substances, options, Val(modelconfig.MTK))
 
     params_code = parameter_code(parameters, substances, options, modelconfig.CompleteFlux)
 

@@ -24,7 +24,7 @@ const sw_dens = 1.0290834608199197 # g cm^-3 # seawater density
 # grid parameters
 #----------------------------------------------
 const L = 50.0 # cm # model sediment section thickness
-const Ngrid = 200 # integer # number of model grid
+const Ngrid = 100 # integer # number of model grid
 const pgrid = L / 20 # cm # constant in gridtran, attenuation scale
 const Nmat = Ngrid * nspec #  # Jacobian dimention
 const ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
@@ -97,7 +97,7 @@ const DNdr = 1.0763975632520105E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1
 const DH = 1.8564498889096735E+03 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DOH = 9.3665996003371845E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DH4SiO4 = 1.7771493723450564E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
-const DH3SiO4 = 2.4111599225962418E-307 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
+const DH3SiO4 = 0.0000000000000000E+00 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DCO2 = 3.3679572156139625E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DHCO3 = 1.9213920442515075E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
 const DCO3 = 1.5899631135414575E+02 ./ (1.0 .- 2log.(phif)) .+ 15Ds # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -181,7 +181,7 @@ const betaNdr = 2.1527951265040210E+03 # cm yr^-1 # solute mass transfer velocit
 const betaH = 3.7128997778193465E+04 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaOH = 1.8733199200674368E+04 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaH4SiO4 = 3.5542987446901125E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-const betaH3SiO4 = 4.8223198451924836E-306 # cm yr^-1 # solute mass transfer velocity across SWI
+const betaH3SiO4 = 0.0000000000000000E+00 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaCO2 = 6.7359144312279250E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaHCO3 = 3.8427840885030150E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 const betaCO3 = 3.1799262270829149E+03 # cm yr^-1 # solute mass transfer velocity across SWI
