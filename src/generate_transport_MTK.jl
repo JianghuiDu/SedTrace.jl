@@ -43,7 +43,7 @@ function transport_code(substances, options, ::Val{true})
         if i.type ∈ ["dissolved", "dissolved_summed"]
             push!(
                 alpha_str,
-                "d$(i.substance) += alpha.*($(i.substance)$(bc_type(i.top_bc_type,i.substance)).-$(i.substance))",
+                "d$(i.substance) .+= alpha.*($(i.substance)$(bc_type(i.top_bc_type,i.substance)).-$(i.substance))",
             )
         end
         if i.type == "dissolved_adsorbed"
@@ -53,8 +53,8 @@ function transport_code(substances, options, ::Val{true})
                 ads_str,
                 "d$(i.substance) .= Am$((i.substance))_ads * $((i.substance))_ads",
             )
-            push!(ads_str, "d$(i.substance) = d$(i.substance).*dstopw")
-            push!(ads_str, "d$(i.substance) += Am$(i.substance) * $(i.substance)")
+            push!(ads_str, "d$(i.substance) .= d$(i.substance).*dstopw")
+            push!(ads_str, "d$(i.substance) .+= Am$(i.substance) * $(i.substance)")
             push!(
                 ads_str,
                 "d$(i.substance)[1] += (BcAm$((i.substance))_ads[1]*$((i.substance))_ads[1]+BcCm$((i.substance))_ads[1])*$dstopw1",
@@ -73,11 +73,11 @@ function transport_code(substances, options, ::Val{true})
             )
             push!(
                 ads_str,
-                "d$(i.substance) += alpha .* ($((i.substance))0 .- $(i.substance))",
+                "d$(i.substance) .+= alpha .* ($((i.substance))0 .- $(i.substance))",
             )
             push!(
                 ads_str,
-                "d$(i.substance) = d$(i.substance)./(1.0.+dstopw.*K$((i.substance))_ads)",
+                "d$(i.substance) .= d$(i.substance)./(1.0.+dstopw.*K$((i.substance))_ads)",
             )
 
             push!(ads_str, " ")

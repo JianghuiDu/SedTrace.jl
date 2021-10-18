@@ -42,6 +42,7 @@ function generate_code(modelconfig::ModelConfig)
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
 
+
     if modelconfig.UpdateParamOnly
         ord = [
             "solid",
@@ -194,7 +195,12 @@ function generate_code(modelconfig::ModelConfig)
     check_illegal_char(select(options, :options, :value))
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
-    tran_code, tran_expr, tran_cache = transport_code(substances, options, Val(modelconfig.MTK))
+    tran_code, tran_expr, tran_cache = 
+    transport_code(
+        substances, 
+        options, 
+        Val(false)#Val(modelconfig.MTK)
+    )
 
     params_code = parameter_code(parameters, substances, options, modelconfig.CompleteFlux)
 
@@ -204,7 +210,7 @@ function generate_code(modelconfig::ModelConfig)
         speciation,
         tran_cache,
         modelconfig.CompleteFlux,
-        modelconfig.MTK,
+        false,#modelconfig.MTK,
         modelconfig.AllowDiscontinuity,
         modelconfig.ModelDirectory
     )
@@ -287,12 +293,22 @@ function generate_code(modelconfig::ModelConfig)
     )
 
     if !modelconfig.AutoDiff
-        open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
-            for i in cache
-                # write(io, "const $i = @MVector(zeros(Ngrid)) \n")
-                write(io, "const $i = zeros(Ngrid) \n")
+        if !modelconfig.MTK
+            open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
+                for i in cache
+                    # write(io, "const $i = @MVector(zeros(Ngrid)) \n")
+                    write(io, "const $i = zeros(Ngrid) \n")
+                end
+                # write(io, "nothing")
             end
-            # write(io, "nothing")
+        else
+            open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
+                for i in cache
+                    # write(io, "const $i = @MVector(zeros(Ngrid)) \n")
+                    write(io, "@variables $i[1:Ngrid] \n")
+                end
+                # write(io, "nothing")
+            end
         end
 
         header = "function reactran_fvcf_auto(dC,C,parms,t)"

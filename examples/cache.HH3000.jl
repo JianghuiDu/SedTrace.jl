@@ -1,127 +1,127 @@
-const Mn_ads = zeros(Ngrid)
-const Fe_ads = zeros(Ngrid)
-const NH4_ads = zeros(Ngrid)
-const OH = zeros(Ngrid)
-const H4SiO4 = zeros(Ngrid)
-const H3SiO4 = zeros(Ngrid)
-const HCO3 = zeros(Ngrid)
-const CO3 = zeros(Ngrid)
-const CO2 = zeros(Ngrid)
-const H2S = zeros(Ngrid)
-const HS = zeros(Ngrid)
-const H3BO3 = zeros(Ngrid)
-const H4BO4 = zeros(Ngrid)
-const H3PO4 = zeros(Ngrid)
-const H2PO4 = zeros(Ngrid)
-const HPO4 = zeros(Ngrid)
-const PO4 = zeros(Ngrid)
-const H_tran = zeros(Ngrid)
-const OH_tran = zeros(Ngrid)
-const H4SiO4_tran = zeros(Ngrid)
-const H3SiO4_tran = zeros(Ngrid)
-const HCO3_tran = zeros(Ngrid)
-const CO3_tran = zeros(Ngrid)
-const CO2_tran = zeros(Ngrid)
-const H2S_tran = zeros(Ngrid)
-const HS_tran = zeros(Ngrid)
-const H3BO3_tran = zeros(Ngrid)
-const H4BO4_tran = zeros(Ngrid)
-const H3PO4_tran = zeros(Ngrid)
-const H2PO4_tran = zeros(Ngrid)
-const HPO4_tran = zeros(Ngrid)
-const PO4_tran = zeros(Ngrid)
-const TA_tran = zeros(Ngrid)
-const dTA_dH = zeros(Ngrid)
-const dTA_dTH4SiO4 = zeros(Ngrid)
-const dTA_dTCO2 = zeros(Ngrid)
-const dTA_dTH2S = zeros(Ngrid)
-const dTA_dTH3BO3 = zeros(Ngrid)
-const dTA_dTH3PO4 = zeros(Ngrid)
-const Fe_free = zeros(Ngrid)
-const Al_free = zeros(Ngrid)
-const Ndnr_free = zeros(Ngrid)
-const Ndr_free = zeros(Ngrid)
-const Omega_RFeS_dis = zeros(Ngrid)
-const Omega_RFeS_pre = zeros(Ngrid)
-const Omega_RCaCO3_dis = zeros(Ngrid)
-const Omega_RCaCO3_pre = zeros(Ngrid)
-const Omega_RMnCO3_dis = zeros(Ngrid)
-const Omega_RMnCO3_pre = zeros(Ngrid)
-const Omega_RFeCO3_dis = zeros(Ngrid)
-const Omega_RFeCO3_pre = zeros(Ngrid)
-const Omega_RBSi_dis = zeros(Ngrid)
-const Omega_RNdnrPO4_pre = zeros(Ngrid)
-const Omega_RNdrPO4_pre = zeros(Ngrid)
-const RO2POC = zeros(Ngrid)
-const RNO2POC = zeros(Ngrid)
-const RNO3POC = zeros(Ngrid)
-const RMnO2POC = zeros(Ngrid)
-const RFeOOHPOC = zeros(Ngrid)
-const RSO4POC = zeros(Ngrid)
-const RCH4POC = zeros(Ngrid)
-const RO2NO2 = zeros(Ngrid)
-const RO2NH4 = zeros(Ngrid)
-const RO2Mn = zeros(Ngrid)
-const RO2Mn_ads = zeros(Ngrid)
-const RO2Fe = zeros(Ngrid)
-const RO2Fe_ads = zeros(Ngrid)
-const RO2H2S = zeros(Ngrid)
-const RO2FeS = zeros(Ngrid)
-const RO2CH4 = zeros(Ngrid)
-const RNO2NH4 = zeros(Ngrid)
-const RNO3Mn = zeros(Ngrid)
-const RNO3Fe = zeros(Ngrid)
-const RNO3H2S = zeros(Ngrid)
-const RSO4CH4 = zeros(Ngrid)
-const RMnO2Fe = zeros(Ngrid)
-const RMnO2H2S = zeros(Ngrid)
-const RFeOOHH2S = zeros(Ngrid)
-const RFeSH2S = zeros(Ngrid)
-const RFeS_dis = zeros(Ngrid)
-const RFeS_pre = zeros(Ngrid)
-const RCaCO3_dis = zeros(Ngrid)
-const RCaCO3_pre = zeros(Ngrid)
-const RMnCO3_dis = zeros(Ngrid)
-const RMnCO3_pre = zeros(Ngrid)
-const RFeCO3_dis = zeros(Ngrid)
-const RFeCO3_pre = zeros(Ngrid)
-const RBSi_dis = zeros(Ngrid)
-const RMnO2POC_Nd = zeros(Ngrid)
-const RMnO2H2S_Nd = zeros(Ngrid)
-const RFeOOHPOC_Nd = zeros(Ngrid)
-const RFeOOHH2S_Nd = zeros(Ngrid)
-const RO2Mn_Ndnr = zeros(Ngrid)
-const RO2Mn_Ndr = zeros(Ngrid)
-const RO2Fe_Ndnr = zeros(Ngrid)
-const RO2Fe_Ndr = zeros(Ngrid)
-const RNdnrPO4_pre = zeros(Ngrid)
-const RNdrPO4_pre = zeros(Ngrid)
-const S_POC = zeros(Ngrid)
-const S_O2 = zeros(Ngrid)
-const S_TCO2 = zeros(Ngrid)
-const S_NH4 = zeros(Ngrid)
-const S_TH3PO4 = zeros(Ngrid)
-const S_NO2 = zeros(Ngrid)
-const S_NO3 = zeros(Ngrid)
-const S_MnO2 = zeros(Ngrid)
-const S_Mn = zeros(Ngrid)
-const S_FeOOH = zeros(Ngrid)
-const S_Fe = zeros(Ngrid)
-const S_SO4 = zeros(Ngrid)
-const S_TH2S = zeros(Ngrid)
-const S_CH4 = zeros(Ngrid)
-const S_FeS = zeros(Ngrid)
-const S_FeS2 = zeros(Ngrid)
-const S_CaCO3 = zeros(Ngrid)
-const S_Ca = zeros(Ngrid)
-const S_MnCO3 = zeros(Ngrid)
-const S_FeCO3 = zeros(Ngrid)
-const S_BSi = zeros(Ngrid)
-const S_TH4SiO4 = zeros(Ngrid)
-const S_Ndnr = zeros(Ngrid)
-const S_Ndr = zeros(Ngrid)
-const S_NdnrPO4 = zeros(Ngrid)
-const S_NdrPO4 = zeros(Ngrid)
-const S_TA = zeros(Ngrid)
-const S_H = zeros(Ngrid)
-const S_Age = zeros(Ngrid)
+@variables Mn_ads[1:Ngrid]
+@variables Fe_ads[1:Ngrid]
+@variables NH4_ads[1:Ngrid]
+@variables OH[1:Ngrid]
+@variables H4SiO4[1:Ngrid]
+@variables H3SiO4[1:Ngrid]
+@variables HCO3[1:Ngrid]
+@variables CO3[1:Ngrid]
+@variables CO2[1:Ngrid]
+@variables H2S[1:Ngrid]
+@variables HS[1:Ngrid]
+@variables H3BO3[1:Ngrid]
+@variables H4BO4[1:Ngrid]
+@variables H3PO4[1:Ngrid]
+@variables H2PO4[1:Ngrid]
+@variables HPO4[1:Ngrid]
+@variables PO4[1:Ngrid]
+@variables H_tran[1:Ngrid]
+@variables OH_tran[1:Ngrid]
+@variables H4SiO4_tran[1:Ngrid]
+@variables H3SiO4_tran[1:Ngrid]
+@variables HCO3_tran[1:Ngrid]
+@variables CO3_tran[1:Ngrid]
+@variables CO2_tran[1:Ngrid]
+@variables H2S_tran[1:Ngrid]
+@variables HS_tran[1:Ngrid]
+@variables H3BO3_tran[1:Ngrid]
+@variables H4BO4_tran[1:Ngrid]
+@variables H3PO4_tran[1:Ngrid]
+@variables H2PO4_tran[1:Ngrid]
+@variables HPO4_tran[1:Ngrid]
+@variables PO4_tran[1:Ngrid]
+@variables TA_tran[1:Ngrid]
+@variables dTA_dH[1:Ngrid]
+@variables dTA_dTH4SiO4[1:Ngrid]
+@variables dTA_dTCO2[1:Ngrid]
+@variables dTA_dTH2S[1:Ngrid]
+@variables dTA_dTH3BO3[1:Ngrid]
+@variables dTA_dTH3PO4[1:Ngrid]
+@variables Fe_free[1:Ngrid]
+@variables Al_free[1:Ngrid]
+@variables Ndnr_free[1:Ngrid]
+@variables Ndr_free[1:Ngrid]
+@variables Omega_RFeS_dis[1:Ngrid]
+@variables Omega_RFeS_pre[1:Ngrid]
+@variables Omega_RCaCO3_dis[1:Ngrid]
+@variables Omega_RCaCO3_pre[1:Ngrid]
+@variables Omega_RMnCO3_dis[1:Ngrid]
+@variables Omega_RMnCO3_pre[1:Ngrid]
+@variables Omega_RFeCO3_dis[1:Ngrid]
+@variables Omega_RFeCO3_pre[1:Ngrid]
+@variables Omega_RBSi_dis[1:Ngrid]
+@variables Omega_RNdnrPO4_pre[1:Ngrid]
+@variables Omega_RNdrPO4_pre[1:Ngrid]
+@variables RO2POC[1:Ngrid]
+@variables RNO2POC[1:Ngrid]
+@variables RNO3POC[1:Ngrid]
+@variables RMnO2POC[1:Ngrid]
+@variables RFeOOHPOC[1:Ngrid]
+@variables RSO4POC[1:Ngrid]
+@variables RCH4POC[1:Ngrid]
+@variables RO2NO2[1:Ngrid]
+@variables RO2NH4[1:Ngrid]
+@variables RO2Mn[1:Ngrid]
+@variables RO2Mn_ads[1:Ngrid]
+@variables RO2Fe[1:Ngrid]
+@variables RO2Fe_ads[1:Ngrid]
+@variables RO2H2S[1:Ngrid]
+@variables RO2FeS[1:Ngrid]
+@variables RO2CH4[1:Ngrid]
+@variables RNO2NH4[1:Ngrid]
+@variables RNO3Mn[1:Ngrid]
+@variables RNO3Fe[1:Ngrid]
+@variables RNO3H2S[1:Ngrid]
+@variables RSO4CH4[1:Ngrid]
+@variables RMnO2Fe[1:Ngrid]
+@variables RMnO2H2S[1:Ngrid]
+@variables RFeOOHH2S[1:Ngrid]
+@variables RFeSH2S[1:Ngrid]
+@variables RFeS_dis[1:Ngrid]
+@variables RFeS_pre[1:Ngrid]
+@variables RCaCO3_dis[1:Ngrid]
+@variables RCaCO3_pre[1:Ngrid]
+@variables RMnCO3_dis[1:Ngrid]
+@variables RMnCO3_pre[1:Ngrid]
+@variables RFeCO3_dis[1:Ngrid]
+@variables RFeCO3_pre[1:Ngrid]
+@variables RBSi_dis[1:Ngrid]
+@variables RMnO2POC_Nd[1:Ngrid]
+@variables RMnO2H2S_Nd[1:Ngrid]
+@variables RFeOOHPOC_Nd[1:Ngrid]
+@variables RFeOOHH2S_Nd[1:Ngrid]
+@variables RO2Mn_Ndnr[1:Ngrid]
+@variables RO2Mn_Ndr[1:Ngrid]
+@variables RO2Fe_Ndnr[1:Ngrid]
+@variables RO2Fe_Ndr[1:Ngrid]
+@variables RNdnrPO4_pre[1:Ngrid]
+@variables RNdrPO4_pre[1:Ngrid]
+@variables S_POC[1:Ngrid]
+@variables S_O2[1:Ngrid]
+@variables S_TCO2[1:Ngrid]
+@variables S_NH4[1:Ngrid]
+@variables S_TH3PO4[1:Ngrid]
+@variables S_NO2[1:Ngrid]
+@variables S_NO3[1:Ngrid]
+@variables S_MnO2[1:Ngrid]
+@variables S_Mn[1:Ngrid]
+@variables S_FeOOH[1:Ngrid]
+@variables S_Fe[1:Ngrid]
+@variables S_SO4[1:Ngrid]
+@variables S_TH2S[1:Ngrid]
+@variables S_CH4[1:Ngrid]
+@variables S_FeS[1:Ngrid]
+@variables S_FeS2[1:Ngrid]
+@variables S_CaCO3[1:Ngrid]
+@variables S_Ca[1:Ngrid]
+@variables S_MnCO3[1:Ngrid]
+@variables S_FeCO3[1:Ngrid]
+@variables S_BSi[1:Ngrid]
+@variables S_TH4SiO4[1:Ngrid]
+@variables S_Ndnr[1:Ngrid]
+@variables S_Ndr[1:Ngrid]
+@variables S_NdnrPO4[1:Ngrid]
+@variables S_NdrPO4[1:Ngrid]
+@variables S_TA[1:Ngrid]
+@variables S_H[1:Ngrid]
+@variables S_Age[1:Ngrid]

@@ -15,7 +15,6 @@ modelconfig = ModelConfig(
     Template = false,
     AutoDiff = false,
     CompleteFlux = false,
-    AssembleParam = false,
     FastBroadcast = false,
     UnflattenOp = false,
     MTK = true
@@ -27,10 +26,17 @@ IncludeFiles(modelconfig)
 
 JacPrototype = SedTrace.JacType()
 
+
 ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
 chunk_size = 12;
+jacp1 = similar(JacPrototype)
+
+jac1 = SedTrace.generate_jacobian(OdeFun,jacp1,chunk_size);
+jac1(jacp1,SedTrace.C_uni,nothing,0)
+writedlm("j2.txt",jacp1)
 
 OdeFun = SedTrace.Cache.init(SedTrace.C_uni, SedTrace.Ngrid, Val(chunk_size));
+
 
 
 TestJacobian(JacPrototype,OdeFun,chunk_size)
@@ -58,39 +64,62 @@ generate_output(modelconfig,sol,["HH3000"],SedTrace.L, false)
 
 
 using ModelingToolkit
+using SpecialFunctions, LinearAlgebra
+include((@__DIR__)*"//src//fvcf_discretization.jl")
+include((@__DIR__)*"//examples//parm.HH3000.jl")
+include((@__DIR__)*"//examples//reactran.HH3000.jl")
+include((@__DIR__)*"//examples//cache.HH3000.jl")
 
-@variables t,dC[1:SedTrace.Nmat](t),C[1:SedTrace.Nmat](t);
+@variables t,dC[1:Nmat](t),C[1:Nmat](t);
 
 D = Differential(t);
-@time SedTrace.reactran_fvcf_auto(dC,C,nothing,0)
-# dC[SedTrace.HID]
-
+@time reactran_fvcf_auto(dC,C,nothing,0)
 
 fol = ODESystem(D.(C) .~ dC,t,C,[])
 sys = structural_simplify(fol)
 
-@time prob = ODEProblem(sys,SedTrace.C_uni,(0.0,10.0),sparse=true,jac=true);
+@time prob = ODEProblem(sys,C_uni,(0.0,10.0),sparse=true,jac=true);
+
+C0 = C_uni;
+dC0 = similar(C0);
+
+prob.f(dC0,C0,nothing,0)
+
 
 jac=ModelingToolkit.generate_jacobian(sys,sparse=true,expression = Val{false});
 
 
-write("sparsity.jl", string(jac[1]))
-write("jacobian.jl", string(jac[2]))
+# write("sparsity.jl", string(jac[1]))
+# write("jacobian.jl", string(jac[2]))
 
-include("jacobian.jl")
+# include("jacobian.jl")
 
 
-using RuntimeGeneratedFunctions
-RuntimeGeneratedFunctions.init(@__MODULE__)
+# using RuntimeGeneratedFunctions
+# RuntimeGeneratedFunctions.init(@__MODULE__)
 
-jacsp = eval(jac[2])
+# jacsp = eval(jac[2])
 
-C0 = SedTrace.C_uni;
+C0 = C_uni;
 dC0 = similar(C0);
 
 jp = prob.f.jac_prototype
+jp.nzval.=1.0;
+jp2=JacType()
+jp2.nzval.=1.0
+
+jp.!=jp2
+
 
 prob.f.jac(jp,C0,nothing,0);
 
 using DelimitedFiles
-writedlm("j.txt",jp)
+writedlm("j.txt",jp-jp2)
+
+maximum(abs.(jp-jacp1))
+@variables t,aa[1:10],bb[1:10];
+cc = @view aa[1:5]
+dd = @view bb[1:5]
+@. dd = cc*dd
+bb
+mul!(aa,ones(10,10),bb)

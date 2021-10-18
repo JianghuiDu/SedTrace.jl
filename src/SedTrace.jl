@@ -3,6 +3,7 @@ module SedTrace
 using Reexport
 using SciMLBase
 using Sundials
+@reexport using ModelingToolkit
 @reexport using BenchmarkTools
 
 @reexport using SparseDiffTools
