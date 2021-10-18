@@ -38,7 +38,6 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         Upbdwth,Lwbdwth = bandwidths(JacPrototype)
         return (
             ODEFunction{true,true}(OdeFun),

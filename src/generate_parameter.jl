@@ -341,22 +341,25 @@ function parameter_code(param_model, substances, options,cf)
     # if speciation not modelled, then the main species is chosen to calculate molecular diffusivity
 
 
-    model_name1 = [
-        "H3PO4",
-        "TH3PO4",
-        "CO2",
-        "TCO2",
-        "H2S",
-        "TH2S",
-        "THSO4",
-        "HSO4",
-        "TNH4",
-        "TH3BO3",
-        "THF",
-        "HF",
-    ]
-    species_name1 =
-        ["HPO4", "HPO4", "HCO3", "HCO3", "HS", "HS", "SO4", "SO4", "NH4", "H3BO3", "F", "F"]
+    # model_name1 = [
+    #     "H3PO4", # if using H3PO4 as the name for total H3PO4 but without speciation
+    #     "TH3PO4", # if using TH3PO4 as the name for total H3PO4 but without speciation
+    #     "CO2",
+    #     "TCO2",
+    #     "H2S",
+    #     "TH2S",
+    #     "THSO4",
+    #     "HSO4",
+    #     "TNH4",
+    #     "TH3BO3",
+    #     "THF",
+    #     "HF",
+    # ]
+    # species_name1 =
+    #     ["HPO4", "HPO4", "HCO3", "HCO3", "HS", "HS", "SO4", "SO4", "NH4", "H3BO3", "F", "F"]
+    model_name1 = ["TH3PO4","TNH4","TH4SiO4","TH2S","THF","TH3BO3","THSO4","TCO2"]
+    species_name1 = ["HPO4","NH4","H4SiO4","HS","F","H3BO3","SO4","HCO3"]
+
     model_name2 = ["Al", "Mo"]
     species_name2 = ["Al(OH)[4]", "MoO4"]
 
@@ -408,7 +411,13 @@ function parameter_code(param_model, substances, options,cf)
         append!(dissolved_summed)
     end
 
-    mdif = molecdiff(35.0, 5.0, 50.0) # cm2 yr-1 in situ diffusivity
+
+    salinity = getNumber!(globalParam, :parameter, "salinity", :value)
+    temperature = getNumber!(globalParam, :parameter, "temp", :value)
+    pressure = getNumber!(globalParam, :parameter, "depth", :value) / 10
+    sw_dens = getNumber!(globalParam, :parameter, "sw_dens", :value)
+
+    mdif = molecdiff(salinity, temperature, pressure) # cm2 yr-1 in situ diffusivity
 
 
     diffusionParam = @chain begin
@@ -444,10 +453,6 @@ function parameter_code(param_model, substances, options,cf)
     #---------------------------------------------------------------------
     # pH calculation of boundary conditions
     #---------------------------------------------------------------------
-    salinity = getNumber!(globalParam, :parameter, "salinity", :value)
-    temperature = getNumber!(globalParam, :parameter, "temp", :value)
-    pressure = getNumber!(globalParam, :parameter, "depth", :value) / 10
-    sw_dens = getNumber!(globalParam, :parameter, "sw_dens", :value)
 
 
     # R"""

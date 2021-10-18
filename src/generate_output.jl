@@ -9,7 +9,7 @@ function generate_output(
 )
 
     nt = length(sol.t)
-    input_path =  modelconfig.ModelDirectory * modelconfig.ModelFile
+    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
         DataFrame(XLSX.gettable(model_config["substances"])...)
@@ -22,8 +22,11 @@ function generate_output(
         # @transform(conversion = string(:conversion))
         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
     end
-    data = DataFrame(XLSX.gettable(model_config["data"])...)
-    data = @subset(data, :site .∈ Ref(site))
+    data = @chain begin
+        DataFrame(XLSX.gettable(model_config["data"])...)
+        @subset(:site .∈ Ref(site))
+        sort!([:substance, :depth])
+    end
 
     df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
@@ -32,8 +35,7 @@ function generate_output(
         [sol.u[j][m] for j = 1:nt,
         # m = ((1:Ngrid) .- 1)nspec .+ i.order]
         # m = eval(Meta.parse("$(i.substance)ID"))]
-         m = IDdict[i.substance]]
-         for i in eachrow(substances)
+         m in IDdict[i.substance]] for i in eachrow(substances)
     )
 
     # compute the output variables using the input profile data
@@ -92,178 +94,274 @@ function generate_output(
                 calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
-            elseif i.type != "dissolved_summed_pH"
-                push!(flux_top_raw_expr,
+        elseif i.type != "dissolved_summed_pH"
+            push!(
+                flux_top_raw_expr,
                 "($header) ->
-                calc_flux_top(phif[1],D$(i.substance)[1],uf[1],x[1:3],$(i.substance),Bc$(i.substance)[1])")
-                push!(flux_top_raw_name,i.substance)
+                calc_flux_top(phif[1],D$(i.substance)[1],uf[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
+            )
+            push!(flux_top_raw_name, i.substance)
+        else
+            EqInv = EquilibriumInvariant(i.substance)
+            if i.substance == "H"
+                append!(
+                    flux_top_raw_expr,
+                    "($header) ->
+                    calc_flux_top(phif[1],D" .* EqInv.species .* "[1],uf[1],x[1:3]," .*
+                    "map((H) ->" .* (EqInv.expr) .* ",H)" .* ",Bc" .* EqInv.species .*
+                    "[1])",
+                )
             else
-                EqInv = EquilibriumInvariant(i.substance)
-                if i.substance == "H"
-                    append!(flux_top_raw_expr,
+                append!(
+                    flux_top_raw_expr,
                     "($header) ->
-                    calc_flux_top(phif[1],D".*EqInv.species.*"[1],uf[1],x[1:3],".* "map((H) ->" .*(EqInv.expr).*",H)".*",Bc".*EqInv.species.*"[1])")
-                else
-                    append!(flux_top_raw_expr,
-                    "($header) ->
-                    calc_flux_top(phif[1],D".*EqInv.species.*"[1],uf[1],x[1:3],".* "map((H,$(i.substance)) ->".*EqInv.expr.*",H,$(i.substance))".*",Bc".*EqInv.species.*"[1])")
-                end
-                append!(flux_top_raw_name,EqInv.species)
+                    calc_flux_top(phif[1],D" .* EqInv.species .* "[1],uf[1],x[1:3]," .*
+                    "map((H,$(i.substance)) ->" .* EqInv.expr .* ",H,$(i.substance))" .*
+                    ",Bc" .* EqInv.species .* "[1])",
+                )
+            end
+            append!(flux_top_raw_name, EqInv.species)
         end
     end
 
-        function_flux_top_raw  = eval.(Meta.parse.(flux_top_raw_expr))
+    function_flux_top_raw = eval.(Meta.parse.(flux_top_raw_expr))
 
-        function flux_top_at_t(time_id,func_id)
-            input_profile_tmp = Tuple(input_profile[j][time_id,1:3] for j in 1:nspec)
-            Base.@invokelatest function_flux_top_raw[func_id](input_profile_tmp...)
-        end
+    function flux_top_at_t(time_id, func_id)
+        input_profile_tmp = Tuple(input_profile[j][time_id, 1:3] for j = 1:nspec)
+        Base.@invokelatest function_flux_top_raw[func_id](input_profile_tmp...)
+    end
 
-        # compute the flux_top of output variables
+    # compute the flux_top of output variables
 
-        input_flux_top = Tuple([flux_top_at_t(i,j) for i in 1:nt] for j in 1:length(flux_top_raw_name))
-        header_flux = join(flux_top_raw_name,",")
+    input_flux_top =
+        Tuple([flux_top_at_t(i, j) for i = 1:nt] for j = 1:length(flux_top_raw_name))
+    header_flux = join(flux_top_raw_name, ",")
 
-        flux_top_expr = []
-        flux_top_name = []
+    flux_top_expr = []
+    flux_top_name = []
 
-        for i in eachrow(@subset(plotting,.!ismissing.(:flux_top)))
-            if (ismissing(i.type) || i.type != "dissolved_summed_pH") && (i.name != "TA")
-                push!(flux_top_expr,
+    for i in eachrow(@subset(plotting, .!ismissing.(:flux_top)))
+        if (ismissing(i.type) || i.type != "dissolved_summed_pH") && (i.name != "TA")
+            push!(
+                flux_top_expr,
                 "($header_flux) ->
                 $(ismissing(i.expression) ?
-                i.name : i.expression)" )
-                push!(flux_top_name, i.name)
-            elseif (!ismissing(i.type) && i.type == "dissolved_summed_pH") && (i.name != "TA")
-                EqInv = EquilibriumInvariant(i.name)
-                push!(flux_top_expr,"($header_flux) -> $(join( EqInv.species,"+"))")
-                push!(flux_top_name, i.name)
-            elseif i.name == "TA"
-                TA_summed = @subset(substances,:type.=="dissolved_summed_pH")
-                TA_str = []
-                for j in TA_summed.substance
-                    EqInv = EquilibriumInvariant(j)
-                    append!(TA_str,EqInv.coef.*"*(".*EqInv.species.*")")
-                end
-                push!(flux_top_name, i.name)
-                push!(flux_top_expr,
-                "($header_flux) ->
-                $(join(TA_str,"+"))" )
-            end
-        end
-
-
-        function_flux_top  = eval.(Meta.parse.(flux_top_expr))
-        flux_top = OrderedDict(flux_top_name .=> [Base.invokelatest.(f,input_flux_top...) for f in function_flux_top])
-
-
-        output = OrderedDict(plotting.name .=> [(profile=profile_raw[i.name].*eval(Meta.parse(i.conversion_profile)),unit_profile=i.unit_profile,flux_top = (haskey(flux_top,i.name) ? (flux_top[i.name].*eval(Meta.parse(i.conversion_flux))) : nothing),flux_top_measured = i.flux_top_measured,unit_flux = (haskey(flux_top,i.name) ? i.unit_flux : nothing)) for i in eachrow(plotting)])
-
-        for (key,value) in output
-            data_select = @subset(data, :substance .== key)
-
-            if size(data_select, 1) != 0
-                if value.unit_profile != data_select.unit[1]
-                    throw(error("Unit of $(value.unit_profile) MUST be the same in plotting and data!"))
-                else
-                    pwdata = select(data_select, :depth, :value,:error,:site)
-                    sort!(pwdata,:depth)
-                end
-            else
-                pwdata = nothing
-            end
-
-            if !isnothing(value.flux_top)
-                flux_top_message = "$(round(value.flux_top[end],sigdigits=2))  vs. $(value.flux_top_measured) \n $(value.unit_flux)"
-            else
-                flux_top_message = nothing
-            end
-
-
-            p = secplot(
-                site,
-                sol.t,
-                x,
-                value.profile',
-                value.flux_top,
-                :roma,
-                "$key $(value.unit_profile)",
-                (0.0, ylim),
-                pwdata,
-                flux_top_message,
-                :identity,
+                i.name : i.expression)",
             )
-            display(p)
-            if saveplt
-                savefig(p,modelconfig.ModelDirectory*"$key.pdf")
+            push!(flux_top_name, i.name)
+        elseif (!ismissing(i.type) && i.type == "dissolved_summed_pH") && (i.name != "TA")
+            EqInv = EquilibriumInvariant(i.name)
+            push!(flux_top_expr, "($header_flux) -> $(join( EqInv.species,"+"))")
+            push!(flux_top_name, i.name)
+        elseif i.name == "TA"
+            TA_summed = @subset(substances, :type .== "dissolved_summed_pH")
+            TA_str = []
+            for j in TA_summed.substance
+                EqInv = EquilibriumInvariant(j)
+                append!(TA_str, EqInv.coef .* "*(" .* EqInv.species .* ")")
             end
+            push!(flux_top_name, i.name)
+            push!(
+                flux_top_expr,
+                "($header_flux) ->
+                $(join(TA_str,"+"))",
+            )
+        end
+    end
 
+
+    function_flux_top = eval.(Meta.parse.(flux_top_expr))
+    flux_top = OrderedDict(
+        flux_top_name .=>
+            [Base.invokelatest.(f, input_flux_top...) for f in function_flux_top],
+    )
+
+
+    output = OrderedDict(
+        plotting.name .=> [
+            (
+                profile = profile_raw[i.name] .* eval(Meta.parse(i.conversion_profile)),
+                unit_profile = i.unit_profile,
+                flux_top = (
+                    haskey(flux_top, i.name) ?
+                    (flux_top[i.name] .* eval(Meta.parse(i.conversion_flux))) :
+                    nothing
+                ),
+                flux_top_measured = i.flux_top_measured,
+                unit_flux = (haskey(flux_top, i.name) ? i.unit_flux : nothing),
+            ) for i in eachrow(plotting)
+        ],
+    )
+
+    for (key, value) in output
+        data_select = @subset(data, :substance .== key)
+
+        if size(data_select, 1) != 0
+            if value.unit_profile != data_select.unit[1]
+                throw(
+                    error(
+                        "Unit of $(value.unit_profile) MUST be the same in plotting and data!",
+                    ),
+                )
+            else
+                pwdata = select(data_select, :depth, :value, :error, :site)
+                sort!(pwdata, :depth)
+            end
+        else
+            pwdata = nothing
         end
 
+        if !isnothing(value.flux_top)
+            flux_top_message = "$(round(value.flux_top[end],sigdigits=2))  vs. $(value.flux_top_measured) \n $(value.unit_flux)"
+        else
+            flux_top_message = nothing
+        end
+
+
+        p = secplot(
+            site,
+            sol.t,
+            x,
+            value.profile',
+            value.flux_top,
+            :roma,
+            "$key $(value.unit_profile)",
+            (0.0, ylim),
+            pwdata,
+            flux_top_message,
+            :identity,
+        )
+        display(p)
+        if saveplt
+            savefig(p, modelconfig.ModelDirectory * "$key.pdf")
+        end
 
     end
 
 
+end
+
+
+function generate_output(
+    modelconfig::ModelConfig,
+    sol::SciMLBase.ODESolution,
+    site::Vector{String},
+    IDdict::Dict,
+    vars::Vector{String},
+    ylim = L::Real,
+    saveplt::Bool = false,
+)
+
+    nt = length(sol.t)
+    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    model_config = XLSX.readxlsx(input_path)
+    substances = @chain begin
+        DataFrame(XLSX.gettable(model_config["substances"])...)
+        @subset(:include .== 1)
+        @subset(:substance .∈ Ref(vars))
+        @transform(:order = 1:length(:substance))
+    end
+
+    df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    # create a tuple of raw model profile results
+    input_profile = Tuple(
+        [sol.u[j][m] for j = 1:nt,
+         m in IDdict[i.substance]] for i in eachrow(substances)
+    )
+
+    for i in eachrow(substances)
+        var_val = hcat([sol.u[j][IDdict[i.substance]] for j = 1:nt]...)
+        p = secplot(
+            site,
+            sol.t,
+            x,
+            var_val,
+            nothing,
+            :roma,
+            i.substance,
+            (0.0, ylim),
+            nothing,
+            nothing,
+            :identity,
+        )
+        display(p)
+    end
+end
 
 
 
-    function secplot(site,t, seddepth, var,var_flux_top, cmap, label, y_lim, pwdata ,flux_top_message , yscale)
-        clims = range(minimum(var), stop = maximum(var), length = 100)
+function secplot(
+    site,
+    t,
+    seddepth,
+    var,
+    var_flux_top,
+    cmap,
+    label,
+    y_lim,
+    pwdata,
+    flux_top_message,
+    yscale,
+)
+    clims = range(minimum(var), stop = maximum(var), length = 100)
 
-        if isnothing(var_flux_top)
-            p0 = plot(legend=false,grid=false,foreground_color_subplot=:white)
-        else
-        p0 = plot(t,
+    if isnothing(var_flux_top)
+        p0 = plot(legend = false, grid = false, foreground_color_subplot = :white)
+    else
+        p0 = plot(
+            t,
             var_flux_top,
-            linecolor="red",
+            linecolor = "red",
             xlabel = "Time (yr)",
             ylabel = "Benthic flux",
-            title = flux_top_message)
-        end
-        p1 = contour(
-            t,
-            seddepth,
-            var,
-            levels = 10,
-            fill = true,
-            yflip = true,
-            linecolor = "black",
-            fillcolor = cmap,
-            ylims = y_lim,
-            xlabel = "Time (yr)",
-            ylabel = "Depth (cm)",
-            title = label,
-            yscale = yscale,
+            title = flux_top_message,
         )
-        p2 = plot(
-            var[:, 1],
-            seddepth,
-            linecolor = "black",
-            yflip = true,
-            ylims = y_lim,
-            label = "initial",
-            ylabel = "Depth (cm)",
-            title = label,
-            yscale = yscale,
-            legend = :outerright,
-        )
-        plot!(
-            p2,
-            var[:, end],
-            seddepth,
-            linecolor = "red",
-            yflip = true,
-            ylims = y_lim,
-            label = "model",
-            ylabel = "Depth (cm)",
-            title = label,
-            yscale = yscale,
-            legend = :right,
-            dpi = 200,
-        )
-        if !isnothing(pwdata)
-            if any(ismissing.(pwdata.error))
-                @df pwdata plot!(
+    end
+    p1 = contour(
+        t,
+        seddepth,
+        var,
+        levels = 10,
+        fill = true,
+        yflip = true,
+        linecolor = "black",
+        fillcolor = cmap,
+        ylims = y_lim,
+        xlabel = "Time (yr)",
+        ylabel = "Depth (cm)",
+        title = label,
+        yscale = yscale,
+    )
+    p2 = plot(
+        var[:, 1],
+        seddepth,
+        linecolor = "black",
+        yflip = true,
+        ylims = y_lim,
+        label = "initial",
+        ylabel = "Depth (cm)",
+        title = label,
+        yscale = yscale,
+        legend = :outerright,
+    )
+    plot!(
+        p2,
+        var[:, end],
+        seddepth,
+        linecolor = "red",
+        yflip = true,
+        ylims = y_lim,
+        label = "model",
+        ylabel = "Depth (cm)",
+        title = label,
+        yscale = yscale,
+        legend = :right,
+        dpi = 200,
+    )
+    if !isnothing(pwdata)
+        if any(ismissing.(pwdata.error))
+            @df pwdata plot!(
                 p2,
                 :value,
                 :depth,
@@ -275,14 +373,14 @@ function generate_output(
                 ylims = y_lim,
                 yscale = yscale,
                 markersize = 2,
-                orientation = :vertical
+                orientation = :vertical,
             )
-            else
-                @df pwdata plot!(
+        else
+            @df pwdata plot!(
                 p2,
                 :value,
                 :depth,
-                xerror = (:error,:error),
+                xerror = (:error, :error),
                 seriestype = :path,
                 group = :site,
                 linestyle = :solid,
@@ -293,30 +391,30 @@ function generate_output(
                 markersize = 2,
                 markerstrokewidth = 0.5,
                 markerstrokecolor = "blue",
-                orientation = :vertical
+                orientation = :vertical,
             )
-            end
         end
+    end
 
-        # if !isnothing(flux_top_message)
-        #     annotate!(p0,(0.0,-y_lim[2]*0.002),text(flux_top_message,:red,:left,8))
-        # end
-        p = plot(
-            p1,
-            p2,
-            p0,
-            layout=grid(3, 1, heights=[0.45, 0.45,0.1]),
-            guidefontsize = 12,
-            colorbar_tickfontsize = 6,
-            colorbar_titlefontsize = 6,
-            legendfontsize = 6,
-            legendtitlefontsize = 6,
-            titlefontsize = 12,
-            tickfontsize = 6,
-            margin = 2.0mm,
-            background_color_legend = nothing,
-            foreground_color_legend = nothing,
-        )
+    # if !isnothing(flux_top_message)
+    #     annotate!(p0,(0.0,-y_lim[2]*0.002),text(flux_top_message,:red,:left,8))
+    # end
+    p = plot(
+        p1,
+        p2,
+        p0,
+        layout = grid(3, 1, heights = [0.45, 0.45, 0.1]),
+        guidefontsize = 12,
+        colorbar_tickfontsize = 6,
+        colorbar_titlefontsize = 6,
+        legendfontsize = 6,
+        legendtitlefontsize = 6,
+        titlefontsize = 12,
+        tickfontsize = 6,
+        margin = 2.0mm,
+        background_color_legend = nothing,
+        foreground_color_legend = nothing,
+    )
 end
 
 

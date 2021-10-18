@@ -21,7 +21,6 @@ species = [
     "HPO4",
     "H2PO4",
     "H3PO4",
-    "TH3PO4",
     "CO2",
     "HCO3",
     "CO3",
@@ -32,7 +31,6 @@ species = [
     "Ca",
     "H4SiO4",
     "H3SiO4",
-    "TH4SiO4",
     "HF",
     "F",
     "OH",
@@ -51,7 +49,7 @@ species = [
 # return molecular diffusion in cm2/yr
 function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vector{String}=species)
     nspec = length(species)
-    diffcoef = Array{Float64}(undef, nspec)
+    diffcoef = fill(NaN,nspec)#Array{Float64}(undef, nspec)
     mdif = Dict(species[i] => diffcoef[i] for i = 1:nspec)
 
     # first calculate diffusivity at in situ temperature but 0 salinity and 1 Patm
@@ -125,12 +123,12 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
       mu_S  = viscosity(SS, tS, Patm)
       mdif["H4SiO4"] = D_H4SiO4 * (mu_S / mu_0) * (TK / (tS + 273.15)) 
     end
-    if haskey(mdif, "TH4SiO4")
+    if haskey(mdif, "H3SiO4")
       D_H4SiO4 = 1.0E-05
       tS    = 25.0
       SS    = 36.1
       mu_S  = viscosity(SS, tS, Patm)
-      mdif["TH4SiO4"] = D_H4SiO4 * (mu_S / mu_0) * (TK / (tS + 273.15)) 
+      mdif["H3SiO4"] = D_H4SiO4 * (mu_S / mu_0) * (TK / (tS + 273.15)) 
     end
 
 
@@ -176,10 +174,10 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
         end
     end
 
-    if haskey(mdif, "TH3PO4")
-      i = findfirst(x->x=="HPO4",ion)
-     mdif["TH3PO4"] = (m0[i]+m1[i]*temp)*1e-6
-   end
+  #   if haskey(mdif, "TH3PO4")
+  #     i = findfirst(x->x=="HPO4",ion)
+  #    mdif["TH3PO4"] = (m0[i]+m1[i]*temp)*1e-6
+  #  end
 
 
     if haskey(mdif, "Nd")

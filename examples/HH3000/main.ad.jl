@@ -10,12 +10,11 @@ modelconfig = ModelConfig(
     modeldirectory,
     modelfile,
     modelname,
-    UpdateParamOnly = true,
+    UpdateParamOnly = false,
     JacType = :sparse_banded,
     Template = true,
     AutoDiff = true,
     CompleteFlux = false,
-    AssembleParam = false
 )
 
 @time generate_code(modelconfig)
