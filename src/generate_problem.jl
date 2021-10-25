@@ -62,6 +62,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
         prec = default_prec(p_prec)
+
         return (
             ODEFunction{true,true}(OdeFun),
             CVODE_BDF(
@@ -69,7 +70,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
                 prec = prec,
                 psetup = psetup,
                 prec_side = 2,
-                krylov_dim = Ngrid,
+                krylov_dim = Int(0.1*size(JacPrototype,1)),
             ),
         )
     end
@@ -105,7 +106,8 @@ function modelrun(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solve
     )
 
     println("$(sol.retcode) at t = $(sol.t[end]).")
-    return sol
+    println(sol.destats)
+    return SolutionConfig(sol,x,L,Ngrid,IDdict)
 end
 
 nothing

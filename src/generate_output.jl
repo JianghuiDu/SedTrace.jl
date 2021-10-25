@@ -2,13 +2,14 @@
 
 function generate_output(
     modelconfig::ModelConfig,
-    sol::SciMLBase.ODESolution,
+    sol::SolutionConfig,
     site::Vector{String},
+    vars::Vector,
     ylim = L::Real,
     saveplt::Bool = false,
 )
 
-    nt = length(sol.t)
+    nt = length(sol.sol.t)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -22,20 +23,27 @@ function generate_output(
         # @transform(conversion = string(:conversion))
         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
     end
+
+    if !isempty(vars)
+        substances = @subset(substances,:substance .∈  Ref(vars))
+        plotting = @subset(plotting,:name .∈  Ref(vars))
+    end
+
     data = @chain begin
         DataFrame(XLSX.gettable(model_config["data"])...)
         @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
     end
 
+    nspec = length(substances.substance)
     df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     # create a tuple of raw model profile results
     input_profile = Tuple(
-        [sol.u[j][m] for j = 1:nt,
+        [sol.sol.u[j][m] for j = 1:nt,
         # m = ((1:Ngrid) .- 1)nspec .+ i.order]
         # m = eval(Meta.parse("$(i.substance)ID"))]
-         m in IDdict[i.substance]] for i in eachrow(substances)
+         m in sol.IDdict[i.substance]] for i in eachrow(substances)
     )
 
     # compute the output variables using the input profile data
@@ -220,8 +228,8 @@ function generate_output(
 
         p = secplot(
             site,
-            sol.t,
-            x,
+            sol.sol.t,
+            sol.x,
             value.profile',
             value.flux_top,
             :roma,
@@ -244,15 +252,14 @@ end
 
 function generate_output(
     modelconfig::ModelConfig,
-    sol::SciMLBase.ODESolution,
+    sol::SolutionConfig,
     site::Vector{String},
-    IDdict::Dict,
     vars::Vector{String},
-    ylim = L::Real,
+    # ylim = L::Real,
     saveplt::Bool = false,
 )
 
-    nt = length(sol.t)
+    nt = length(sol.sol.t)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -264,23 +271,17 @@ function generate_output(
 
     df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
-    # create a tuple of raw model profile results
-    input_profile = Tuple(
-        [sol.u[j][m] for j = 1:nt,
-         m in IDdict[i.substance]] for i in eachrow(substances)
-    )
-
     for i in eachrow(substances)
-        var_val = hcat([sol.u[j][IDdict[i.substance]] for j = 1:nt]...)
+        var_val = hcat([sol.sol.u[j][sol.IDdict[i.substance]] for j = 1:nt]...)
         p = secplot(
             site,
-            sol.t,
-            x,
+            sol.sol.t,
+            sol.x,
             var_val,
             nothing,
             :roma,
             i.substance,
-            (0.0, ylim),
+            (0.0, sol.L),
             nothing,
             nothing,
             :identity,

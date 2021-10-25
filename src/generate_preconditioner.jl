@@ -43,8 +43,9 @@
 function J2M!(spmat::SparseMatrixCSC, gamma) #M=I-gamma*J
     rows = rowvals(spmat)
     vals = nonzeros(spmat)
-    for j = 1:Nmat
-        for i in nzrange(spmat, j)
+    Nmat = size(spmat,1)
+    @inbounds for j = 1:Nmat
+        @inbounds for i in nzrange(spmat, j)
             id = rows[i] == j ? 1 : 0
             vals[i] = id - gamma * vals[i]
         end
@@ -53,7 +54,7 @@ end
 
 
 function default_prec(p_prec)
-    return (z, r, p, t, y, fy, gamma, delta, lr) -> LinearAlgebra.ldiv!(z, p_prec, r)
+    return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec, r)
 end
 
 # function default_psetup(p_prec::TridiagonalLUCache)

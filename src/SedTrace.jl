@@ -11,7 +11,7 @@ using Sundials
 
 @reexport using SparseArrays
 @reexport using BandedMatrices
-@reexport using LinearAlgebra
+@reexport import LinearAlgebra:Tridiagonal,mul!,ldiv!
 using ILUZero
 
 
@@ -19,17 +19,16 @@ using ILUZero
 using DataFrames
 using DataFramesMeta
 @reexport using XLSX
-using Printf
-using JuliaFormatter
-using DataStructures
+import Printf:@sprintf
+import JuliaFormatter:format_file
+import DataStructures:OrderedDict
 
-@reexport using Plots
-using Plots.PlotMeasures
-@reexport using StatsPlots
+@reexport import Plots:plot,contour,plot!,grid,gr,savefig
+@reexport import Plots.PlotMeasures:mm
+@reexport import StatsPlots:@df
 
 using RCall
-using Conda
-using SymPy
+import SymPy:simplify,solve,nsimplify,sympify,symbols
 
 # using CSV
 
@@ -81,7 +80,7 @@ const ⊗ = *
 export ⊕, ⊗
 
 
-export SolverConfig, ModelConfig
+export SolverConfig, ModelConfig, SolutionConfig
 
 export generate_code
 export modelrun

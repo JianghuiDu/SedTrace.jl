@@ -106,3 +106,13 @@ function SolverConfig(
     )
 end
 
+
+
+struct SolutionConfig
+    sol::SciMLBase.ODESolution
+    x::Vector{Float64}
+    L::Float64
+    Ngrid::Int
+    IDdict::Dict{String, StepRange{Int64, Int64}}
+end
+

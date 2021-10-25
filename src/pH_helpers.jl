@@ -6,6 +6,7 @@ struct EquilibriumInvariant
     coef::Vector{String} # subspecies coefficient in TA definition
     dTAdsum::String
     dTAdH::String
+    diss_const::Vector{String}
 end
 
 list_summed_species =
@@ -24,6 +25,7 @@ function EquilibriumInvariant(Tsum)
             ["1", "2", "0"],
             "KCO2*(H + 2*KHCO3)/(H^2 + H*KCO2 + KCO2*KHCO3)",
             "-KCO2*TCO2*(H^2 + 4*H*KHCO3 + KCO2*KHCO3)/(H^2+ H*KCO2 + KCO2*KHCO3)^2",
+            ["KCO2","KHCO3"]
         )
     elseif Tsum == "TNH4"
         return EquilibriumInvariant(
@@ -33,6 +35,7 @@ function EquilibriumInvariant(Tsum)
             ["1", "0"],
             "KNH4/(H + KNH4)",
             "-KNH4 * TNH4 / (H + KNH4)^2",
+            ["KNH4"]
         )
     elseif Tsum == "TH3PO4"
         return EquilibriumInvariant(
@@ -51,6 +54,7 @@ function EquilibriumInvariant(Tsum)
             "-KH2PO4*KH3PO4*TH3PO4*(2*H^3 + H^2*KH3PO4 - KH2PO4*KH3PO4*KHPO4)/(H^3 + H^2*KH3PO4 + H*KH2PO4*KH3PO4 + KH2PO4*KH3PO4*KHPO4)^2 +
             -2*KH2PO4*KH3PO4*KHPO4*TH3PO4*(3*H^2 + 2*H*KH3PO4 + KH2PO4*KH3PO4)/(H^3 + H^2*KH3PO4 + H*KH2PO4*KH3PO4 + KH2PO4*KH3PO4*KHPO4)^2 +
             -H^2*KH3PO4*TH3PO4*(H^2 + 2*H*KH2PO4 + 3*KH2PO4*KHPO4)/(H^3 + H^2*KH3PO4 + H*KH2PO4*KH3PO4 + KH2PO4*KH3PO4*KHPO4)^2",
+            ["KH3PO4","KH2PO4","KHPO4"]
         )
     elseif Tsum == "TH2S"
         return EquilibriumInvariant(
@@ -60,6 +64,7 @@ function EquilibriumInvariant(Tsum)
             ["0", "1"],
             "KH2S / (H + KH2S)",
             "-KH2S * TH2S / (H + KH2S)^2",
+            ["KH2S"]
         )
     elseif Tsum == "THSO4"
         return EquilibriumInvariant(
@@ -69,6 +74,7 @@ function EquilibriumInvariant(Tsum)
             ["-1", "0"],
             "-H/(H + KHSO4)",
             "-KHSO4 * THSO4 / (H + KHSO4)^2",
+            ["KHSO4"]
         )
     elseif Tsum == "TH3BO3"
         return EquilibriumInvariant(
@@ -78,6 +84,7 @@ function EquilibriumInvariant(Tsum)
             ["0", "1"],
             "KH3BO3 / (H + KH3BO3)",
             "-KH3BO3 * TH3BO3 / (H + KH3BO3)^2",
+            ["KH3BO3"]
         )
     elseif Tsum == "THF"
         return EquilibriumInvariant(
@@ -87,6 +94,7 @@ function EquilibriumInvariant(Tsum)
             ["-1", "0"],
             "-H/(H + KHF)",
             "-KHF * THF / (H + KHF)^2",
+            ["KHF"]
         )
     elseif Tsum == "TH4SiO4"
         return EquilibriumInvariant(
@@ -96,6 +104,7 @@ function EquilibriumInvariant(Tsum)
             ["0", "1"],
             "KH4SiO4 / (H + KH4SiO4)",
             "-KH4SiO4 * TH4SiO4 / (H + KH4SiO4)^2",
+            ["KH4SiO4"]
         )
     elseif Tsum == "H"
         return EquilibriumInvariant(
@@ -105,6 +114,7 @@ function EquilibriumInvariant(Tsum)
             ["-1", "1"],
             "",
             "-(H^2 + KH2O) / H^2",
+            ["KH2O"]
         )
     end
 

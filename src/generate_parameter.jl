@@ -9,14 +9,6 @@ function parameter_code(param_model, substances, options,cf)
             end
         end
     end
-    # for i in eachrow(param_model)
-    #     if typeof(i.value) <: Real
-    #         if i.value == 0
-    #             i.value = 3eps()
-    #         end
-    #     end
-    # end
-
 
     uniform_grid = getval!(options, :options, "uniform_grid", :value) == "yes"
     constant_porosity_profile =
@@ -429,6 +421,7 @@ function parameter_code(param_model, substances, options,cf)
     bcParam = @chain begin
         @subset(param_model, :class .== "BoundaryCondition")
         select(:type, :parameter, :value, :unit, :comment)
+        @subset(:parameter .!= "delta")
     end
 
 
@@ -453,30 +446,6 @@ function parameter_code(param_model, substances, options,cf)
     #---------------------------------------------------------------------
     # pH calculation of boundary conditions
     #---------------------------------------------------------------------
-
-
-    # R"""
-    # library(seacarb)
-    # diss_const <- function(S,T,P){
-    #   KW = Kw(S,T,P,"F")
-    #   KBOH3 = Kb(S,T,P,"F")
-    #   KCO2 = K1(S,T,P,"x","F")
-    #   KHCO3 = K2(S,T,P,"x","F")
-    #   KH2S = Khs(S,T,P,"F")
-    #   KHSO4 = Ks(S,T,P)
-    #   KCaCO3 = Kspc(S,T,P)
-    #   KH3PO4 = K1p(S,T,P,"F")
-    #   KH2PO4 = K2p(S,T,P,"F")
-    #   KHPO4 = K3p(S,T,P,"F")
-    #   KNH4 = Kn(S,T,P,"F")
-    #   KH4SiO4 = Ksi(S,T,P,"F")
-    #   KH3SiO4 = K2si(S,T,P,"F")
-    #   KHF = Kf(S,T,P,"x","F")
-    #   return(data.frame(KW,KBOH3,KCO2,KHCO3,KH2S,KHSO4,KCaCO3,KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4,KH3SiO4,KHF))
-    # }
-    # K_diss <- diss_const($salinity,$temperature,$pressure)/$sw_dens
-    # # units in (mmol cm^3)^2
-    # """
     R"""
     library(AquaEnv)
     diss_const <- function(salinity,temp,pres){
@@ -502,7 +471,7 @@ function parameter_code(param_model, substances, options,cf)
 
     K_diss = @rget K_diss
 
-    KW = K_diss.KW[1]
+    KH2O = K_diss.KW[1]
     KCO2 = K_diss.KCO2[1]
     KHCO3 = K_diss.KHCO3[1]
     KH2S = K_diss.KH2S[1]
@@ -517,6 +486,7 @@ function parameter_code(param_model, substances, options,cf)
 
     KpHParam = newdf()
 
+    Ks = Dict("KH2O"=>KH2O,"KCO2"=>KCO2,"KHCO3"=>KHCO3,"KH2S"=>KH2S,"KH3BO3"=>KH3BO3,"KHSO4"=>KHSO4,"KHF"=>KHF,"KNH4"=>KNH4,"KH3PO4"=>KH3PO4,"KH2PO4"=>KH2PO4,"KHPO4"=>KHPO4,"KH4SiO4"=>KH4SiO4)
 
 
     function varsubscript(bc_type, top)
@@ -541,487 +511,556 @@ function parameter_code(param_model, substances, options,cf)
         end
     end
 
-    if "H" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "H")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            push!(
-                bcParam,
-                ["const", "H" * i, @sprintf("%.16E", H_tmp,), "mmol cm^-3", comment(i, "H")],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "OH" * i,
-                    @sprintf("%.16E", KW / H_tmp,),
-                    "mmol cm^-3",
-                    comment(i, "OH"),
-                ],
-            )
+    
+function pH_param(substances,bcParam,KpHParam,summed_species,Ks)
+    df = @subset(substances, :substance .== summed_species)
+    vscptTOP = varsubscript(df.top_bc_type[1], true)
+    vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    vscpt = [vscptTOP, vscptBOT]
+    vscpt = filter!(x -> !isnothing(x), vscpt)
+    eqinv = EquilibriumInvariant(summed_species)
+
+    p = 0
+    for k in eqinv.diss_const
+        p+=1
+    push!(
+        KpHParam,
+        [
+            "const",
+            k,
+            @sprintf("%.16E", Ks[k]),
+            "",
+            "$(summed_species) $(p)th dissociation constant",
+        ],
+    )
+    end
+
+    for i in vscpt
+        H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+        if summed_species != "H"
+        Summed_tmp = getNumber!(bcParam, :parameter, summed_species * i, :value)
         end
+
+        for j in 1:length(eqinv.species)
+    
+            expr = replace(eqinv.expr[j],r"\bH\b"=>"$H_tmp")
+            if summed_species != "H"
+            expr = replace(expr,Regex("\\b$(summed_species)\\b")=>"$Summed_tmp")
+            end
+            for (key,value) in Ks
+                expr = replace(expr,Regex("\\b$key\\b") => "$value")
+            end
+            res = eval(Meta.parse(expr))
         push!(
-            KpHParam,
+            bcParam,
             [
                 "const",
-                "KH2O",
-                @sprintf("%.16E", KW,),
+                eqinv.species[j] * i,
+                @sprintf(
+                    "%.16E",
+                    res,
+                ),
                 "mmol cm^-3",
-                "Water dissociation constant",
+                comment(i, eqinv.species[j]),
             ],
         )
-
+        end
     end
 
 
-    if "TCO2" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TCO2")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TCO2_tmp = getNumber!(bcParam, :parameter, "TCO2" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "CO2" * i,
-                    @sprintf(
-                        "%.16E",
-                        H_tmp^2 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "CO2"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "HCO3" * i,
-                    @sprintf(
-                        "%.16E",
-                        H_tmp * KCO2 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "HCO3"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "CO3" * i,
-                    @sprintf(
-                        "%.16E",
-                        KCO2 * KHCO3 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "CO3"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KCO2",
-                @sprintf("%.16E", KCO2,),
-                "mmol cm^-3",
-                "H2CO3 dissociation constant",
-            ],
-        )
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KHCO3",
-                @sprintf("%.16E", KHCO3,),
-                "mmol cm^-3",
-                "HCO3 dissociation constant",
-            ],
-        )
+end
 
+    dissolved_summed_all = @chain begin
+        substances
+        @subset(:type .∈ Ref(["dissolved_summed","dissolved_summed_pH"]))
+    end
+    
+    for m in dissolved_summed_all.substance
+        pH_param(substances,bcParam,KpHParam,m,Ks)
     end
 
 
+    # if "H" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "H")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         push!(
+    #             bcParam,
+    #             ["const", "H" * i, @sprintf("%.16E", H_tmp,), "mmol cm^-3", comment(i, "H")],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "OH" * i,
+    #                 @sprintf("%.16E", KW / H_tmp,),
+    #                 "mmol cm^-3",
+    #                 comment(i, "OH"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH2O",
+    #             @sprintf("%.16E", KW,),
+    #             "mmol cm^-3",
+    #             "Water dissociation constant",
+    #         ],
+    #     )
 
-    if "TH2S" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TH2S")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TH2S_tmp = getNumber!(bcParam, :parameter, "TH2S" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H2S" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KH2S) * TH2S_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H2S"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "HS" * i,
-                    @sprintf("%.16E", KH2S / (H_tmp + KH2S) * TH2S_tmp),
-                    "mmol cm^-3",
-                    comment(i, "HS"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KH2S",
-                @sprintf("%.16E", KH2S,),
-                "mmol cm^-3",
-                "H2S dissociation constant",
-            ],
-        )
-
-    end
+    # end
 
 
+    # if "TCO2" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TCO2")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TCO2_tmp = getNumber!(bcParam, :parameter, "TCO2" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "CO2" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     H_tmp^2 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "CO2"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "HCO3" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     H_tmp * KCO2 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "HCO3"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "CO3" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     KCO2 * KHCO3 / (H_tmp^2 + H_tmp * KCO2 + KCO2 * KHCO3) * TCO2_tmp,
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "CO3"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KCO2",
+    #             @sprintf("%.16E", KCO2,),
+    #             "mmol cm^-3",
+    #             "H2CO3 dissociation constant",
+    #         ],
+    #     )
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KHCO3",
+    #             @sprintf("%.16E", KHCO3,),
+    #             "mmol cm^-3",
+    #             "HCO3 dissociation constant",
+    #         ],
+    #     )
 
-    if "TH3BO3" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TH3BO3")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TH3BO3_tmp = getNumber!(bcParam, :parameter, "TH3BO3" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H3BO3" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KH3BO3) * TH3BO3_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H3BO3"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H4BO4" * i,
-                    @sprintf("%.16E", KH3BO3 / (H_tmp + KH3BO3) * TH3BO3_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H4BO4"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KH3BO3",
-                @sprintf("%.16E", KH3BO3,),
-                "mmol cm^-3",
-                "H3BO3 dissociation constant",
-            ],
-        )
-    end
-
-
-    if "TNH4" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TNH4")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TNH4_tmp = getNumber!(bcParam, :parameter, "TNH4" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "NH4" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KNH4) * TNH4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "NH4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "NH3" * i,
-                    @sprintf("%.16E", KNH4 / (H_tmp + KNH4) * TNH4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "NH3"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KNH4",
-                @sprintf("%.16E", KNH4,),
-                "mmol cm^-3",
-                "NH4 dissociation constant",
-            ],
-        )
-    end
-
-    if "TH3PO4" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TH3PO4")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TH3PO4_tmp = getNumber!(bcParam, :parameter, "TH3PO4" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H3PO4" * i,
-                    @sprintf(
-                        "%.16E",
-                        H_tmp^3 / (
-                            H_tmp^3 +
-                            H_tmp^2 * KH3PO4 +
-                            H_tmp * KH3PO4 * KH2PO4 +
-                            KH3PO4 * KH2PO4 * KHPO4
-                        ) * TH3PO4_tmp
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "H3PO4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H2PO4" * i,
-                    @sprintf(
-                        "%.16E",
-                        H_tmp^2 * KH3PO4 / (
-                            H_tmp^3 +
-                            H_tmp^2 * KH3PO4 +
-                            H_tmp * KH3PO4 * KH2PO4 +
-                            KH3PO4 * KH2PO4 * KHPO4
-                        ) * TH3PO4_tmp
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "H2PO4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "HPO4" * i,
-                    @sprintf(
-                        "%.16E",
-                        H_tmp * KH3PO4 * KH2PO4 / (
-                            H_tmp^3 +
-                            H_tmp^2 * KH3PO4 +
-                            H_tmp * KH3PO4 * KH2PO4 +
-                            KH3PO4 * KH2PO4 * KHPO4
-                        ) * TH3PO4_tmp
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "HPO4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "PO4" * i,
-                    @sprintf(
-                        "%.16E",
-                        KH3PO4 * KH2PO4 * KHPO4 / (
-                            H_tmp^3 +
-                            H_tmp^2 * KH3PO4 +
-                            H_tmp * KH3PO4 * KH2PO4 +
-                            KH3PO4 * KH2PO4 * KHPO4
-                        ) * TH3PO4_tmp
-                    ),
-                    "mmol cm^-3",
-                    comment(i, "PO4"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KH3PO4",
-                @sprintf("%.16E", KH3PO4,),
-                "mmol cm^-3",
-                "H3PO4 dissociation constant",
-            ],
-        )
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KH2PO4",
-                @sprintf("%.16E", KH2PO4,),
-                "mmol cm^-3",
-                "H2PO4 dissociation constant",
-            ],
-        )
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KHPO4",
-                @sprintf("%.16E", KHPO4,),
-                "mmol cm^-3",
-                "HPO4 dissociation constant",
-            ],
-        )
-    end
+    # end
 
 
-    if "THF" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "THF")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            THF_tmp = getNumber!(bcParam, :parameter, "THF" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "HF" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KHF) * THF_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H2S"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "F" * i,
-                    @sprintf("%.16E", KHF / (H_tmp + KHF) * THF_tmp),
-                    "mmol cm^-3",
-                    comment(i, "F"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KHF",
-                @sprintf("%.16E", KHF,),
-                "mmol cm^-3",
-                "HF dissociation constant",
-            ],
-        )
-    end
 
-    if "TH4SiO4" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "TH4SiO4")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            TH4SiO4_tmp = getNumber!(bcParam, :parameter, "TH4SiO4" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H4SiO4" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KH4SiO4) * TH4SiO4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H4SiO4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "H3SiO4" * i,
-                    @sprintf("%.16E", KH4SiO4 / (H_tmp + KH4SiO4) * TH4SiO4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "H3SiO4"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KH4SiO4",
-                @sprintf("%.16E", KH4SiO4,),
-                "mmol cm^-3",
-                "H4SiO4 dissociation constant",
-            ],
-        )
-    end
+    # if "TH2S" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TH2S")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TH2S_tmp = getNumber!(bcParam, :parameter, "TH2S" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H2S" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KH2S) * TH2S_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H2S"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "HS" * i,
+    #                 @sprintf("%.16E", KH2S / (H_tmp + KH2S) * TH2S_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "HS"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH2S",
+    #             @sprintf("%.16E", KH2S,),
+    #             "mmol cm^-3",
+    #             "H2S dissociation constant",
+    #         ],
+    #     )
 
-    if "THSO4" ∈ dissolved_summed.substance
-        df = @subset(substances, :substance .== "THSO4")
-        vscptTOP = varsubscript(df.top_bc_type[1], true)
-        vscptBOT = varsubscript(df.bot_bc_type[1], false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for i in vscpt
-            H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
-            THSO4_tmp = getNumber!(bcParam, :parameter, "THSO4" * i, :value)
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "HSO4" * i,
-                    @sprintf("%.16E", H_tmp / (H_tmp + KHSO4) * THSO4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "HSO4"),
-                ],
-            )
-            push!(
-                bcParam,
-                [
-                    "const",
-                    "SO4" * i,
-                    @sprintf("%.16E", KHSO4 / (H_tmp + KHSO4) * THSO4_tmp),
-                    "mmol cm^-3",
-                    comment(i, "SO4"),
-                ],
-            )
-        end
-        push!(
-            KpHParam,
-            [
-                "const",
-                "KHSO4",
-                @sprintf("%.16E", KHSO4,),
-                "mmol cm^-3",
-                "HSO4 dissociation constant",
-            ],
-        )
-    end
+    # end
+
+
+
+    # if "TH3BO3" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TH3BO3")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TH3BO3_tmp = getNumber!(bcParam, :parameter, "TH3BO3" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H3BO3" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KH3BO3) * TH3BO3_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H3BO3"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H4BO4" * i,
+    #                 @sprintf("%.16E", KH3BO3 / (H_tmp + KH3BO3) * TH3BO3_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H4BO4"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH3BO3",
+    #             @sprintf("%.16E", KH3BO3,),
+    #             "mmol cm^-3",
+    #             "H3BO3 dissociation constant",
+    #         ],
+    #     )
+    # end
+
+
+    # if "TNH4" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TNH4")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TNH4_tmp = getNumber!(bcParam, :parameter, "TNH4" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "NH4" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KNH4) * TNH4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "NH4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "NH3" * i,
+    #                 @sprintf("%.16E", KNH4 / (H_tmp + KNH4) * TNH4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "NH3"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KNH4",
+    #             @sprintf("%.16E", KNH4,),
+    #             "mmol cm^-3",
+    #             "NH4 dissociation constant",
+    #         ],
+    #     )
+    # end
+
+    # if "TH3PO4" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TH3PO4")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TH3PO4_tmp = getNumber!(bcParam, :parameter, "TH3PO4" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H3PO4" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     H_tmp^3 / (
+    #                         H_tmp^3 +
+    #                         H_tmp^2 * KH3PO4 +
+    #                         H_tmp * KH3PO4 * KH2PO4 +
+    #                         KH3PO4 * KH2PO4 * KHPO4
+    #                     ) * TH3PO4_tmp
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H3PO4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H2PO4" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     H_tmp^2 * KH3PO4 / (
+    #                         H_tmp^3 +
+    #                         H_tmp^2 * KH3PO4 +
+    #                         H_tmp * KH3PO4 * KH2PO4 +
+    #                         KH3PO4 * KH2PO4 * KHPO4
+    #                     ) * TH3PO4_tmp
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H2PO4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "HPO4" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     H_tmp * KH3PO4 * KH2PO4 / (
+    #                         H_tmp^3 +
+    #                         H_tmp^2 * KH3PO4 +
+    #                         H_tmp * KH3PO4 * KH2PO4 +
+    #                         KH3PO4 * KH2PO4 * KHPO4
+    #                     ) * TH3PO4_tmp
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "HPO4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "PO4" * i,
+    #                 @sprintf(
+    #                     "%.16E",
+    #                     KH3PO4 * KH2PO4 * KHPO4 / (
+    #                         H_tmp^3 +
+    #                         H_tmp^2 * KH3PO4 +
+    #                         H_tmp * KH3PO4 * KH2PO4 +
+    #                         KH3PO4 * KH2PO4 * KHPO4
+    #                     ) * TH3PO4_tmp
+    #                 ),
+    #                 "mmol cm^-3",
+    #                 comment(i, "PO4"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH3PO4",
+    #             @sprintf("%.16E", KH3PO4,),
+    #             "mmol cm^-3",
+    #             "H3PO4 dissociation constant",
+    #         ],
+    #     )
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH2PO4",
+    #             @sprintf("%.16E", KH2PO4,),
+    #             "mmol cm^-3",
+    #             "H2PO4 dissociation constant",
+    #         ],
+    #     )
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KHPO4",
+    #             @sprintf("%.16E", KHPO4,),
+    #             "mmol cm^-3",
+    #             "HPO4 dissociation constant",
+    #         ],
+    #     )
+    # end
+
+
+    # if "THF" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "THF")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         THF_tmp = getNumber!(bcParam, :parameter, "THF" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "HF" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KHF) * THF_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H2S"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "F" * i,
+    #                 @sprintf("%.16E", KHF / (H_tmp + KHF) * THF_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "F"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KHF",
+    #             @sprintf("%.16E", KHF,),
+    #             "mmol cm^-3",
+    #             "HF dissociation constant",
+    #         ],
+    #     )
+    # end
+
+    # if "TH4SiO4" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "TH4SiO4")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         TH4SiO4_tmp = getNumber!(bcParam, :parameter, "TH4SiO4" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H4SiO4" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KH4SiO4) * TH4SiO4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H4SiO4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "H3SiO4" * i,
+    #                 @sprintf("%.16E", KH4SiO4 / (H_tmp + KH4SiO4) * TH4SiO4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "H3SiO4"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KH4SiO4",
+    #             @sprintf("%.16E", KH4SiO4,),
+    #             "mmol cm^-3",
+    #             "H4SiO4 dissociation constant",
+    #         ],
+    #     )
+    # end
+
+    # if "THSO4" ∈ dissolved_summed_all.substance
+    #     df = @subset(substances, :substance .== "THSO4")
+    #     vscptTOP = varsubscript(df.top_bc_type[1], true)
+    #     vscptBOT = varsubscript(df.bot_bc_type[1], false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for i in vscpt
+    #         H_tmp = 10^(-1 * getNumber!(bcParam, :parameter, "pH" * i, :value))
+    #         THSO4_tmp = getNumber!(bcParam, :parameter, "THSO4" * i, :value)
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "HSO4" * i,
+    #                 @sprintf("%.16E", H_tmp / (H_tmp + KHSO4) * THSO4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "HSO4"),
+    #             ],
+    #         )
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 "SO4" * i,
+    #                 @sprintf("%.16E", KHSO4 / (H_tmp + KHSO4) * THSO4_tmp),
+    #                 "mmol cm^-3",
+    #                 comment(i, "SO4"),
+    #             ],
+    #         )
+    #     end
+    #     push!(
+    #         KpHParam,
+    #         [
+    #             "const",
+    #             "KHSO4",
+    #             @sprintf("%.16E", KHSO4,),
+    #             "mmol cm^-3",
+    #             "HSO4 dissociation constant",
+    #         ],
+    #     )
+    # end
 
     for i in eachrow(dissolved_adsorbed)
         vscptTOP = varsubscript(i.top_bc_type, true)
@@ -1042,16 +1081,22 @@ function parameter_code(param_model, substances, options,cf)
         end
     end
 
+    betaParam = @chain begin        
+    @subset(param_model, :class .== "BoundaryCondition")
+    select(:type, :parameter, :value, :unit, :comment)
+    @subset(:parameter .== "delta")
+    end
+
     for i in eachrow(dissolved_all)
         if i.top_bc_type == "robin"
             push!(
-                bcParam,
+                betaParam,
                 [
                     "const",
                     "beta" * i.species_name,
                     @sprintf(
                         "%.16E",
-                        mdif[i.species] / getval!(bcParam, :parameter, "delta", :value),
+                        mdif[i.species] / getval!(betaParam, :parameter, "delta", :value),
                     ),
                     "cm yr^-1",
                     "solute mass transfer velocity across SWI",
@@ -1098,11 +1143,14 @@ function parameter_code(param_model, substances, options,cf)
         append!(dissolved_adsorbed)
     end
 
+
+    bdParam = newdf()
+
     for i in eachrow(substances_bc)
         BC_str_Top = setTopBC(i.species_name, i.type, i.top_bc_type)
         BC_str_Bot = setBotBC(i.species_name, i.type, i.bot_bc_type)
         push!(
-            bcParam,
+            bdParam,
             [
                 "const",
                 "Bc" * i.species_name,
@@ -1208,6 +1256,28 @@ function parameter_code(param_model, substances, options,cf)
 
 
     param_str = String[]
+    # param_df = @chain begin
+    #     NspeciesParam
+    #     outerjoin(globalParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(gridParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(porosityParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(burialParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(bioturbationParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(bioirrigationParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(adsParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(diffusionParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(betaParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(bcParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(bdParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(tranBCParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(tranIntParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(KpHParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(reactionParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(initialParam,on=[:type,:parameter,:value,:unit,:comment])
+    #     outerjoin(abtolParam,on=[:type,:parameter,:value,:unit,:comment])
+
+    # end
+
     appendtostr!(param_str, NspeciesParam, "Number of substances")
     appendtostr!(param_str, globalParam, "global parameters")
     appendtostr!(param_str, gridParam, "grid parameters")
@@ -1216,8 +1286,10 @@ function parameter_code(param_model, substances, options,cf)
     appendtostr!(param_str, bioturbationParam, "bioturbation parameters")
     appendtostr!(param_str, bioirrigationParam, "bioirrigation parameters")
     appendtostr!(param_str, adsParam, "adsorption parameters")
-    appendtostr!(param_str, diffusionParam, "diffusion parameters")
-    appendtostr!(param_str, bcParam, "Boundary Condition parameters")
+    appendtostr!(param_str, diffusionParam, "solute diffusivity")
+    appendtostr!(param_str, betaParam, "solute mass transfer velocities")
+    appendtostr!(param_str, bcParam, "boundary fluxes and concentrations")
+    appendtostr!(param_str, bdParam, "assemble boundary conditions")
     appendtostr!(param_str, tranBCParam, "Boundary transport matrix")
     appendtostr!(param_str, tranIntParam, "Interior transport matrix")
     appendtostr!(param_str, KpHParam, "Acid dissociation constants")
