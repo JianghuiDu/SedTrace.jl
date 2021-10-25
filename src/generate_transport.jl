@@ -1,7 +1,7 @@
-function transport_code(substances, options,MTK)
+function transport_code(substances,adsorption, options,MTK)
 
     nsolid = sum(substances.type .== "solid")
-    ndissolved = sum(substances.type .∈ Ref(["dissolved", "dissolved_adsorbed","dissolved_summed"]))
+    ndissolved = sum(substances.type .∈ Ref(["dissolved", "dissolved_adsorbed","dissolved_summed","dissolved_adsorbed_summed"]))
     nsummed = sum(substances.type .== "dissolved_summed_pH")
 
     tran_cache = String[]
@@ -12,6 +12,7 @@ function transport_code(substances, options,MTK)
     bc_strN = String[]
     alpha_str = String[]
     ads_str = String[]
+    ads_summed_expr_str = String[]
 
     # id_stride(x) =
     #     x == "solid" ? "" :
@@ -103,6 +104,55 @@ function transport_code(substances, options,MTK)
 
             push!(ads_str, " ")
         end
+
+
+        if i.type == "dissolved_adsorbed_summed"
+            ads_df = @chain begin
+                @subset(adsorption,:substance.==i.substance)
+                @transform(:conv = ifelse.(:surface.=="dissolved","1","dstopw"))
+            end
+            substance_name = ads_df.substance[1]
+
+            main_spec = getval!(ads_df,:surface,"dissolved",:species)
+
+            sum_eq = SymPy.sympify(join(ads_df.expression.*"*".*ads_df.conv,"+")*"-"*ads_df.substance[1])
+
+            main_spec_expr = SymPy.solve(sum_eq, SymPy.symbols.(main_spec))
+            setval!(ads_df,:surface,"dissolved",:expression,string(main_spec_expr[1]))
+
+            for j in eachrow(ads_df)
+                push!(ads_summed_expr_str,"$(j.species) = $(j.expression)")
+                push!(tran_cache,"$(j.species)")
+                push!(tran_cache,"$(j.species)_tran")
+                push!(ads_str, "@. $(j.species) = $(j.expression)")
+                push!(ads_str, 
+                "mul!($(j.species)_tran, Am$(j.species), $(j.species))")
+                push!(
+                    ads_str,
+                    "$((j.species))_tran[1] += BcAm$((j.species))[1]*$((j.species))[1] + BcCm$((j.species))[1]",
+                )
+                push!(
+                    ads_str,
+                    "$((j.species))_tran[Ngrid] += BcAm$((j.species))[2]*$((j.species))[Ngrid] + BcCm$((j.species))[2]",
+                )
+            end
+            push!(
+                ads_str,
+                "@. d$(substance_name) = " * join(ads_df.species.*"_tran*".*ads_df.conv,"+")
+            )
+            push!(
+                ads_str,
+                "@. d$(substance_name) += alpha*($(main_spec)0-$(main_spec))"
+            )
+            push!(
+                ads_str,
+                " "
+            )
+
+
+        end
+
+
     end
 
     species_summed_pH = @subset(substances, :type .== "dissolved_summed_pH")
@@ -281,7 +331,7 @@ function transport_code(substances, options,MTK)
         throw(error("incorrect number of inputs"))
     end
 
-    return  code, tran_expr, tran_cache
+    return  code, tran_expr, tran_cache,ads_summed_expr_str
 
 end
 

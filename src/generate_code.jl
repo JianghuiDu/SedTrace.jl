@@ -93,7 +93,7 @@ function generate_code(modelconfig::ModelConfig)
         end
         check_illegal_char(select(parameters, :class, :type, :parameter, :value))
         params_code =
-            parameter_code(parameters, substances, options, modelconfig.CompleteFlux)
+            parameter_code(parameters, substances,adsorption, options, modelconfig.CompleteFlux)
 
 
         if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
@@ -123,9 +123,10 @@ function generate_code(modelconfig::ModelConfig)
 
     # substance must be sorted by TYPE otherwise will NOT get banded jacobian!
     ord = [
+        "dissolved_adsorbed_summed",
         "solid",
-        "dissolved_adsorbed",
         "dissolved",
+        "dissolved_adsorbed",
         "dissolved_summed",
         "dissolved_summed_pH",
     ]
@@ -144,6 +145,11 @@ function generate_code(modelconfig::ModelConfig)
         DataFrame(XLSX.gettable(model_config["speciation"])...)
         @subset(:include .== 1)
     end
+    adsorption = @chain begin
+        DataFrame(XLSX.gettable(model_config["adsorption"])...)
+        @subset(:include .== 1)
+    end
+
     options = DataFrame(XLSX.gettable(model_config["options"])...)
     parameters = @chain begin
         DataFrame(XLSX.gettable(model_config["parameters"])...)
@@ -154,6 +160,7 @@ function generate_code(modelconfig::ModelConfig)
     df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+    df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     substances = @chain begin
         substances
@@ -189,18 +196,21 @@ function generate_code(modelconfig::ModelConfig)
     check_illegal_char(substances)
     check_illegal_char(reactions)
     check_illegal_char(speciation)
+    check_illegal_char(adsorption)
     check_illegal_char(select(options, :options, :value))
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
-    tran_code, tran_expr, tran_cache = transport_code(substances, options, modelconfig.MTK)
+    tran_code, tran_expr, tran_cache,ads_summed_expr_str = transport_code(substances, adsorption,options, modelconfig.MTK)
 
-    params_code = parameter_code(parameters, substances, options, modelconfig.CompleteFlux)
+    params_code = parameter_code(parameters, substances, adsorption, options, modelconfig.CompleteFlux)
 
     react_code, species_modelled, react_expr, react_cache, react_jp = reaction_code(
         reactions,
         substances,
         speciation,
+        adsorption,
         tran_cache,
+        ads_summed_expr_str,
         modelconfig.CompleteFlux,
         modelconfig.MTK,
         modelconfig.AllowDiscontinuity,
@@ -209,7 +219,7 @@ function generate_code(modelconfig::ModelConfig)
 
     tran_param = identify_param(species_modelled, tran_expr, tran_cache, "tran")
     react_param = identify_param(species_modelled, react_expr, react_cache, "react")
-
+    
     # if modelconfig.AssembleParam
     #     param_required = @chain begin
     #         outerjoin(tran_param,react_param,on=[:class, :type, :parameter, :value, :unit, :comment])
@@ -354,6 +364,7 @@ function generate_code(modelconfig::ModelConfig)
     jp_str = generate_jacprototype(
         modelconfig.JacType,
         substances,
+        adsorption,
         react_jp,
         modelconfig.CompleteFlux,
     )
@@ -443,7 +454,7 @@ function generate_code(modelconfig::ModelConfig,ParamDict::Dict)
         end
 
         params_code =
-            parameter_code(parameters, substances, options, modelconfig.CompleteFlux)
+            parameter_code(parameters, substances,adsorption, options, modelconfig.CompleteFlux)
 
 
         if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded

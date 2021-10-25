@@ -191,7 +191,15 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
    if haskey(mdif, "Ndr")
     i = findfirst(x->x=="Ce",ion)
    mdif["Ndr"] = (m0[i]+m1[i]*temp)*1e-6
+  end
+  if haskey(mdif, "TNdnr")
+    i = findfirst(x->x=="Ce",ion)
+   mdif["TNdnr"] = (m0[i]+m1[i]*temp)*1e-6
  end
+ if haskey(mdif, "TNdr")
+  i = findfirst(x->x=="Ce",ion)
+ mdif["TNdr"] = (m0[i]+m1[i]*temp)*1e-6
+end
 
     if haskey(mdif, "Nd144")
       i = findfirst(x->x=="Ce",ion)
@@ -200,7 +208,7 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
    if haskey(mdif, "Nd143")
     i = findfirst(x->x=="Ce",ion)
    mdif["Nd143"] = (m0[i]+m1[i]*temp)*1e-6
- end
+  end
 
     # Boundreau 1997 p112 table4.4
     A  = [3338, 3047, 2000, 818, 1608, 7238, 6393, 9007, 15877]
