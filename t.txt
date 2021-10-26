@@ -1,0 +1,78 @@
+"(POC) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],POC,BcPOC[1])"
+"(MnO2) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],MnO2,BcMnO2[1])"
+"(FeOOH) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],FeOOH,BcFeOOH[1])"
+"(FeS) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],FeS,BcFeS[1])"
+"(FeS2) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],FeS2,BcFeS2[1])"
+"(CaCO3) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],CaCO3,BcCaCO3[1])"
+"(MnCO3) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],MnCO3,BcMnCO3[1])"
+"(FeCO3) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],FeCO3,BcFeCO3[1])"
+"(Age) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],Age,BcAge[1])"
+"(BSi) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],BSi,BcBSi[1])"
+"(NdnrPO4) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],NdnrPO4,BcNdnrPO4[1])"
+"(NdrPO4) ->
+                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],NdrPO4,BcNdrPO4[1])"
+"(O2) ->
+                calc_flux_top(phif[1],DO2[1],uf[1],x[1:3],O2,BcO2[1])"
+"(NO3) ->
+                calc_flux_top(phif[1],DNO3[1],uf[1],x[1:3],NO3,BcNO3[1])"
+"(Mn) ->
+                calc_flux_top(phif[1],DMn[1],uf[1],x[1:3],Mn,BcMn[1])"
+"(Fe) ->
+                calc_flux_top(phif[1],DFe[1],uf[1],x[1:3],Fe,BcFe[1])"
+"(CH4) ->
+                calc_flux_top(phif[1],DCH4[1],uf[1],x[1:3],CH4,BcCH4[1])"
+"(NO2) ->
+                calc_flux_top(phif[1],DNO2[1],uf[1],x[1:3],NO2,BcNO2[1])"
+"(Ca) ->
+                calc_flux_top(phif[1],DCa[1],uf[1],x[1:3],Ca,BcCa[1])"
+"(Al) ->
+                calc_flux_top(phif[1],DAl[1],uf[1],x[1:3],Al,BcAl[1])"
+"(NH4) ->
+                calc_flux_top(phif[1],DNH4[1],uf[1],x[1:3],NH4,BcNH4[1])"
+"(SO4) ->
+                calc_flux_top(phif[1],DSO4[1],uf[1],x[1:3],SO4,BcSO4[1])"
+"(Ndnr) ->
+                        calc_flux_top(phif[1],DNdnr[1],uf[1],x[1:3],Ndnr,BcNdnr[1])"
+"(Ndnr_ads_Mn) ->
+                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],Ndnr_ads_Mn,BcNdnr_ads_Mn[1])"
+"(Ndnr_ads_Fe) ->
+                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],Ndnr_ads_Fe,BcNdnr_ads_Fe[1])"
+"(Ndr) ->
+                        calc_flux_top(phif[1],DNdr[1],uf[1],x[1:3],Ndr,BcNdr[1])"
+"(Ndr_ads_Mn) ->
+                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],Ndr_ads_Mn,BcNdr_ads_Mn[1])"
+"(Ndr_ads_Fe) ->
+                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],Ndr_ads_Fe,BcNdr_ads_Fe[1])"
+"(TH4SiO4) ->
+                calc_flux_top(phif[1],DTH4SiO4[1],uf[1],x[1:3],TH4SiO4,BcTH4SiO4[1])"
+"(H,TCO2) ->
+                    calc_flux_top(phif[1],DHCO3[1],uf[1],x[1:3],map((H,TCO2) ->H * KCO2 * TCO2 / (H^2 + H * KCO2 + KCO2 * KHCO3),H,TCO2),BcHCO3[1])"
+"(H,TCO2) ->
+                    calc_flux_top(phif[1],DCO3[1],uf[1],x[1:3],map((H,TCO2) ->KCO2 * KHCO3 * TCO2 / (H^2 + H * KCO2 + KCO2 * KHCO3),H,TCO2),BcCO3[1])"
+"(H,TCO2) ->
+                    calc_flux_top(phif[1],DCO2[1],uf[1],x[1:3],map((H,TCO2) ->H^2 * TCO2 / (H^2 + H * KCO2 + KCO2 * KHCO3),H,TCO2),BcCO2[1])"
+"(H,TH2S) ->
+                    calc_flux_top(phif[1],DH2S[1],uf[1],x[1:3],map((H,TH2S) ->H * TH2S / (H + KH2S),H,TH2S),BcH2S[1])"
+"(H,TH2S) ->
+                    calc_flux_top(phif[1],DHS[1],uf[1],x[1:3],map((H,TH2S) ->KH2S * TH2S / (H + KH2S),H,TH2S),BcHS[1])"
+"(H,TH3BO3) ->
+                    calc_flux_top(phif[1],DH3BO3[1],uf[1],x[1:3],map((H,TH3BO3) ->H * TH3BO3 / (H + KH3BO3),H,TH3BO3),BcH3BO3[1])"
+"(H,TH3BO3) ->
+                    calc_flux_top(phif[1],DH4BO4[1],uf[1],x[1:3],map((H,TH3BO3) ->KH3BO3 * TH3BO3 / (H + KH3BO3),H,TH3BO3),BcH4BO4[1])"
+"(TH3PO4) ->
+                calc_flux_top(phif[1],DTH3PO4[1],uf[1],x[1:3],TH3PO4,BcTH3PO4[1])"
+"(H) ->
+                    calc_flux_top(phif[1],DH[1],uf[1],x[1:3],map((H) ->H,H),BcH[1])"
+"(H) ->
+                    calc_flux_top(phif[1],DOH[1],uf[1],x[1:3],map((H) ->KH2O / H,H),BcOH[1])"

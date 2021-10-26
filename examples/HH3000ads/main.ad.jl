@@ -29,10 +29,10 @@ chunk_size = 12;
 OdeFun = SedTrace.Cache.init(SedTrace.C_uni, SedTrace.Ngrid, Val(chunk_size));
 
 
-TestJacobian(JacPrototype,OdeFun,chunk_size)
-BenchmarkReactran(OdeFun,SedTrace.C_uni)
-BenchmarkJacobian(JacPrototype,OdeFun,chunk_size)
-BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size)
+# TestJacobian(JacPrototype,OdeFun,chunk_size)
+# BenchmarkReactran(OdeFun,SedTrace.C_uni)
+# BenchmarkJacobian(JacPrototype,OdeFun,chunk_size)
+# BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size)
 
 
 solverconfig = SolverConfig(
@@ -43,17 +43,20 @@ solverconfig = SolverConfig(
     reltol = 1e-6,
     abstol = 1e-16,
     saveat = 1000.0,
-    callback = TerminateSteadyState(1e-12, 1e-6, DiffEqCallbacks.allDerivPass),
+    callback = TerminateSteadyState(1e-12, 1e-6, DiffEqCallbacks.allDerivPass)
 )
 
 
 sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
-using DataFrames,DataFramesMeta
-include((@__DIR__)*"\\examples\\HH3000ads\\helpers.jl")
+
+gr(; size = (400, 1000))
+generate_plot(modelconfig, OdeFun, sol, ["HH3000"], false)
+
+
+
 include((@__DIR__)*"\\examples\\HH3000ads\\pH_helpers.jl")
 include((@__DIR__)*"\\examples\\HH3000ads\\generate_output_old.jl")
-gr(; size = (400, 1000))
 generate_output_old(modelconfig,sol,["HH3000"],SedTrace.L, false)
 
 
@@ -71,12 +74,12 @@ plot!(p,(OdeFun.Ndnr_ads_Fe.du+OdeFun.Ndr_ads_Fe.du)*144.24/SedTrace.ds_rho*1000
 # using SparseArrays
 # using SedTrace
 
-# dir = "C:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\HH3000ads\\"
-# include(dir*"fvcf_discretization.jl")
-# include(dir*"parm.HH3000Nd.jl")
-# include(dir*"cache.HH3000Nd.jl")
-# include(dir*"reactran.HH3000Nd.jl")
-# include(dir*"jactype.HH3000Nd.jl")
+dir = "C:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\HH3000ads\\"
+include(dir*"fvcf_discretization.jl")
+include(dir*"parm.HH3000Nd.jl")
+include(dir*"cache.HH3000Nd.jl")
+include(dir*"reactran.HH3000Nd.jl")
+include(dir*"jactype.HH3000Nd.jl")
 
 # JacPrototype = JacType()
 
