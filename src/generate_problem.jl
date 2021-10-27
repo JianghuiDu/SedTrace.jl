@@ -38,7 +38,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        Upbdwth,Lwbdwth = bandwidths(JacPrototype)
+        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
         return (
             ODEFunction{true,true}(OdeFun),
             CVODE_BDF(

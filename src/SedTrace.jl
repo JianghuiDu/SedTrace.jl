@@ -60,6 +60,7 @@ include("generate_struct.jl")
 include("generate_initval.jl")
 include("generate_jacprototype.jl")
 include("generate_output.jl")
+include("generate_plot.jl")
 
 include("benchmark.jl")
 
@@ -88,7 +89,7 @@ export generate_jacobian
 
 export fvcf_bc,fvcf
 
-export generate_output
+export generate_output,generate_plot
 
 export IncludeFiles
 

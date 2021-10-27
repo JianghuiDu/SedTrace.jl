@@ -1,4 +1,4 @@
-function generate_jacprototype(jac_type::Symbol, substances::DataFrame, react_jp::DataFrame, cf::Bool)
+function generate_jacprototype(jac_type::Symbol, substances::DataFrame, adsorption::DataFrame,react_jp::DataFrame, cf::Bool)
     substances = leftjoin(substances, react_jp, on = :substance)
 
     jp_str = String[]
@@ -66,6 +66,26 @@ function generate_jacprototype(jac_type::Symbol, substances::DataFrame, react_jp
            colID,getindex(HID,vcat(1:Ngrid,2:Ngrid,1:(Ngrid-1))))",
                 )
                 push!(sumspecies, i.substance)
+            end
+            if i.type == "dissolved_adsorbed_summed"
+                ads_df = @chain begin
+                    adsorption
+                    @subset(:substance.==i.substance)
+                    @subset(:surface .!= "dissolved")
+                end
+                for j in eachrow(ads_df)
+                    push!(
+                        jp_str,
+                        "append!(
+               rowID,getindex($(i.substance)ID,vcat(1:Ngrid,1:(Ngrid-1),2:Ngrid)))",
+                    )
+                    push!(
+                        jp_str,
+                        "append!(
+               colID,getindex($(j.surface)ID,vcat(1:Ngrid,2:Ngrid,1:(Ngrid-1))))",
+                    )
+    
+                end
             end
         end
 

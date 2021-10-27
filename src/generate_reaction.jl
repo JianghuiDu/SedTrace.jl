@@ -704,10 +704,10 @@ function convfac(df)
     for j = 1:size(df, 1)
         if df.substance_type[j] == df.reaction_type[j]
             conversion_fac[j] = ""
-        elseif df.substance_type[j] in ["dissolved_summed", "dissolved_summed_pH"] &&
+        elseif df.substance_type[j] in ["dissolved_summed", "dissolved_summed_pH","dissolved_adsorbed_summed"] &&
                df.reaction_type[j] == "dissolved"
             conversion_fac[j] = ""
-        elseif df.substance_type[j] in ["dissolved_summed", "dissolved_summed_pH"] &&
+        elseif df.substance_type[j] in ["dissolved_summed", "dissolved_summed_pH","dissolved_adsorbed_summed"] &&
                df.reaction_type[j] == "solid"
             conversion_fac[j] = "*dstopw"
         elseif df.substance_type[j] == "solid" && df.reaction_type[j] == "dissolved"
@@ -914,6 +914,17 @@ end
 
 
 
+# species_list = @chain begin
+#     substances
+#     dropmissing(:species_modelled)
+#     @transform(:species = split.(:species_modelled, ","))
+#     DataFrames.flatten(:species)
+#     @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
+#     select(:substance,:species)
+# end
+
+
+
 function jac_ract_dependence(
     species_join,
     species_modelled,
@@ -924,11 +935,18 @@ function jac_ract_dependence(
     cache_str,
     pHspecies,
 )
-    p_other = @chain begin
-        find_param_in_expr(species_modelled, vcat(spec_expr, ads_expr), cache_str, "react")
+    p_spec = @chain begin
+        find_param_in_expr(species_modelled, spec_expr, cache_str, "react")
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
+
+    p_ads = @chain begin
+        find_param_in_expr(species_modelled, ads_expr, cache_str, "react")
+        @subset(.!:isparam)
+        @select!(:label, :variable)
+    end
+
 
     p_omega = @chain begin
         find_param_in_expr(species_modelled, omega_expr, cache_str, "react")
@@ -953,7 +971,10 @@ function jac_ract_dependence(
         leftjoin(p_omega, on = [:variable => :label], renamecols = "" => "_tmp")
         @transform(:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
         @select!(:label, :variable)
-        leftjoin(p_other, on = [:variable => :label], renamecols = "" => "_tmp")
+        leftjoin(p_spec, on = [:variable => :label], renamecols = "" => "_tmp")
+        @transform(:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
+        @select!(:label, :variable)
+        leftjoin(p_ads, on = [:variable => :label], renamecols = "" => "_tmp")
         @transform(
             :dependence = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp)
         )
@@ -997,7 +1018,9 @@ function reaction_code(
     reactions,
     substances,
     speciation,
+    adsorption,
     tran_cache,
+    ads_summed_expr_str,
     cf,
     MTK,
     discontinuity,
@@ -1018,6 +1041,10 @@ function reaction_code(
     for i in eachrow(sp_ads)
         push!(ads_expr, i.codename * "=" * i.substance * "*K" * i.codename)
     end
+
+
+    append!(ads_expr, ads_summed_expr_str)
+
 
     # formate rate expressions
     rate_expr, omega_expr = format_rate_expr(reactions, discontinuity)
@@ -1110,6 +1137,20 @@ function reaction_code(
         cache_str,
         pHspecies,
     )
+
+    # for i in eachrow(react_jp)
+    #     if getval!(substances,:substance,i.substance,:type) == "dissolved_adsorbed_summed"
+    #         ads_df = @chain begin
+    #         adsorption
+    #         @subset(:substance.==i.substance)
+    #         @subset(:surface.!="dissolved")
+    #         end
+    #         for k in ads_df.surface
+    #             tmp_dep = split(getval!(react_jp,:substance,k,:dependence),",")
+    #             i.dependence = join(unique(vcat(split(i.dependence,","),tmp_dep)),",")
+    #         end
+    #     end
+    # end
 
 
     XLSX.writetable(

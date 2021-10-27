@@ -6,13 +6,15 @@ function TestJacobian(JacPrototype,OdeFun,chunk_size)
     jac1 = SedTrace.generate_jacobian(OdeFun,jacp1,chunk_size);
     jac2 = SedTrace.generate_jacobian(OdeFun,jacp2,chunk_size);
     
-    u0 = rand(size(JacPrototype,1))
+    for i in 1:6
+        u0 = rand(size(JacPrototype,1)).*10^(i-1)
 
-    jac1(jacp1,u0,nothing,0)
-    jac2(jacp2,u0,nothing,0)
+        jac1(jacp1,u0,nothing,0)
+        jac2(jacp2,u0,nothing,0)
 
-    @assert Matrix(jacp1) == jacp2 "Auto-generated jacobian pattern is incorrect!"
-
+        @assert Matrix(jacp1) == jacp2 "Auto-generated jacobian pattern is incorrect!"
+        println("test $i sucessful.")
+    end
 end
 
 function BenchmarkReactran(OdeFun,u0)

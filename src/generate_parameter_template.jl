@@ -267,7 +267,7 @@ function generat_template(input_path::String)
                substance_type in ["solid", "dissolved", "dissolved_summed","dissolved_summed_pH"]
                 return true
             elseif bc_type in ["dirichlet"] &&
-                   substance_type == "dissolved_adsorbed"
+                   substance_type in ["dissolved_adsorbed","dissolved_adsorbed_summed"]
                 return true
             else
                 return false
@@ -343,7 +343,7 @@ function generat_template(input_path::String)
                     ],
                 )
             elseif substance_type in
-                   ["dissolved", "dissolved_summed", "dissolved_adsorbed","dissolved_summed_pH"]
+                   ["dissolved", "dissolved_summed", "dissolved_adsorbed","dissolved_summed_pH","dissolved_adsorbed_summed"]
                 push!(
                     df,
                     [
