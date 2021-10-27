@@ -51,5 +51,5 @@ sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
 
 gr(; size = (400, 1000))
-generate_plot(modelconfig, OdeFun, sol, ["HH3000"], false)
-
+generate_substance_plot(modelconfig, OdeFun, sol, ["HH3000"],["Nd_pw","eNd_pw"])
+generate_aux_plot(modelconfig,OdeFun, sol,["HH3000"],["POC"])

@@ -1,5 +1,4 @@
-
-function generate_plot(modelconfig, OdeFun, sol, site, saveplt=false)
+function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -12,10 +11,20 @@ function generate_plot(modelconfig, OdeFun, sol, site, saveplt=false)
         @subset(:include .== 1)
     end
 
+    # remove empty space or weird minus signs
+    SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+    SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
     plotting = @chain begin
         DataFrame(XLSX.gettable(model_config["output"])...)
         @subset(:include .== 1)
         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
+    end
+
+    SedTrace.df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    if !isempty(vars)
+        plotting = @subset(plotting,:name .∈ Ref(vars))
     end
 
     data = @chain begin
@@ -24,14 +33,7 @@ function generate_plot(modelconfig, OdeFun, sol, site, saveplt=false)
         sort!([:substance, :depth])
     end
 
-
-    # remove empty space or weird minus signs
-    SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-    SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-    SedTrace.df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
     nt = length(sol.sol.t)
-
     ModelledProfile = get_all_vars(substances, OdeFun, sol)
     ModelledFlux = get_all_flux_top(substances, adsorption, ModelledProfile,nt)
 
@@ -46,7 +48,6 @@ function generate_plot(modelconfig, OdeFun, sol, site, saveplt=false)
         sol.Ngrid,
         summedspecies,
     )
-
 
     output = OrderedDict(
         plotting.name .=> [
@@ -106,7 +107,69 @@ function generate_plot(modelconfig, OdeFun, sol, site, saveplt=false)
         end
 
     end
+end
 
+function generate_aux_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
+    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    model_config = XLSX.readxlsx(input_path)
+    substances = @chain begin
+        DataFrame(XLSX.gettable(model_config["substances"])...)
+        @subset(:include .== 1)
+    end
+
+    adsorption = @chain begin
+        DataFrame(XLSX.gettable(model_config["adsorption"])...)
+        @subset(:include .== 1)
+    end
+
+    # remove empty space or weird minus signs
+    SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+    SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    plotting = @chain begin
+        DataFrame(XLSX.gettable(model_config["output"])...)
+        @subset(:include .== 1)
+        leftjoin(select(substances, :substance, :type), on = [:name => :substance])
+    end
+
+    SedTrace.df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    if !isempty(vars)
+        plotting = @subset(plotting,:name .∈ Ref(vars))
+    end
+
+    data = @chain begin
+        DataFrame(XLSX.gettable(model_config["data"])...)
+        @subset(:site .∈ Ref(site))
+        sort!([:substance, :depth])
+    end
+
+    nt = length(sol.sol.t)
+    ModelledProfile = get_all_vars(substances, OdeFun, sol)
+
+    if !isempty(vars)
+        Selectvar = filter(k->k.first in vars,ModelledProfile)
+    end
+
+    for (key,value) in Selectvar
+        p = secplot(
+            nothing,
+            sol.sol.t,
+            sol.x,
+            value',
+            nothing,
+            :roma,
+            key,
+            sol.L,
+            nothing,
+            nothing,
+            :identity,
+        )
+        display(p)
+        if saveplt
+            savefig(p, modelconfig.ModelDirectory * "$key.pdf")
+        end
+    end
 
 end
 
