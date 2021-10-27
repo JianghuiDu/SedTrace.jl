@@ -89,7 +89,7 @@ export generate_jacobian
 
 export fvcf_bc,fvcf
 
-export generate_output,generate_plot
+export generate_substance_plot,generate_aux_plot
 
 export IncludeFiles
 
