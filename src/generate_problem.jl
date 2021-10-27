@@ -40,7 +40,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
     if solverconfig.linsolve in [:Band, :LapackBand]
         Lwbdwth,Upbdwth = bandwidths(JacPrototype)
         return (
-            ODEFunction{true,true}(OdeFun),
+            ODEFunction{true,false}(OdeFun),
             CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 jac_upper = Upbdwth,
@@ -52,7 +52,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
     if solverconfig.linsolve == :KLU
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
         return (
-            ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
+            ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
             CVODE_BDF(linear_solver = solverconfig.linsolve),
         )
     end
@@ -64,7 +64,7 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
         prec = default_prec(p_prec)
 
         return (
-            ODEFunction{true,true}(OdeFun),
+            ODEFunction{true,false}(OdeFun),
             CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 prec = prec,

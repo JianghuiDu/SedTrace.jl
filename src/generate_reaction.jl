@@ -216,12 +216,12 @@ function check_react_balance(label, equation_ind)
 
     # convert elements (Strings) to symbolic variables
     # by parsing into an expression and then evaluating
-    element_sym = Meta.parse("@vars " * join(unique(element_df.element), " "))
+    element_sym = Meta.parse("SymPy.@vars " * join(unique(element_df.element), " "))
     eval(element_sym)
     # convert coefficients of element (Strings) to symbolic variables
     coef_vars = filter(!isnothing, myeachmatch.(r"[a-zA-Z]+", element_df.coef))
     if !isempty(coef_vars)
-        coef_sym = Meta.parse("@vars " * join(unique(vcat(coef_vars...)), " "))
+        coef_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(coef_vars...)), " "))
         eval(coef_sym)
     end
     # check if the sum of element*coefficient of the reaction is zero
@@ -250,7 +250,7 @@ function check_react_balance(label, equation_ind)
     if isempty(charge_vars)
         charge_sum = eval(charge_sum_expr)
     else
-        charge_sym = Meta.parse("@vars " * join(unique(vcat(charge_vars...)), " "))
+        charge_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(charge_vars...)), " "))
         eval(charge_sym)
         charge_sum = SymPy.simplify(
             SymPy.nsimplify(eval(charge_sum_expr), tolerance = 1e-15, rational = true),
@@ -875,7 +875,7 @@ function speciation_code(speciation_df)
     end
 
     var1 = SymPy.solve.(speciation_Eq.Eq, SymPy.symbols.(speciation_Eq.label))
-    var2 = sum(var1) / (symbols(substance_model * "_free"))
+    var2 = sum(var1) / (SymPy.symbols(substance_model * "_free"))
     var3 = SymPy.symbols(substance_model) / (var2[1] + 1)
     substance_free = SymPy.simplify(var3)
 

@@ -17,7 +17,9 @@ modelconfig = ModelConfig(
     CompleteFlux = false,
 )
 
-@time generate_code(modelconfig)
+ParamDict = Dict("KNd_ads_Mn"=>1e7)
+
+@time generate_code(modelconfig,ParamDict)
 
 IncludeFiles(modelconfig)
 
@@ -37,7 +39,8 @@ OdeFun = SedTrace.Cache.init(SedTrace.C_uni, SedTrace.Ngrid, Val(chunk_size));
 
 solverconfig = SolverConfig(
     chunk_size,
-    SedTrace.C_uni,
+    # SedTrace.C_uni,
+    sol.sol[end],
     (0.0, 30000.0),
     :FGMRES,
     reltol = 1e-6,
@@ -50,6 +53,7 @@ solverconfig = SolverConfig(
 sol = modelrun(OdeFun,JacPrototype,solverconfig);
 
 
-gr(; size = (400, 1000))
+gr(size = (400, 1000))
 generate_substance_plot(modelconfig, OdeFun, sol, ["HH3000"],["Nd_pw","eNd_pw"])
+
 generate_aux_plot(modelconfig,OdeFun, sol,["HH3000"],["POC"])

@@ -1,4 +1,4 @@
-function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
+function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=false)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -33,8 +33,8 @@ function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=f
         sort!([:substance, :depth])
     end
 
-    nt = length(sol.sol.t)
-    ModelledProfile = get_all_vars(substances, OdeFun, sol)
+    nt = length(solution.sol.t)
+    ModelledProfile = get_all_vars(substances, OdeFun, solution)
     ModelledFlux = get_all_flux_top(substances, adsorption, ModelledProfile,nt)
 
     summedspecies = @subset(substances, :type .== "dissolved_summed_pH").substance
@@ -45,7 +45,7 @@ function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=f
         ModelledProfile,
         ModelledFlux,
         nt,
-        sol.Ngrid,
+        solution.Ngrid,
         summedspecies,
     )
 
@@ -90,13 +90,13 @@ function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=f
 
         p = SedTrace.secplot(
             site,
-            sol.sol.t,
-            sol.x,
+            solution.sol.t,
+            solution.x,
             value.profile',
             value.flux_top,
             :roma,
             "$key $(value.unit_profile)",
-            (0.0, sol.L),
+            (0.0, solution.L),
             pwdata,
             flux_top_message,
             :identity,
@@ -109,7 +109,7 @@ function generate_substance_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=f
     end
 end
 
-function generate_aux_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
+function generate_aux_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=false)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -144,8 +144,8 @@ function generate_aux_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
         sort!([:substance, :depth])
     end
 
-    nt = length(sol.sol.t)
-    ModelledProfile = get_all_vars(substances, OdeFun, sol)
+    nt = length(solution.sol.t)
+    ModelledProfile = get_all_vars(substances, OdeFun, solution)
 
     if !isempty(vars)
         Selectvar = filter(k->k.first in vars,ModelledProfile)
@@ -154,13 +154,13 @@ function generate_aux_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
     for (key,value) in Selectvar
         p = secplot(
             nothing,
-            sol.sol.t,
-            sol.x,
+            solution.sol.t,
+            solution.x,
             value',
             nothing,
             :roma,
             key,
-            sol.L,
+            solution.L,
             nothing,
             nothing,
             :identity,
@@ -174,13 +174,13 @@ function generate_aux_plot(modelconfig,OdeFun, sol,site,vars=[], saveplt=false)
 end
 
 # get the profiles of all modelled substances and species
-function get_all_vars(substances, OdeFun, sol::SolutionConfig)
+function get_all_vars(substances, OdeFun, solution::SolutionConfig)
 
-    nt = length(sol.sol.t)
+    nt = length(solution.sol.t)
 
 
     OutputDict = Dict(
-        i.substance => [sol.sol.u[j][m] for j = 1:nt, m in sol.IDdict[i.substance]] for
+        i.substance => [solution.sol.u[j][m] for j = 1:nt, m in solution.IDdict[i.substance]] for
         i in eachrow(substances)
     )
 
@@ -188,12 +188,12 @@ function get_all_vars(substances, OdeFun, sol::SolutionConfig)
     VarName = fieldnames(typeof(OdeFun))
     nVar = length(VarName)
 
-    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt, sol.Ngrid) for i in VarName)
+    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt, solution.Ngrid) for i in VarName)
 
-    dC0 = similar(ones(size(sol.sol, 1)))
+    dC0 = similar(ones(size(solution.sol, 1)))
 
     for i = 1:nt
-        OdeFun(dC0, sol.sol[i], nothing, 0)
+        OdeFun(dC0, solution.sol[i], nothing, 0)
         for j in VarName
             VarVal[string(j)][i, :] = getfield(OdeFun, j).du
         end

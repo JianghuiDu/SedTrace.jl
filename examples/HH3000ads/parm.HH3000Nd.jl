@@ -78,7 +78,7 @@ const alpha = broadcast(x -> Dbir0 * fO2bir * exp(-x / xbir), x) # cm^2 yr^-1 # 
 const KNH4_ads = 1.6 * ds_rho # cm^3(porewater) cm^-3(dry sediment) # Adsorption constant
 const KMn_ads = 28 * ds_rho # cm^3(porewater) cm^-3(dry sediment) # Adsorption constant
 const KFe_ads = 268.0 * ds_rho # cm^3(porewater) cm^-3(dry sediment) # Adsorption constant
-const KNd_ads_Mn = 5.0e6 # missing # missing
+const KNd_ads_Mn = 1.0e7 # missing # missing
 const KNd_ads_Fe = 100000.0 # missing # missing
 
 #----------------------------------------------

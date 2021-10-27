@@ -1,18 +1,8 @@
 module CodeGeneration
-# using Base: Real
 using SedTrace: ModelConfig
-# ENV["R_HOME"] = "C:\\Program Files\\R\\R-4.0.5"
 import XLSX
-# CSV,
-using SymPy
-using DataFrames,
-    DataFramesMeta,
-    Chain,
-    RCall,
-    Printf,
-    # SpecialFunctions,
-    LinearAlgebra,
-    JuliaFormatter
+import SymPy
+using DataFrames, DataFramesMeta, Chain, RCall, Printf, LinearAlgebra, JuliaFormatter
 
 
 include("helpers.jl")
@@ -28,7 +18,7 @@ include("pH_helpers.jl")
 include("identify_parameters.jl")
 
 # export generate_code
-function generate_code(modelconfig::ModelConfig)
+function generate_code(modelconfig::ModelConfig, ParamDict::Dict = Dict())
     if !(modelconfig.JacType in [:banded, :sparse_banded, :sparse])
         throw(
             error(
@@ -39,86 +29,6 @@ function generate_code(modelconfig::ModelConfig)
 
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
-
-    if modelconfig.UpdateParamOnly
-        ord = [
-            "solid",
-            "dissolved_adsorbed",
-            "dissolved",
-            "dissolved_summed",
-            "dissolved_summed_pH",
-        ]
-        orderdict = Dict(x => i for (i, x) in enumerate(ord))
-        substances = @chain begin
-            DataFrame(XLSX.gettable(model_config["substances"])...)
-            @subset(:include .== 1)
-            sort!(:type, by = x -> orderdict[x])
-        end
-        df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-        substances = @chain begin
-            substances
-            transform(
-                [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
-                renamecols = false,
-            )
-            @transform(:order = 1:length(:substance))
-        end
-
-        options = DataFrame(XLSX.gettable(model_config["options"])...)
-
-        options = @chain begin
-            options
-            transform(
-                [:options, :value] .=> ByRow(x -> lowercase((replace(x, r"\s" => "")))),
-                renamecols = false,
-            )
-        end
-
-
-        parameters = @chain begin
-            DataFrame(XLSX.gettable(model_config["parameters"])...)
-            @subset(:include .== 1)
-            transform(
-                [:class, :type, :parameter] .=> ByRow(x -> replace(x, r"\s" => "")),
-                renamecols = false,
-            )
-            transform(
-                :value => ByRow(
-                    x ->
-                        (typeof(x) <: Real || !isnothing(tryparse(Float64, x))) ?
-                        x : replace(x, r"\s" => ""),
-                ),
-                renamecols = false,
-            )
-        end
-        check_illegal_char(select(parameters, :class, :type, :parameter, :value))
-        params_code =
-            parameter_code(parameters, substances,adsorption, options, modelconfig.CompleteFlux)
-
-
-        if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-            initval_code("banded", substances, params_code)
-        elseif modelconfig.JacType == :sparse
-            initval_code("Notbanded", substances, params_code)
-        end
-
-
-        open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
-            for i in params_code
-                write(io, i * "\n")
-            end
-            write(io, "nothing")
-        end
-        format_file(
-            modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
-            overwrite = true,
-            verbose = true,
-            margin = 80,
-        )
-
-        return nothing
-
-    end
 
 
     # substance must be sorted by TYPE otherwise will NOT get banded jacobian!
@@ -156,6 +66,15 @@ function generate_code(modelconfig::ModelConfig)
         @subset(:include .== 1)
     end
 
+    if !isempty(ParamDict)
+        for (key, value) in ParamDict
+            if !in(key,parameters.parameter)
+                throw(error("$key is not a parameter!"))
+            else
+                setval!(parameters, :parameter, key, :value, value)
+            end
+        end
+    end
     # remove empty space or weird minus signs
     df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
@@ -193,6 +112,7 @@ function generate_code(modelconfig::ModelConfig)
         )
     end
 
+
     check_illegal_char(substances)
     check_illegal_char(reactions)
     check_illegal_char(speciation)
@@ -200,9 +120,44 @@ function generate_code(modelconfig::ModelConfig)
     check_illegal_char(select(options, :options, :value))
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
-    tran_code, tran_expr, tran_cache,ads_summed_expr_str = transport_code(substances, adsorption,options, modelconfig.MTK)
 
-    params_code = parameter_code(parameters, substances, adsorption, options, modelconfig.CompleteFlux)
+    params_code = parameter_code(
+        parameters,
+        substances,
+        adsorption,
+        options,
+        modelconfig.CompleteFlux,
+    )
+
+
+
+    if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
+        initval_code("banded", substances, params_code)
+    elseif modelconfig.JacType == :sparse
+        initval_code("Notbanded", substances, params_code)
+    end
+
+    open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
+        # for i in vcat(params_code,"# Assmeble parameters",param_assemble)
+        for i in params_code
+            write(io, i * "\n")
+        end
+        write(io, "nothing")
+    end
+    format_file(
+        modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
+        overwrite = true,
+        verbose = true,
+        margin = 80,
+    )
+
+    if modelconfig.UpdateParamOnly
+        return nothing
+    end
+
+
+    tran_code, tran_expr, tran_cache, ads_summed_expr_str =
+        transport_code(substances, adsorption, options, modelconfig.MTK)
 
     react_code, species_modelled, react_expr, react_cache, react_jp = reaction_code(
         reactions,
@@ -214,12 +169,12 @@ function generate_code(modelconfig::ModelConfig)
         modelconfig.CompleteFlux,
         modelconfig.MTK,
         modelconfig.AllowDiscontinuity,
-        modelconfig.ModelDirectory
+        modelconfig.ModelDirectory,
     )
 
     tran_param = identify_param(species_modelled, tran_expr, tran_cache, "tran")
     react_param = identify_param(species_modelled, react_expr, react_cache, "react")
-    
+
     # if modelconfig.AssembleParam
     #     param_required = @chain begin
     #         outerjoin(tran_param,react_param,on=[:class, :type, :parameter, :value, :unit, :comment])
@@ -236,23 +191,10 @@ function generate_code(modelconfig::ModelConfig)
     #     param_assemble = "ParamDict = Dict("*join(ParamDict,",")*")"
     # end
 
-    cache = unique(vcat(tran_cache, react_cache))
+
+
+
     code = vcat(tran_code, react_code)
-
-    cache_struct = String[]
-    for i in cache
-        push!(cache_struct, "$i = PreallocationTools.get_tmp(f.$i, C)")
-    end
-    push!(cache_struct, "")
-
-
-    if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-        initval_code("banded", substances, params_code)
-    elseif modelconfig.JacType == :sparse
-        initval_code("Notbanded", substances, params_code)
-    end
-
-
 
     if modelconfig.FastBroadcast
         code = replace.(code, r"@\." => "@..")
@@ -263,36 +205,9 @@ function generate_code(modelconfig::ModelConfig)
         code = replace.(code, r"\*(?!=)" => "⊗")
     end
 
-    if modelconfig.Template
-        params = generat_parameter_template(model_path)
-        param_all = append!(params, react_param)
-        template_path = replace(model_path, r".xlsx" => "_parameter_template.xlsx")
 
-        XLSX.writetable(
-            template_path,
-            overwrite = true,
-            parameters = (
-                collect(DataFrames.eachcol(param_all)),
-                DataFrames.names(param_all),
-            ),
-        )
-    end
 
-    # modelName = split(modelconfig.ModelPath, ".")[2]
-
-    open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
-        # for i in vcat(params_code,"# Assmeble parameters",param_assemble)
-        for i in params_code
-            write(io, i * "\n")
-        end
-        write(io, "nothing")
-    end
-    format_file(
-        modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
-        overwrite = true,
-        verbose = true,
-        margin = 80,
-    )
+    cache = unique(vcat(tran_cache, react_cache))
 
     if !modelconfig.AutoDiff
         open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
@@ -326,6 +241,11 @@ function generate_code(modelconfig::ModelConfig)
         )
     else
         cache_code = struct_code(cache)
+        cache_struct = String[]
+        for i in cache
+            push!(cache_struct, "$i = PreallocationTools.get_tmp(f.$i, C)")
+        end
+        push!(cache_struct, "")
 
         open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
             for i in vcat(
@@ -380,104 +300,25 @@ function generate_code(modelconfig::ModelConfig)
         margin = 80,
     )
 
-    return nothing
-end
+    if modelconfig.Template
+        params = generat_parameter_template(model_path)
+        param_all = append!(params, react_param)
+        template_path = replace(model_path, r".xlsx" => "_parameter_template.xlsx")
 
-
-function generate_code(modelconfig::ModelConfig,ParamDict::Dict)
-
-    if !(modelconfig.JacType in [:banded, :sparse_banded, :sparse])
-        throw(
-            error(
-                "Jacobian of type $(modelconfig.JacType) is not allowed. Choose one from banded, sparse_banded or sparse!",
+        XLSX.writetable(
+            template_path,
+            overwrite = true,
+            parameters = (
+                collect(DataFrames.eachcol(param_all)),
+                DataFrames.names(param_all),
             ),
         )
     end
 
-    model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
-    model_config = XLSX.readxlsx(model_path)
-
-        ord = [
-            "solid",
-            "dissolved_adsorbed",
-            "dissolved",
-            "dissolved_summed",
-            "dissolved_summed_pH",
-        ]
-        orderdict = Dict(x => i for (i, x) in enumerate(ord))
-        substances = @chain begin
-            DataFrame(XLSX.gettable(model_config["substances"])...)
-            @subset(:include .== 1)
-            sort!(:type, by = x -> orderdict[x])
-        end
-        df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-        substances = @chain begin
-            substances
-            transform(
-                [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
-                renamecols = false,
-            )
-            @transform(:order = 1:length(:substance))
-        end
-
-        options = DataFrame(XLSX.gettable(model_config["options"])...)
-
-        options = @chain begin
-            options
-            transform(
-                [:options, :value] .=> ByRow(x -> lowercase((replace(x, r"\s" => "")))),
-                renamecols = false,
-            )
-        end
-
-
-        parameters = @chain begin
-            DataFrame(XLSX.gettable(model_config["parameters"])...)
-            @subset(:include .== 1)
-            transform(
-                [:class, :type, :parameter] .=> ByRow(x -> replace(x, r"\s" => "")),
-                renamecols = false,
-            )
-            transform(
-                :value => ByRow(
-                    x ->
-                        (typeof(x) <: Real || !isnothing(tryparse(Float64, x))) ?
-                        x : replace(x, r"\s" => ""),
-                ),
-                renamecols = false,
-            )
-        end
-        check_illegal_char(select(parameters, :class, :type, :parameter, :value))
-
-        for (key,value) in ParamDict
-            setval!(parameters, :parameter, key, :value, value)
-        end
-
-        params_code =
-            parameter_code(parameters, substances,adsorption, options, modelconfig.CompleteFlux)
-
-
-        if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-            initval_code("banded", substances, params_code)
-        elseif modelconfig.JacType == :sparse
-            initval_code("Notbanded", substances, params_code)
-        end
-
-
-        open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
-            for i in params_code
-                write(io, i * "\n")
-            end
-            write(io, "nothing")
-        end
-        format_file(
-            modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
-            overwrite = true,
-            verbose = true,
-            margin = 80,
-        )
-
+    return nothing
 end
+
+
 end
 
 

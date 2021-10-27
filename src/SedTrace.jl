@@ -59,7 +59,6 @@ include("generate_parameter_template.jl")
 include("generate_struct.jl")
 include("generate_initval.jl")
 include("generate_jacprototype.jl")
-include("generate_output.jl")
 include("generate_plot.jl")
 
 include("benchmark.jl")
@@ -67,7 +66,6 @@ include("benchmark.jl")
 using .CodeGeneration: generate_code
 
 function IncludeFiles(modelconfig::ModelConfig)
-        
     include(modelconfig.ModelDirectory*"parm."*modelconfig.ModelName*".jl");
     include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
     include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode

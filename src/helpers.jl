@@ -56,7 +56,7 @@ function str_simplify(str::Array{String})
     # find strings in coefficients and convert to symbolic variables
     coef_vars = filter(!isnothing, myeachmatch.(r"[A-Za-z]+", str))
     if !isempty(coef_vars)
-        coef_sym = Meta.parse("@vars " * join(unique(vcat(coef_vars...)), " "))
+        coef_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(coef_vars...)), " "))
         eval(coef_sym)
     end
     return to_rational.(str)
