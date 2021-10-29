@@ -52,24 +52,28 @@ function ModelConfig(
 end
 
 
-# struct JacConfig <: TEIConfig
-#     JacType::Symbol
-#     JacFun::Bool
-#     JacVec::Bool
-# end
-
-# function JacConfig(JacType; JacFun = true, JacVec = false)
-#     return JacConfig(JacType, JacFun, JacVec)
-# end
-
-
 
 struct SolverConfig <: TEIConfig
     chunk_size::Int
-    u0::AbstractArray
-    tspan::Tuple{Real,Real}
     linsolve::Symbol
     Precondition::Symbol
+end
+
+function SolverConfig(
+    chunk_size,
+    linsolve;
+    Precondition = :ILU0,
+)
+    return SolverConfig(
+        chunk_size,
+        linsolve,
+        Precondition,
+    )
+end
+
+struct SolverCtrlConfig <: TEIConfig
+    u0::AbstractArray
+    tspan::Tuple{Real,Real}
     reltol::Real
     abstol::Union{Real,AbstractArray}
     callback::Union{Nothing,SciMLBase.DECallback}
@@ -78,12 +82,9 @@ struct SolverConfig <: TEIConfig
     maxiters::Int
 end
 
-function SolverConfig(
-    chunk_size,
+function SolverCtrlConfig(
     u0,
-    tspan,
-    linsolve;
-    Precondition = :ILU0,
+    tspan;
     reltol = 1e-6,
     abstol = 1e-14,
     callback = nothing,
@@ -91,12 +92,9 @@ function SolverConfig(
     dtmax = nothing,
     maxiters = Int(1e5),
 )
-    return SolverConfig(
-        chunk_size,
+    return SolverCtrlConfig(
         u0,
         tspan,
-        linsolve,
-        Precondition,
         reltol,
         abstol,
         callback,

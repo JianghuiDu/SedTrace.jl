@@ -34,8 +34,8 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
     end
 
     nt = length(solution.sol.t)
-    ModelledProfile = get_all_vars(substances, OdeFun, solution)
-    ModelledFlux = get_all_flux_top(substances, adsorption, ModelledProfile,nt)
+    ModelledProfile = SedTrace.get_all_vars(substances, OdeFun, solution)
+    ModelledFlux = SedTrace.get_all_flux_top(substances, adsorption, ModelledProfile,nt)
 
     summedspecies = @subset(substances, :type .== "dissolved_summed_pH").substance
 
@@ -324,7 +324,7 @@ function get_required_vars(
 
     for i in eachrow(plotting)
         plotvarval[i.name] .=
-            compute_output_vars(OutputDict, i, summed_species) .*
+            SedTrace.compute_output_vars(OutputDict, i, summed_species) .*
             eval(Meta.parse(i.conversion_profile))
     end
 

@@ -79,9 +79,9 @@ const ⊗ = *
 export ⊕, ⊗
 
 
-export SolverConfig, ModelConfig, SolutionConfig
+export SolverConfig, ModelConfig, SolutionConfig,SolverCtrlConfig
 
-export generate_code
+export generate_code,generate_ODESolver,generate_ODEFun
 export modelrun
 export generate_jacobian
 

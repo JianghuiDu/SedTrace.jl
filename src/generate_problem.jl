@@ -34,27 +34,98 @@
 
 # end
 # using OrdinaryDiffEq
-function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
+# function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
+
+
+#     if solverconfig.linsolve in [:Band, :LapackBand]
+#         Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+#         return (
+#             # ODEFunction{true,false}(OdeFun),
+#             OdeFun,
+#             CVODE_BDF(
+#                 linear_solver = solverconfig.linsolve,
+#                 jac_upper = Upbdwth,
+#                 jac_lower = Lwbdwth,
+#             ),
+#         )
+#     end
+
+#     if solverconfig.linsolve == :KLU
+#         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+#         return (
+#             ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
+#             CVODE_BDF(linear_solver = solverconfig.linsolve),
+#         )
+#     end
+
+#     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
+#         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+#         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
+#         psetup = default_psetup(p_prec, JacPrototype, JacFun)
+#         prec = default_prec(p_prec)
+
+#         return (
+#             # ODEFunction{true,false}(OdeFun),
+#             OdeFun,
+#             CVODE_BDF(
+#                 linear_solver = solverconfig.linsolve,
+#                 prec = prec,
+#                 psetup = psetup,
+#                 prec_side = 2,
+#                 krylov_dim = Int(0.1*size(JacPrototype,1)),
+#             ),
+#         )
+#     end
+
+    
+#     # if solverconfig.linsolve in [:QNDF,:QBDF,:TRBDF2,:FBDF]
+#     #     JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+#     #     return (
+#     #         ODEFunction{true,true}(OdeFun;jac=JacFun,jac_prototype=JacPrototype),
+#     #         FBDF(
+#     #             autodiff = false,
+#     #             # chunk_size = solverconfig.chunk_size
+#     #         ),
+#     #     )
+#     # end
+
+# end
+
+# function modelrun(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
+#     OdeFunction, solver = generate_ODESolver(OdeFun,JacPrototype,solverconfig);
+#     prob = ODEProblem{true}(OdeFunction, solverconfig.u0, solverconfig.tspan, nothing)
+
+#     @time sol = SciMLBase.solve(
+#         prob,
+#         solver,
+#         reltol = solverconfig.reltol,
+#         abstol = solverconfig.abstol,
+#         save_everystep = false,
+#         callback = solverconfig.callback,
+#         saveat = isnothing(solverconfig.saveat) ? [] : solverconfig.saveat,
+#         # dtmax = 1.0,
+#         maxiters = solverconfig.maxiters,
+#     )
+
+#     println("$(sol.retcode) at t = $(sol.t[end]).")
+#     println(sol.destats)
+#     return SolutionConfig(sol,x,L,Ngrid,IDdict)
+# end
+
+function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
         Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        return (
-            ODEFunction{true,false}(OdeFun),
-            CVODE_BDF(
+        return CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 jac_upper = Upbdwth,
                 jac_lower = Lwbdwth,
-            ),
-        )
+            )
     end
 
     if solverconfig.linsolve == :KLU
-        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
-        return (
-            ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype),
-            CVODE_BDF(linear_solver = solverconfig.linsolve),
-        )
+        return CVODE_BDF(linear_solver = solverconfig.linsolve)
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
@@ -63,50 +134,57 @@ function generate_ODESolver(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrix
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
         prec = default_prec(p_prec)
 
-        return (
-            ODEFunction{true,false}(OdeFun),
-            CVODE_BDF(
+        return  CVODE_BDF(
                 linear_solver = solverconfig.linsolve,
                 prec = prec,
                 psetup = psetup,
                 prec_side = 2,
                 krylov_dim = Int(0.1*size(JacPrototype,1)),
-            ),
-        )
+            )
+
     end
 
-    
-    # if solverconfig.linsolve in [:QNDF,:QBDF,:TRBDF2,:FBDF]
-    #     JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
-    #     return (
-    #         ODEFunction{true,true}(OdeFun;jac=JacFun,jac_prototype=JacPrototype),
-    #         FBDF(
-    #             autodiff = false,
-    #             # chunk_size = solverconfig.chunk_size
-    #         ),
-    #     )
-    # end
 
 end
 
-function modelrun(OdeFun,JacPrototype::Union{BandedMatrix,SparseMatrixCSC},solverconfig::SolverConfig)
-    OdeFunction, solver = generate_ODESolver(OdeFun,JacPrototype,solverconfig);
-    prob = ODEProblem{true}(OdeFunction, solverconfig.u0, solverconfig.tspan, nothing)
+function generate_ODEFun(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
+
+    if solverconfig.linsolve in [:Band, :LapackBand]
+        return OdeFun
+    end
+
+    if solverconfig.linsolve == :KLU
+        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+        return  ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype)
+
+    end
+
+    if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
+        return  OdeFun
+
+    end
+
+
+end
+
+
+function modelrun(OdeFunction, solver::CVODE_BDF,solverctrlconfig::SolverCtrlConfig)
+    prob = ODEProblem{true}(OdeFunction, solverctrlconfig.u0, solverctrlconfig.tspan, nothing)
 
     @time sol = SciMLBase.solve(
         prob,
         solver,
-        reltol = solverconfig.reltol,
-        abstol = solverconfig.abstol,
+        reltol = solverctrlconfig.reltol,
+        abstol = solverctrlconfig.abstol,
         save_everystep = false,
-        callback = solverconfig.callback,
-        saveat = isnothing(solverconfig.saveat) ? [] : solverconfig.saveat,
+        callback = solverctrlconfig.callback,
+        saveat = isnothing(solverctrlconfig.saveat) ? [] : solverctrlconfig.saveat,
         # dtmax = 1.0,
-        maxiters = solverconfig.maxiters,
+        maxiters = solverctrlconfig.maxiters,
     )
 
     println("$(sol.retcode) at t = $(sol.t[end]).")
-    println(sol.destats)
+    # println(sol.destats)
     return SolutionConfig(sol,x,L,Ngrid,IDdict)
 end
 
