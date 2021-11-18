@@ -442,8 +442,8 @@ function parameter_code(param_model, substances,adsorption, options,cf)
                 "const",
                 "D" * i.species_name,
                 @sprintf("%.16E", mdif[i.species]) * (
-                    constant_porosity_profile ? "/(1-2log(phif)) + 15Ds" :
-                    "./(1.0 .- 2log.(phif)) .+ 15Ds"
+                    constant_porosity_profile ? "/(1-2log(phif))" :
+                    "./(1.0 .- 2log.(phif))"
                 ),
                 "cm^2 yr^-1",
                 "Sediment diffusion coefficient",

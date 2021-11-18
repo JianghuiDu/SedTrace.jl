@@ -35,8 +35,8 @@ function find_param_in_expr(species_modelled, expr_str, cache_str, type)
                 append!(param.isparam, fill(false, length(variable)))
             end
         end
-
     end
+
     # find which are species (also Omegas) and which are parameters
     for i in eachrow(param)
         if !in(i.variable, species_modelled) &&
@@ -49,6 +49,43 @@ function find_param_in_expr(species_modelled, expr_str, cache_str, type)
     return param
 end
 
+function find_param_in_expr_ads(species_modelled, expr_str, cache_str,adsorption)
+
+    param = DataFrame(label = String[], variable = String[], isparam = Bool[])
+    expr_str_split = @chain begin
+        expr_str
+        replace.(r"\s" => "")
+        split.(r"[\+\-\*\/]?\=")
+    end
+
+    for i in expr_str_split
+        variable = myeachmatch(r"\b[A-Za-zΑ-Ωα-ω_][\wΑ-Ωα-ω]*\b(?!\()", i[2])
+        for j in 1:length(variable)
+            if variable[j] in adsorption.species
+                variable[j] = getval!(adsorption,:species,variable[j],:substance)
+            end
+        end
+        if !isnothing(variable)
+            variable = unique(variable)
+
+            # variable = filter(x->!(x in preallocate),variable)
+            append!(param.variable, variable)
+            append!(param.label, fill(i[1], length(variable)))
+            append!(param.isparam, fill(false, length(variable)))
+        end
+    end
+
+    # find which are species (also Omegas) and which are parameters
+    for i in eachrow(param)
+        if !in(i.variable, species_modelled) &&
+           !in(i.variable, cache_str) &&
+           !in(i.variable, "d" .* species_modelled)
+            i.isparam = true
+        end
+    end
+
+    return unique(param)
+end
 
 function identify_param(species_modelled, expr_str, cache_str, type)
 

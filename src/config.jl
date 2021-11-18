@@ -112,5 +112,6 @@ struct SolutionConfig
     L::Float64
     Ngrid::Int
     IDdict::Dict{String, StepRange{Int64, Int64}}
+    VarVal::Dict{String,Matrix{Float64}}
 end
 

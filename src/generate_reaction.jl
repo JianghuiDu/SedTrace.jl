@@ -934,6 +934,7 @@ function jac_ract_dependence(
     rate_expr,
     cache_str,
     pHspecies,
+    adsorption
 )
     p_spec = @chain begin
         find_param_in_expr(species_modelled, spec_expr, cache_str, "react")
@@ -942,7 +943,7 @@ function jac_ract_dependence(
     end
 
     p_ads = @chain begin
-        find_param_in_expr(species_modelled, ads_expr, cache_str, "react")
+        find_param_in_expr_ads(species_modelled, ads_expr, cache_str, adsorption)
         @subset(.!:isparam)
         @select!(:label, :variable)
     end
@@ -984,7 +985,6 @@ function jac_ract_dependence(
         @select!(:label, :dependence)
         unique()
     end
-
     species_join_H = @chain begin
         species_join
         @subset(:substance_type .== "dissolved_summed_pH")
@@ -1136,6 +1136,7 @@ function reaction_code(
         rate_expr,
         cache_str,
         pHspecies,
+        adsorption
     )
 
     # for i in eachrow(react_jp)

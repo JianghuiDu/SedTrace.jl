@@ -171,6 +171,8 @@ end
 function modelrun(OdeFunction, solver::CVODE_BDF,solverctrlconfig::SolverCtrlConfig)
     prob = ODEProblem{true}(OdeFunction, solverctrlconfig.u0, solverctrlconfig.tspan, nothing)
 
+    saveat = isnothing(solverctrlconfig.saveat) ? [] : vcat(1e-12,(solverctrlconfig.tspan[1]+solverctrlconfig.saveat):solverctrlconfig.saveat:solverctrlconfig.tspan[2])
+
     @time sol = SciMLBase.solve(
         prob,
         solver,
@@ -178,14 +180,30 @@ function modelrun(OdeFunction, solver::CVODE_BDF,solverctrlconfig::SolverCtrlCon
         abstol = solverctrlconfig.abstol,
         save_everystep = false,
         callback = solverctrlconfig.callback,
-        saveat = isnothing(solverctrlconfig.saveat) ? [] : solverctrlconfig.saveat,
+        saveat = saveat,
         # dtmax = 1.0,
         maxiters = solverctrlconfig.maxiters,
+        save_start = false
     )
-
     println("$(sol.retcode) at t = $(sol.t[end]).")
+
+    nt = length(sol.t)
+    dC0 = similar(ones(size(sol, 1)))
+    VarName = fieldnames(typeof(OdeFunction))
+    nVar = length(VarName)
+
+    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt,  Ngrid) for i in VarName)
+
+    for i in 1:nt
+        OdeFunction(dC0, sol[i], nothing, 0)
+        for j in VarName
+            VarVal[string(j)][i, :] .= getfield(OdeFunction, j).du
+        end
+    end
+
+
     # println(sol.destats)
-    return SolutionConfig(sol,x,L,Ngrid,IDdict)
+    return SolutionConfig(sol,x,L,Ngrid,IDdict,VarVal)
 end
 
 nothing

@@ -1,11 +1,14 @@
-function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=false)
+function generate_substance_plot(modelconfig, solution,site,vars=[], saveplt=false)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
         DataFrame(XLSX.gettable(model_config["substances"])...)
         @subset(:include .== 1)
     end
-
+    reactions = @chain begin
+        DataFrame(XLSX.gettable(model_config["reactions"])...)
+        @subset(:include .== 1)
+    end
     adsorption = @chain begin
         DataFrame(XLSX.gettable(model_config["adsorption"])...)
         @subset(:include .== 1)
@@ -14,6 +17,7 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
     # remove empty space or weird minus signs
     SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+    SedTrace.df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     plotting = @chain begin
         DataFrame(XLSX.gettable(model_config["output"])...)
@@ -34,7 +38,7 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
     end
 
     nt = length(solution.sol.t)
-    ModelledProfile = SedTrace.get_all_vars(substances, OdeFun, solution)
+    ModelledProfile = SedTrace.get_all_vars(substances, solution)
     ModelledFlux = SedTrace.get_all_flux_top(substances, adsorption, ModelledProfile,nt)
 
     summedspecies = @subset(substances, :type .== "dissolved_summed_pH").substance
@@ -59,6 +63,43 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
                 unit_flux = haskey(OutputFlux, i.name) ? i.unit_flux : nothing,
             ) for i in eachrow(plotting)
         ],
+    )
+
+    all_vars = collect(keys(ModelledProfile))
+
+    df_substance = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in substances.substance]),vcat(:depth,Symbol.(substances.substance)))
+
+    df_reacrate = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in reactions.label]),vcat(:depth,Symbol.(reactions.label)))
+
+    omega_vars = filter(x->occursin(r"\bOmega_",x)==1,all_vars)
+
+    df_omega = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in omega_vars]),vcat(:depth,Symbol.(omega_vars)))
+
+
+    species_vars = filter(x-> !in(x,substances.substance)&& !in(x,reactions.label) && !in(x,omega_vars) && !occursin(r"_tran/b",x) && !occursin(r"\bS_",x),all_vars)
+
+    df_species = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in species_vars]),vcat(:depth,Symbol.(species_vars)))
+
+    XLSX.writetable(
+        modelconfig.ModelDirectory*modelconfig.ModelName*"_output.xlsx",
+        overwrite = true,
+        substances = (
+            collect(DataFrames.eachcol(df_substance)),
+            DataFrames.names(df_substance),
+        ),
+        reacrates = (
+            collect(DataFrames.eachcol(df_reacrate)),
+            DataFrames.names(df_reacrate),
+        ),
+        omega = (
+            collect(DataFrames.eachcol(df_omega)),
+            DataFrames.names(df_omega),
+        ),
+        species = (
+            collect(DataFrames.eachcol(df_species)),
+            DataFrames.names(df_species),
+        ),
+
     )
 
 
@@ -101,7 +142,7 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
             flux_top_message,
             :identity,
         )
-        display(p)
+        display("image/svg+xml", p)
         if saveplt
             savefig(p, modelconfig.ModelDirectory * "$key.pdf")
         end
@@ -109,7 +150,7 @@ function generate_substance_plot(modelconfig,OdeFun, solution,site,vars=[], save
     end
 end
 
-function generate_aux_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=false)
+function generate_aux_plot(modelconfig, solution,site,vars=[], saveplt=false)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -145,7 +186,7 @@ function generate_aux_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=fa
     end
 
     nt = length(solution.sol.t)
-    ModelledProfile = get_all_vars(substances, OdeFun, solution)
+    ModelledProfile = get_all_vars(substances, solution)
 
     if !isempty(vars)
         Selectvar = filter(k->k.first in vars,ModelledProfile)
@@ -165,7 +206,7 @@ function generate_aux_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=fa
             nothing,
             :identity,
         )
-        display(p)
+        display("image/svg+xml", p)        
         if saveplt
             savefig(p, modelconfig.ModelDirectory * "$key.pdf")
         end
@@ -174,7 +215,7 @@ function generate_aux_plot(modelconfig,OdeFun, solution,site,vars=[], saveplt=fa
 end
 
 # get the profiles of all modelled substances and species
-function get_all_vars(substances, OdeFun, solution::SolutionConfig)
+function get_all_vars(substances, solution::SolutionConfig)
 
     nt = length(solution.sol.t)
 
@@ -185,21 +226,22 @@ function get_all_vars(substances, OdeFun, solution::SolutionConfig)
     )
 
 
-    VarName = fieldnames(typeof(OdeFun))
-    nVar = length(VarName)
+    # VarName = fieldnames(typeof(OdeFun))
+    # nVar = length(VarName)
 
-    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt, solution.Ngrid) for i in VarName)
+    # VarVal = Dict(string(i) => Matrix{Float64}(undef, nt, solution.Ngrid) for i in VarName)
 
-    dC0 = similar(ones(size(solution.sol, 1)))
+    # dC0 = similar(ones(size(solution.sol, 1)))
 
-    for i = 1:nt
-        OdeFun(dC0, solution.sol[i], nothing, 0)
-        for j in VarName
-            VarVal[string(j)][i, :] = getfield(OdeFun, j).du
-        end
-    end
+    # solution_tmp = deepcopy(solution.sol)
+    # for i = 1:nt
+    #     Base.invokelatest(OdeFun,dC0, solution_tmp[i], nothing, 0)
+    #     for j in VarName
+    #         VarVal[string(j)][i, :] = getfield(OdeFun, j).du
+    #     end
+    # end
 
-    return merge!(OutputDict, VarVal)
+    return merge!(OutputDict, solution.VarVal)
 end
 
 # get the benthic fluxes of all modelled substances and species
