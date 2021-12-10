@@ -393,26 +393,31 @@ function parameter_code(param_model, substances,adsorption, options,cf)
         @transform(:species_name = :species)
     end
 
-    dissolved_adsorbed_summed = @chain begin
-        substances
-        @subset(:type .== "dissolved_adsorbed_summed")
-        @transform(:species = split.(:species_modelled, ","))
-        DataFrames.flatten(:species)
-        @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
-        @transform(:species_name = :species)
-        leftjoin(adsorption,on=[:substance,:species,:include])
-        @transform(:type = ifelse.(:surface.=="dissolved","dissolved","solid"))
-        @transform(:top_bc_type = ifelse.(:surface.=="dissolved","dirichlet","robin"))
-        select(names(dissolved))
-        unique
-    end
-
-
     dissolved_all = @chain begin
         dissolved
         append!(dissolved_summed)
-        append!(@subset(dissolved_adsorbed_summed,:type.=="dissolved"))
     end
+
+    if any(substances.type.=="dissolved_adsorbed_summed")
+        dissolved_adsorbed_summed = @chain begin
+            substances
+            @subset(:type .== "dissolved_adsorbed_summed")
+            @transform(:species = split.(:species_modelled, ","))
+            DataFrames.flatten(:species)
+            @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
+            @transform(:species_name = :species)
+            leftjoin(adsorption,on=[:substance,:species,:include])
+            @transform(:type = ifelse.(:surface.=="dissolved","dissolved","solid"))
+            @transform(:top_bc_type = ifelse.(:surface.=="dissolved","dirichlet","robin"))
+            select(names(dissolved))
+            unique
+        end
+        append!(dissolved_all,@subset(dissolved_adsorbed_summed,:type.=="dissolved"))
+
+    end
+
+
+    
 
     salinity = getNumber!(globalParam, :parameter, "salinity", :value)
     temperature = getNumber!(globalParam, :parameter, "temp", :value)
@@ -669,10 +674,11 @@ end
         @transform(:species_name = :substance)
         append!(dissolved_all)
         append!(dissolved_adsorbed)
-        append!(dissolved_adsorbed_summed)
         unique
     end
-
+    if any(substances.type.=="dissolved_adsorbed_summed")
+        append!(substances_bc,dissolved_adsorbed_summed)
+    end
 
     bdParam = newdf()
 

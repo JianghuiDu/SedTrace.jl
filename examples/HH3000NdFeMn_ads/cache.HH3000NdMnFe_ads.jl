@@ -269,6 +269,10 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
+    Omega_RBasalt_dis::PreallocationTools.DiffCache{
+        Array{T,1},
+        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
+    }
     Omega_RNdnrPO4_pre::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
@@ -413,6 +417,14 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
+    RBasalt_dis::PreallocationTools.DiffCache{
+        Array{T,1},
+        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
+    }
+    RBasalt_dis_Nd::PreallocationTools.DiffCache{
+        Array{T,1},
+        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
+    }
     RNdnrPO4_pre::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
@@ -541,15 +553,23 @@ mutable struct Reactran{T,chunk_size}
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
+    S_Basalt::PreallocationTools.DiffCache{
+        Array{T,1},
+        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
+    }
+    S_Al::PreallocationTools.DiffCache{
+        Array{T,1},
+        Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
+    }
     S_TNdnr::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
-    S_NdnrPO4::PreallocationTools.DiffCache{
+    S_TNdr::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
-    S_TNdr::PreallocationTools.DiffCache{
+    S_NdnrPO4::PreallocationTools.DiffCache{
         Array{T,1},
         Array{ForwardDiff.Dual{nothing,T,chunk_size},1},
     }
@@ -676,6 +696,8 @@ function init(
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RBSi_dis =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    Omega_RBasalt_dis =
+        PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RNdnrPO4_pre =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     Omega_RNdrPO4_pre =
@@ -714,6 +736,9 @@ function init(
     RFeCO3_dis = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RFeCO3_pre = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RBSi_dis = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    RBasalt_dis = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    RBasalt_dis_Nd =
+        PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RNdnrPO4_pre =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     RNdrPO4_pre = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
@@ -747,9 +772,11 @@ function init(
     S_FeCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_BSi = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_TH4SiO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    S_Basalt = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    S_Al = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_TNdnr = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
-    S_NdnrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_TNdr = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
+    S_NdnrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_NdrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
     S_SurfMn_Ndnr =
         PreallocationTools.dualcache(zeros(T, Ngrid), Val{chunk_size})
@@ -831,6 +858,7 @@ function init(
         Omega_RFeCO3_dis,
         Omega_RFeCO3_pre,
         Omega_RBSi_dis,
+        Omega_RBasalt_dis,
         Omega_RNdnrPO4_pre,
         Omega_RNdrPO4_pre,
         RO2POC,
@@ -867,6 +895,8 @@ function init(
         RFeCO3_dis,
         RFeCO3_pre,
         RBSi_dis,
+        RBasalt_dis,
+        RBasalt_dis_Nd,
         RNdnrPO4_pre,
         RNdrPO4_pre,
         RMnRe_Ndnr,
@@ -899,9 +929,11 @@ function init(
         S_FeCO3,
         S_BSi,
         S_TH4SiO4,
+        S_Basalt,
+        S_Al,
         S_TNdnr,
-        S_NdnrPO4,
         S_TNdr,
+        S_NdnrPO4,
         S_NdrPO4,
         S_SurfMn_Ndnr,
         S_SurfMn_Ndr,

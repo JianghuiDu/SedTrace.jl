@@ -66,6 +66,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     Omega_RFeCO3_dis = PreallocationTools.get_tmp(f.Omega_RFeCO3_dis, C)
     Omega_RFeCO3_pre = PreallocationTools.get_tmp(f.Omega_RFeCO3_pre, C)
     Omega_RBSi_dis = PreallocationTools.get_tmp(f.Omega_RBSi_dis, C)
+    Omega_RBasalt_dis = PreallocationTools.get_tmp(f.Omega_RBasalt_dis, C)
     Omega_RNdnrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdnrPO4_pre, C)
     Omega_RNdrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdrPO4_pre, C)
     RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
@@ -102,6 +103,8 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     RFeCO3_dis = PreallocationTools.get_tmp(f.RFeCO3_dis, C)
     RFeCO3_pre = PreallocationTools.get_tmp(f.RFeCO3_pre, C)
     RBSi_dis = PreallocationTools.get_tmp(f.RBSi_dis, C)
+    RBasalt_dis = PreallocationTools.get_tmp(f.RBasalt_dis, C)
+    RBasalt_dis_Nd = PreallocationTools.get_tmp(f.RBasalt_dis_Nd, C)
     RNdnrPO4_pre = PreallocationTools.get_tmp(f.RNdnrPO4_pre, C)
     RNdrPO4_pre = PreallocationTools.get_tmp(f.RNdrPO4_pre, C)
     RMnRe_Ndnr = PreallocationTools.get_tmp(f.RMnRe_Ndnr, C)
@@ -134,9 +137,11 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     S_FeCO3 = PreallocationTools.get_tmp(f.S_FeCO3, C)
     S_BSi = PreallocationTools.get_tmp(f.S_BSi, C)
     S_TH4SiO4 = PreallocationTools.get_tmp(f.S_TH4SiO4, C)
+    S_Basalt = PreallocationTools.get_tmp(f.S_Basalt, C)
+    S_Al = PreallocationTools.get_tmp(f.S_Al, C)
     S_TNdnr = PreallocationTools.get_tmp(f.S_TNdnr, C)
-    S_NdnrPO4 = PreallocationTools.get_tmp(f.S_NdnrPO4, C)
     S_TNdr = PreallocationTools.get_tmp(f.S_TNdr, C)
+    S_NdnrPO4 = PreallocationTools.get_tmp(f.S_NdnrPO4, C)
     S_NdrPO4 = PreallocationTools.get_tmp(f.S_NdrPO4, C)
     S_SurfMn_Ndnr = PreallocationTools.get_tmp(f.S_SurfMn_Ndnr, C)
     S_SurfMn_Ndr = PreallocationTools.get_tmp(f.S_SurfMn_Ndr, C)
@@ -160,6 +165,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     FeCO3 = @view C[FeCO3ID]
     Age = @view C[AgeID]
     BSi = @view C[BSiID]
+    Basalt = @view C[BasaltID]
     NdnrPO4 = @view C[NdnrPO4ID]
     NdrPO4 = @view C[NdrPO4ID]
     SurfMn_Ndnr = @view C[SurfMn_NdnrID]
@@ -195,6 +201,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dFeCO3 = @view dC[FeCO3ID]
     dAge = @view dC[AgeID]
     dBSi = @view dC[BSiID]
+    dBasalt = @view dC[BasaltID]
     dNdnrPO4 = @view dC[NdnrPO4ID]
     dNdrPO4 = @view dC[NdrPO4ID]
     dSurfMn_Ndnr = @view dC[SurfMn_NdnrID]
@@ -226,6 +233,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     mul!(dFeCO3, AmFeCO3, FeCO3)
     mul!(dAge, AmAge, Age)
     mul!(dBSi, AmBSi, BSi)
+    mul!(dBasalt, AmBasalt, Basalt)
     mul!(dNdnrPO4, AmNdnrPO4, NdnrPO4)
     mul!(dNdrPO4, AmNdrPO4, NdrPO4)
     mul!(dSurfMn_Ndnr, AmSurfMn_Ndnr, SurfMn_Ndnr)
@@ -252,6 +260,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dFeCO3[1] += BcAmFeCO3[1] ⊗ FeCO3[1] ⊕ BcCmFeCO3[1]
     dAge[1] += BcAmAge[1] ⊗ Age[1] ⊕ BcCmAge[1]
     dBSi[1] += BcAmBSi[1] ⊗ BSi[1] ⊕ BcCmBSi[1]
+    dBasalt[1] += BcAmBasalt[1] ⊗ Basalt[1] ⊕ BcCmBasalt[1]
     dNdnrPO4[1] += BcAmNdnrPO4[1] ⊗ NdnrPO4[1] ⊕ BcCmNdnrPO4[1]
     dNdrPO4[1] += BcAmNdrPO4[1] ⊗ NdrPO4[1] ⊕ BcCmNdrPO4[1]
     dSurfMn_Ndnr[1] += BcAmSurfMn_Ndnr[1] ⊗ SurfMn_Ndnr[1] ⊕ BcCmSurfMn_Ndnr[1]
@@ -277,6 +286,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dFeCO3[Ngrid] += BcAmFeCO3[2] ⊗ FeCO3[Ngrid] ⊕ BcCmFeCO3[2]
     dAge[Ngrid] += BcAmAge[2] ⊗ Age[Ngrid] ⊕ BcCmAge[2]
     dBSi[Ngrid] += BcAmBSi[2] ⊗ BSi[Ngrid] ⊕ BcCmBSi[2]
+    dBasalt[Ngrid] += BcAmBasalt[2] ⊗ Basalt[Ngrid] ⊕ BcCmBasalt[2]
     dNdnrPO4[Ngrid] += BcAmNdnrPO4[2] ⊗ NdnrPO4[Ngrid] ⊕ BcCmNdnrPO4[2]
     dNdrPO4[Ngrid] += BcAmNdrPO4[2] ⊗ NdrPO4[Ngrid] ⊕ BcCmNdrPO4[2]
     dSurfMn_Ndnr[Ngrid] +=
@@ -323,7 +333,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     Mn_ads_Fe_tran[Ngrid] +=
         BcAmMn_ads_Fe[2] ⊗ Mn_ads_Fe[Ngrid] ⊕ BcCmMn_ads_Fe[2]
     @.. dTMn = Mn_tran ⊗ 1 ⊕ Mn_ads_Mn_tran ⊗ dstopw ⊕ Mn_ads_Fe_tran ⊗ dstopw
-    @.. dTMn += 0.2alpha ⊗ (Mn0 - Mn)
+    @.. dTMn += alpha ⊗ (Mn0 - Mn)
 
     @.. Fe =
         TFe / (FeOOH ⊗ KFe_ads_Fe ⊗ dstopw ⊕ KFe_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
@@ -341,7 +351,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     Fe_ads_Fe_tran[Ngrid] +=
         BcAmFe_ads_Fe[2] ⊗ Fe_ads_Fe[Ngrid] ⊕ BcCmFe_ads_Fe[2]
     @.. dTFe = Fe_tran ⊗ 1 ⊕ Fe_ads_Mn_tran ⊗ dstopw ⊕ Fe_ads_Fe_tran ⊗ dstopw
-    @.. dTFe += 0.2alpha ⊗ (Fe0 - Fe)
+    @.. dTFe += alpha ⊗ (Fe0 - Fe)
 
     @.. Ndnr =
         TNdnr / (FeOOH ⊗ KNd_ads_Fe ⊗ dstopw ⊕ KNd_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
@@ -497,8 +507,8 @@ function (f::Cache.Reactran)(dC, C, parms, t)
             H ⊗ (
                 41423.3356559411 ⊗ CO3^2 ⊕ 965.581207896004 ⊗ CO3 ⊕
                 0.5471766470303 ⊗ Cl ⊕ 3.80379832102204 ⊗ HCO3 ⊕
-                416356.704552951 ⊗ HS ⊕ 478943.184139625 ⊗ OH^2 ⊕
-                4760.8482990692 ⊗ OH ⊕ 6.54884648049946 ⊗ SO4
+                478943.184139625 ⊗ OH^2 ⊕ 4760.8482990692 ⊗ OH ⊕
+                6.54884648049946 ⊗ SO4
             ) ⊕ H ⊕ 0.00150222599838656 ⊗ HS
         )
     @.. Al_free =
@@ -528,9 +538,8 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. Mn_free =
         Mn / (
             42.0329746291717 ⊗ CO3 ⊕ 0.585293386440227 ⊗ Cl ⊕
-            2.23595750479834 ⊗ HCO3 ⊕ 7563305.19479939 ⊗ HS ⊕
-            6200.51874700166 ⊗ OH^2 ⊕ 240.002069606654 ⊗ OH ⊕
-            6.84558981272481 ⊗ SO4 ⊕ 1
+            2.23595750479834 ⊗ HCO3 ⊕ 6200.51874700166 ⊗ OH^2 ⊕
+            240.002069606654 ⊗ OH ⊕ 6.84558981272481 ⊗ SO4 ⊕ 1
         )
 
     # reaction rates
@@ -543,6 +552,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. Omega_RFeCO3_dis = Fe_free ⊗ CO3 / KspFeCO3
     @.. Omega_RFeCO3_pre = Fe_free ⊗ CO3 / KspFeCO3
     @.. Omega_RBSi_dis = H4SiO4 / H4SiO4_dis_sat
+    @.. Omega_RBasalt_dis = H4SiO4 ⊗ Al_free^0.35 / H^1.05 / KspBasalt
     @.. Omega_RNdnrPO4_pre =
         Ndnr_free ⊗ PO4 / (KspNdPO4 ⊗ NdnrPO4 / (NdnrPO4 ⊕ NdrPO4))
     @.. Omega_RNdrPO4_pre =
@@ -583,7 +593,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. RSO4CH4 = kAOM ⊗ CH4 ⊗ SO4 / (SO4 ⊕ KAOM)
     @.. RMnO2Fe = kMnO2Fe ⊗ MnO2 ⊗ Fe
     @.. RMnO2H2S = kMnO2H2S ⊗ MnO2 ⊗ TH2S
-    @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S^0.5
+    @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S
     @.. RFeSH2S = kFeSH2S ⊗ FeS ⊗ TH2S
     @.. RFeS_dis =
         (-tanh(100.0 ⊗ (Omega_RFeS_dis - 1.0)) / 2 ⊕ 0.5) ⊗
@@ -613,7 +623,13 @@ function (f::Cache.Reactran)(dC, C, parms, t)
         (kFeCO3pre ⊗ (Omega_RFeCO3_pre - 1))
     @.. RBSi_dis =
         (-tanh(100.0 ⊗ (Omega_RBSi_dis - 1.0)) / 2 ⊕ 0.5) ⊗
-        ((1 - Omega_RBSi_dis) ⊗ BSi ⊗ nuBSi / (aBSi ⊕ Age))
+        ((1 - Omega_RBSi_dis) ⊗ BSi ⊗ kBSi_dis)
+    @.. RBasalt_dis =
+        (-tanh(100.0 ⊗ (Omega_RBasalt_dis - 1.0)) / 2 ⊕ 0.5) ⊗ (
+            kBasalt ⊗ Basalt ⊗ H / (Al_free)^(1 / 3) ⊗ (1 - Omega_RBasalt_dis) /
+            (aBasalt ⊕ Age)^pBasalt
+        )
+    @.. RBasalt_dis_Nd = RBasalt_dis
     @.. RNdnrPO4_pre =
         (tanh(100.0 ⊗ (Omega_RNdnrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kNdPO4_pre ⊗ NdnrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdnrPO4_pre - 1))
@@ -622,16 +638,17 @@ function (f::Cache.Reactran)(dC, C, parms, t)
         (kNdPO4_pre ⊗ NdrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdrPO4_pre - 1))
     @.. RMnRe_Ndnr = (RMnO2POC ⊗ 2 ⊕ RMnO2H2S ⊕ RMnO2Fe) ⊗ SurfMn_Ndnr / MnO2
     @.. RMnRe_Ndr = (RMnO2POC ⊗ 2 ⊕ RMnO2H2S ⊕ RMnO2Fe) ⊗ SurfMn_Ndr / MnO2
-    @.. RMnOx_Ndnr = (RO2Mn ⊕ RO2Mn_ads ⊗ dstopw ⊕ RNO3Mn) ⊗ Ndnr / Mn ⊗ DNdMn
-    @.. RMnOx_Ndr = (RO2Mn ⊕ RO2Mn_ads ⊗ dstopw ⊕ RNO3Mn) ⊗ Ndr / Mn ⊗ DNdMn
+    @.. RMnOx_Ndnr =
+        (RO2Mn ⊕ RO2Mn_ads ⊗ dstopw ⊕ RNO3Mn) ⊗ Ndnr / Mn ⊗ DNdMn_sed
+    @.. RMnOx_Ndr = (RO2Mn ⊕ RO2Mn_ads ⊗ dstopw ⊕ RNO3Mn) ⊗ Ndr / Mn ⊗ DNdMn_sed
     @.. RFeRe_Ndnr = (RFeOOHPOC ⊕ RFeOOHH2S) ⊗ SurfFe_Ndnr / FeOOH
     @.. RFeRe_Ndr = (RFeOOHPOC ⊕ RFeOOHH2S) ⊗ SurfFe_Ndr / FeOOH
     @.. RFeOx_Ndnr =
         (RO2Fe ⊕ RO2Fe_ads ⊗ dstopw ⊕ RNO3Fe ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndnr / Fe ⊗
-        DNdFe
+        DNdFe_sed
     @.. RFeOx_Ndr =
         (RO2Fe ⊕ RO2Fe_ads ⊗ dstopw ⊕ RNO3Fe ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndr / Fe ⊗
-        DNdFe
+        DNdFe_sed
 
     # species rates
     @.. S_POC =
@@ -701,14 +718,16 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. S_MnCO3 = -1 ⊗ RMnCO3_dis ⊕ 1 ⊗ RMnCO3_pre
     @.. S_FeCO3 = -1 ⊗ RFeCO3_dis ⊕ 1 ⊗ RFeCO3_pre
     @.. S_BSi = -1 ⊗ RBSi_dis
-    @.. S_TH4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw
+    @.. S_TH4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw ⊕ 1 ⊗ RBasalt_dis ⊗ dstopw
+    @.. S_Basalt = -1 ⊗ RBasalt_dis
+    @.. S_Al = 0.35 ⊗ RBasalt_dis ⊗ dstopw
     @.. S_TNdnr =
-        -1 ⊗ RNdnrPO4_pre ⊕ 1 ⊗ RMnRe_Ndnr ⊗ dstopw ⊕ -1 ⊗ RMnOx_Ndnr ⊕
-        1 ⊗ RFeRe_Ndnr ⊗ dstopw ⊕ -1 ⊗ RFeOx_Ndnr
-    @.. S_NdnrPO4 = 1 ⊗ RNdnrPO4_pre ⊗ pwtods
+        rNdnrSi ⊗ RBasalt_dis_Nd ⊕ -1 ⊗ RNdnrPO4_pre ⊕ 1 ⊗ RMnRe_Ndnr ⊗ dstopw ⊕
+        -1 ⊗ RMnOx_Ndnr ⊕ 1 ⊗ RFeRe_Ndnr ⊗ dstopw ⊕ -1 ⊗ RFeOx_Ndnr
     @.. S_TNdr =
-        -1 ⊗ RNdrPO4_pre ⊕ 1 ⊗ RMnRe_Ndr ⊗ dstopw ⊕ -1 ⊗ RMnOx_Ndr ⊕
-        1 ⊗ RFeRe_Ndr ⊗ dstopw ⊕ -1 ⊗ RFeOx_Ndr
+        rNdrSi ⊗ RBasalt_dis_Nd ⊕ -1 ⊗ RNdrPO4_pre ⊕ 1 ⊗ RMnRe_Ndr ⊗ dstopw ⊕
+        -1 ⊗ RMnOx_Ndr ⊕ 1 ⊗ RFeRe_Ndr ⊗ dstopw ⊕ -1 ⊗ RFeOx_Ndr
+    @.. S_NdnrPO4 = 1 ⊗ RNdnrPO4_pre ⊗ pwtods
     @.. S_NdrPO4 = 1 ⊗ RNdrPO4_pre ⊗ pwtods
     @.. S_SurfMn_Ndnr = -1 ⊗ RMnRe_Ndnr ⊕ 1 ⊗ RMnOx_Ndnr ⊗ pwtods
     @.. S_SurfMn_Ndr = -1 ⊗ RMnRe_Ndr ⊕ 1 ⊗ RMnOx_Ndr ⊗ pwtods
@@ -723,7 +742,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
         -2 ⊗ RO2Fe_ads ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕ -8 / 5 ⊗ RNO3Mn ⊕
         -9 / 5 ⊗ RNO3Fe ⊕ 2 ⊗ RSO4CH4 ⊕ -1 ⊗ RMnO2Fe ⊗ dstopw ⊕
         2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕ 1 ⊗ RFeS_dis ⊗ dstopw ⊕
-        -1 ⊗ RFeS_pre
+        -1 ⊗ RFeS_pre ⊕ 21 / 20 ⊗ RBasalt_dis ⊗ dstopw
     @.. S_TA +=
         2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊗ dstopw ⊕
         2 ⊗ RMnCO3_dis ⊗ dstopw ⊕ -2 ⊗ RMnCO3_pre ⊗ dstopw ⊕
@@ -749,6 +768,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dFeCO3 += S_FeCO3
     @.. dAge += S_Age
     @.. dBSi += S_BSi
+    @.. dBasalt += S_Basalt
     @.. dNdnrPO4 += S_NdnrPO4
     @.. dNdrPO4 += S_NdrPO4
     @.. dSurfMn_Ndnr += S_SurfMn_Ndnr
@@ -760,6 +780,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
+    @.. dAl += S_Al
     @.. dSO4 += S_SO4
     @.. dNH4 += S_NH4
     @.. dTH4SiO4 += S_TH4SiO4

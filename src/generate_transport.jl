@@ -57,7 +57,7 @@ function transport_code(substances,adsorption, options,MTK)
         if i.type ∈ ["dissolved","dissolved_summed"]
             push!(
                 alpha_str,
-                "@. d$(i.substance) += alpha*($(i.substance)$(bc_type(i.top_bc_type,i.substance))-$(i.substance))",
+                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha*($(i.substance)$(bc_type(i.top_bc_type,i.substance))-$(i.substance))",
             )
         end
         if i.type == "dissolved_adsorbed"
@@ -97,7 +97,7 @@ function transport_code(substances,adsorption, options,MTK)
             )
             push!(
                 ads_str,
-                "@. d$(i.substance) += alpha * ($((i.substance))0 - $(i.substance))",
+                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha * ($((i.substance))0 - $(i.substance))",
             )
             # push!(ads_str, "@. d$(i.substance) /=1+dstopw*K$((i.substance))_ads")
             push!(ads_str, "@. d$(i.substance) *= 1/(1+dstopw*K$((i.substance))_ads)")
@@ -142,7 +142,7 @@ function transport_code(substances,adsorption, options,MTK)
             )
             push!(
                 ads_str,
-                "@. d$(substance_name) += alpha*($(main_spec)0-$(main_spec))"
+                "@. d$(substance_name) += $(i.bioirrigation_scale)alpha*($(main_spec)0-$(main_spec))"
             )
             push!(
                 ads_str,

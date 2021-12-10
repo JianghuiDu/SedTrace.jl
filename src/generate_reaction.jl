@@ -219,7 +219,7 @@ function check_react_balance(label, equation_ind)
     element_sym = Meta.parse("SymPy.@vars " * join(unique(element_df.element), " "))
     eval(element_sym)
     # convert coefficients of element (Strings) to symbolic variables
-    coef_vars = filter(!isnothing, myeachmatch.(r"[a-zA-Z]+", element_df.coef))
+    coef_vars = filter(!isnothing, myeachmatch.(r"[a-zA-Z]\w+", element_df.coef))
     if !isempty(coef_vars)
         coef_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(coef_vars...)), " "))
         eval(coef_sym)
@@ -227,11 +227,11 @@ function check_react_balance(label, equation_ind)
     # check if the sum of element*coefficient of the reaction is zero
     mass_sum_expr = Meta.parse(join(element_df.coef .* "*" .* element_df.element, "+"))
     mass_sum = SymPy.simplify(
-        SymPy.nsimplify(eval(mass_sum_expr), tolerance = 1e-15, rational = true),
+        SymPy.nsimplify(eval(mass_sum_expr), tolerance = eps(), rational = true),
     )
 
     # if mass_sum != 0 # if not mass balanced
-    if abs(mass_sum) > eps()
+    if abs(mass_sum) > 5eps()
         throw(
             error(
                 "Reaction " *
@@ -253,11 +253,11 @@ function check_react_balance(label, equation_ind)
         charge_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(charge_vars...)), " "))
         eval(charge_sym)
         charge_sum = SymPy.simplify(
-            SymPy.nsimplify(eval(charge_sum_expr), tolerance = 1e-15, rational = true),
+            SymPy.nsimplify(eval(charge_sum_expr), tolerance = eps(), rational = true),
         )
     end
 
-    if abs(charge_sum) > eps() # if not charge balanced
+    if abs(charge_sum) > 5eps() # if not charge balanced
         throw(
             error(
                 "Reaction " *

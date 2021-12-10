@@ -144,31 +144,44 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
 
     end
 
+    if solverconfig.linsolve == :FBDF
+        return FBDF(
+                autodiff = false,
+                # chunk_size = solverconfig.chunk_size
+            )
+    end
+
+
 
 end
 
 function generate_ODEFun(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
+colorvec = matrix_colors(JacPrototype)
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        return OdeFun
+        return ODEFunction{true,false}(OdeFun,colorvec=colorvec)
     end
 
     if solverconfig.linsolve == :KLU
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
-        return  ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype)
+        return  ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype,colorvec=colorvec)
 
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
-        return  OdeFun
-
+        return  ODEFunction{true,false}(OdeFun,colorvec=colorvec)
     end
 
+    if solverconfig.linsolve == :FBDF
+        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+        jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
+        return  ODEFunction{true,false}(OdeFun; jac_prototype = jac_prototype,colorvec=colorvec)
+    end
 
 end
 
 
-function modelrun(OdeFunction, solver::CVODE_BDF,solverctrlconfig::SolverCtrlConfig)
+function modelrun(OdeFunction, solver,solverctrlconfig::SolverCtrlConfig,outputconfig::OutputConfig)
     prob = ODEProblem{true}(OdeFunction, solverctrlconfig.u0, solverctrlconfig.tspan, nothing)
 
     saveat = isnothing(solverctrlconfig.saveat) ? [] : vcat(1e-12,(solverctrlconfig.tspan[1]+solverctrlconfig.saveat):solverctrlconfig.saveat:solverctrlconfig.tspan[2])
@@ -189,21 +202,21 @@ function modelrun(OdeFunction, solver::CVODE_BDF,solverctrlconfig::SolverCtrlCon
 
     nt = length(sol.t)
     dC0 = similar(ones(size(sol, 1)))
-    VarName = fieldnames(typeof(OdeFunction))
+    VarName = fieldnames(typeof(OdeFunction.f))
     nVar = length(VarName)
 
-    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt,  Ngrid) for i in VarName)
+    VarVal = Dict(string(i) => Matrix{Float64}(undef, nt,  outputconfig.Ngrid) for i in VarName)
 
     for i in 1:nt
-        OdeFunction(dC0, sol[i], nothing, 0)
+        Base.@invokelatest OdeFunction.f(dC0, sol[i], nothing, 0)
         for j in VarName
-            VarVal[string(j)][i, :] .= getfield(OdeFunction, j).du
+            VarVal[string(j)][i, :] .= getfield(OdeFunction.f, j).du
         end
     end
 
 
     # println(sol.destats)
-    return SolutionConfig(sol,x,L,Ngrid,IDdict,VarVal)
+    return SolutionConfig(sol,outputconfig.x,outputconfig.L,outputconfig.Ngrid,outputconfig.IDdict,VarVal)
 end
 
 nothing
