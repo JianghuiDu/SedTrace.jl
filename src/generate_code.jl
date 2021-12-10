@@ -45,6 +45,7 @@ function generate_code(modelconfig::ModelConfig, ParamDict::Dict = Dict())
         DataFrame(XLSX.gettable(model_config["substances"])...)
         @subset(:include .== 1)
         sort!(:type, by = x -> orderdict[x])
+        @transform(:bioirrigation_scale = ifelse.(ismissing.(:bioirrigation_scale), "",:bioirrigation_scale))
     end
 
     reactions = @chain begin

@@ -2,8 +2,8 @@
 using SedTrace
 using JLD2
 
-modeldirectory = "C:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\HH3000ads\\"
-modelfile = "model_config.HH3000Nd.xlsx"
+modeldirectory = "C:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\HH3000NdFeMn_ads\\"
+modelfile = "model_config.HH3000NdFeMn_ads.xlsx"
 modelname = "HH3000Nd"
 
 modelconfig = ModelConfig(

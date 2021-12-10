@@ -393,26 +393,31 @@ function parameter_code(param_model, substances,adsorption, options,cf)
         @transform(:species_name = :species)
     end
 
-    dissolved_adsorbed_summed = @chain begin
-        substances
-        @subset(:type .== "dissolved_adsorbed_summed")
-        @transform(:species = split.(:species_modelled, ","))
-        DataFrames.flatten(:species)
-        @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
-        @transform(:species_name = :species)
-        leftjoin(adsorption,on=[:substance,:species,:include])
-        @transform(:type = ifelse.(:surface.=="dissolved","dissolved","solid"))
-        @transform(:top_bc_type = ifelse.(:surface.=="dissolved","dirichlet","robin"))
-        select(names(dissolved))
-        unique
-    end
-
-
     dissolved_all = @chain begin
         dissolved
         append!(dissolved_summed)
-        append!(@subset(dissolved_adsorbed_summed,:type.=="dissolved"))
     end
+
+    if any(substances.type.=="dissolved_adsorbed_summed")
+        dissolved_adsorbed_summed = @chain begin
+            substances
+            @subset(:type .== "dissolved_adsorbed_summed")
+            @transform(:species = split.(:species_modelled, ","))
+            DataFrames.flatten(:species)
+            @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
+            @transform(:species_name = :species)
+            leftjoin(adsorption,on=[:substance,:species,:include])
+            @transform(:type = ifelse.(:surface.=="dissolved","dissolved","solid"))
+            @transform(:top_bc_type = ifelse.(:surface.=="dissolved","dirichlet","robin"))
+            select(names(dissolved))
+            unique
+        end
+        append!(dissolved_all,@subset(dissolved_adsorbed_summed,:type.=="dissolved"))
+
+    end
+
+
+    
 
     salinity = getNumber!(globalParam, :parameter, "salinity", :value)
     temperature = getNumber!(globalParam, :parameter, "temp", :value)
@@ -442,8 +447,8 @@ function parameter_code(param_model, substances,adsorption, options,cf)
                 "const",
                 "D" * i.species_name,
                 @sprintf("%.16E", mdif[i.species]) * (
-                    constant_porosity_profile ? "/(1-2log(phif)) + 15Ds" :
-                    "./(1.0 .- 2log.(phif)) .+ 15Ds"
+                    constant_porosity_profile ? "/(1-2log(phif))" :
+                    "./(1.0 .- 2log.(phif))"
                 ),
                 "cm^2 yr^-1",
                 "Sediment diffusion coefficient",
@@ -669,10 +674,11 @@ end
         @transform(:species_name = :substance)
         append!(dissolved_all)
         append!(dissolved_adsorbed)
-        append!(dissolved_adsorbed_summed)
         unique
     end
-
+    if any(substances.type.=="dissolved_adsorbed_summed")
+        append!(substances_bc,dissolved_adsorbed_summed)
+    end
 
     bdParam = newdf()
 

@@ -1,7 +1,7 @@
 module SedTrace
 
 using Reexport
-using SciMLBase
+using SciMLBase,OrdinaryDiffEq
 using Sundials
 @reexport using BenchmarkTools
 
@@ -79,7 +79,7 @@ const ⊗ = *
 export ⊕, ⊗
 
 
-export SolverConfig, ModelConfig, SolutionConfig,SolverCtrlConfig
+export SolverConfig, ModelConfig, SolutionConfig,SolverCtrlConfig,OutputConfig
 
 export generate_code,generate_ODESolver,generate_ODEFun
 export modelrun
