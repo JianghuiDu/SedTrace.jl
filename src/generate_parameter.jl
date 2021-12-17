@@ -677,7 +677,8 @@ end
         unique
     end
     if any(substances.type.=="dissolved_adsorbed_summed")
-        append!(substances_bc,dissolved_adsorbed_summed)
+        append!(substances_bc,
+        @subset(dissolved_adsorbed_summed,:type .!="dissolved"))
     end
 
     bdParam = newdf()
