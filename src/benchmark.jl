@@ -44,7 +44,7 @@ function BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size,PrecType=:ILU0)
     u = rand(size(JacPrototype,1))
     du = similar(u)
     
-    bmk1 = BenchmarkTools.@benchmarkable $psetup(nothing, 0, $u, $du, nothing, Ref(1), 0.1)
+    bmk1 = BenchmarkTools.@benchmarkable $psetup(nothing, 0, $u, $du, true, Ref(1), 0.1)
     bmk2 = BenchmarkTools.@benchmarkable $prec($z,$r,nothing,0,$u,$du,0.1,0,1)
 
     print("Benchmark preconditioner setup\n")

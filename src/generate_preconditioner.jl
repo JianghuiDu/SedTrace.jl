@@ -68,10 +68,12 @@ end
 
 function default_psetup(p_prec::ILUZero.ILU0Precon,p_sparse::SparseMatrixCSC,JacFun::Function)
     return function (p, t, u, du, jok, jcurPtr, gamma)
-        JacFun(p_sparse, u, p, t)
-        J2M!(p_sparse, gamma)
-        ILUZero.ilu0!(p_prec, p_sparse)
-        jcurPtr[] = false
+        if jok
+            jcurPtr[] = true
+            JacFun(p_sparse, u, p, t)
+            J2M!(p_sparse, gamma)
+            ILUZero.ilu0!(p_prec, p_sparse)
+        end
     end
 end
 
