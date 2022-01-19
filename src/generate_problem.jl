@@ -159,23 +159,23 @@ function generate_ODEFun(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::Solv
 colorvec = matrix_colors(JacPrototype)
 
     if solverconfig.linsolve in [:Band, :LapackBand]
-        return ODEFunction{true,false}(OdeFun,colorvec=colorvec)
+        return ODEFunction{true,true}(OdeFun,colorvec=colorvec)
     end
 
     if solverconfig.linsolve == :KLU
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
-        return  ODEFunction{true,false}(OdeFun; jac = JacFun, jac_prototype = JacPrototype,colorvec=colorvec)
+        return  ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype,colorvec=colorvec)
 
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
-        return  ODEFunction{true,false}(OdeFun,colorvec=colorvec)
+        return  ODEFunction{true,true}(OdeFun,colorvec=colorvec)
     end
 
     if solverconfig.linsolve == :FBDF
         Lwbdwth,Upbdwth = bandwidths(JacPrototype)
         jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
-        return  ODEFunction{true,false}(OdeFun; jac_prototype = jac_prototype,colorvec=colorvec)
+        return  ODEFunction{true,true}(OdeFun; jac_prototype = jac_prototype,colorvec=colorvec)
     end
 
 end

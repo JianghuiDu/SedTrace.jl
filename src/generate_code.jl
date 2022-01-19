@@ -18,7 +18,7 @@ include("pH_helpers.jl")
 include("identify_parameters.jl")
 
 # export generate_code
-function generate_code(modelconfig::ModelConfig, ParamDict::Dict = Dict())
+function generate_code(modelconfig::ModelConfig; ParamDict::Dict = Dict(),EnableList::Dict=Dict())
     if !(modelconfig.JacType in [:banded, :sparse_banded, :sparse])
         throw(
             error(
@@ -30,42 +30,12 @@ function generate_code(modelconfig::ModelConfig, ParamDict::Dict = Dict())
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
 
-
-    # substance must be sorted by TYPE otherwise will NOT get banded jacobian!
-    ord = [
-        "dissolved_adsorbed_summed",
-        "solid",
-        "dissolved",
-        "dissolved_adsorbed",
-        "dissolved_summed",
-        "dissolved_summed_pH",
-    ]
-    orderdict = Dict(x => i for (i, x) in enumerate(ord))
-    substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
-        @subset(:include .== 1)
-        sort!(:type, by = x -> orderdict[x])
-        @transform(:bioirrigation_scale = ifelse.(ismissing.(:bioirrigation_scale), "",:bioirrigation_scale))
-    end
-
-    reactions = @chain begin
-        DataFrame(XLSX.gettable(model_config["reactions"])...)
-        @subset(:include .== 1)
-    end
-    speciation = @chain begin
-        DataFrame(XLSX.gettable(model_config["speciation"])...)
-        @subset(:include .== 1)
-    end
-    adsorption = @chain begin
-        DataFrame(XLSX.gettable(model_config["adsorption"])...)
-        @subset(:include .== 1)
-    end
-
+    substances = DataFrame(XLSX.gettable(model_config["substances"])...)
+    reactions = DataFrame(XLSX.gettable(model_config["reactions"])...)
+    speciation = DataFrame(XLSX.gettable(model_config["speciation"])...)
+    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"])...)
     options = DataFrame(XLSX.gettable(model_config["options"])...)
-    parameters = @chain begin
-        DataFrame(XLSX.gettable(model_config["parameters"])...)
-        @subset(:include .== 1)
-    end
+    parameters = DataFrame(XLSX.gettable(model_config["parameters"])...)
 
     if !isempty(ParamDict)
         for (key, value) in ParamDict
@@ -76,6 +46,64 @@ function generate_code(modelconfig::ModelConfig, ParamDict::Dict = Dict())
             end
         end
     end
+
+    
+    if !isempty(EnableList)
+        if haskey(EnableList,"substances")
+            for i in EnableList["substances"]
+                if !in(i,substances.substance)
+                    throw(error("$i is not a substance!"))
+                else
+                    setval!(substances, :substance, i, :include, 1)
+                end
+            end
+        end
+        if haskey(EnableList,"parameters")
+            for i in EnableList["parameters"]
+                if !in(i,parameters.parameter)
+                    throw(error("$i is not a parameter!"))
+                else
+                    setval!(parameters, :parameter, i, :include, 1)
+                end
+            end
+        end
+        if haskey(EnableList,"reactions")
+            for i in EnableList["reactions"]
+                if !in(i,reactions.label)
+                    throw(error("$i is not a reaction!"))
+                else
+                    setval!(reactions, :label, i, :include, 1)
+                end
+            end
+        end
+    end
+
+
+    subset!(substances,:include => ByRow(!ismissing))
+    subset!(reactions,:include => ByRow(!ismissing)) 
+    subset!(speciation,:include => ByRow(!ismissing))
+    subset!(adsorption,:include => ByRow(!ismissing))
+    subset!(parameters,:include => ByRow(!ismissing))
+    
+    
+    # substance must be sorted by TYPE otherwise will NOT get banded jacobian!
+    ord = [
+        "dissolved_adsorbed_summed",
+        "solid",
+        "dissolved",
+        "dissolved_adsorbed",
+        "dissolved_summed",
+        "dissolved_summed_pH",
+    ]
+    orderdict = Dict(x => i for (i, x) in enumerate(ord))
+
+
+    substances = @chain begin
+        substances
+        sort!(:type, by = x -> orderdict[x])
+        @transform(:bioirrigation_scale = ifelse.(ismissing.(:bioirrigation_scale), "",:bioirrigation_scale))
+    end
+
     # remove empty space or weird minus signs
     df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])

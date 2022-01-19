@@ -354,7 +354,8 @@ function join_eq_to_model(species_eq, species_modelled)
     for i in eachrow(species_eq_unique)
         # reg1: if a species is in species_modelled
         # reg2: if yes get the code name from species_modelled
-        reg1 = Regex("(?<!\\w)" * "\\Q" * i[:species_eq] * "\\E" * "(?!\\w)")
+        # reg1 = Regex("(?<!\\w)" * "\\Q" * i[:species_eq] * "\\E" * "(?!\\w)")
+        reg1 = Regex("(?<=,|\\/|^|;)" * "\\Q" * i[:species_eq] * "\\E" * "(?=,|\\/|\$|;|{)")
         reg2 = Regex(
             "(?<=" * "\\Q" * i[:species_eq] * "\\E" * ")(\\{[\\+\\-\\d*]?\\})?\\/\\K\\w+",
         ) # codename is after chemical name/

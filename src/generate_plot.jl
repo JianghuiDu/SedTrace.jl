@@ -1,31 +1,56 @@
-function generate_substance_plot(modelconfig, solution,site,vars=[], saveplt=false)
+function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(), saveplt=false,dpi=300)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
-    substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
-        @subset(:include .== 1)
-    end
-    reactions = @chain begin
-        DataFrame(XLSX.gettable(model_config["reactions"])...)
-        @subset(:include .== 1)
-    end
-    adsorption = @chain begin
-        DataFrame(XLSX.gettable(model_config["adsorption"])...)
-        @subset(:include .== 1)
+    
+    substances = DataFrame(XLSX.gettable(model_config["substances"])...)
+    reactions = DataFrame(XLSX.gettable(model_config["reactions"])...)
+    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"])...)
+    plotting = DataFrame(XLSX.gettable(model_config["output"])...)
+    
+    if !isempty(EnableList)
+        if haskey(EnableList,"substances")
+            for i in EnableList["substances"]
+                if !in(i,substances.substance)
+                    throw(error("$i is not a substance!"))
+                else
+                    setval!(substances, :substance, i, :include, 1)
+                end
+            end
+        end
+        if haskey(EnableList,"reactions")
+            for i in EnableList["reactions"]
+                if !in(i,reactions.label)
+                    throw(error("$i is not a reaction!"))
+                else
+                    setval!(reactions, :label, i, :include, 1)
+                end
+            end
+        end
+        if haskey(EnableList,"output")
+            for i in EnableList["output"]
+                if !in(i,plotting.name)
+                    throw(error("$i is not in the output!"))
+                else
+                    setval!(plotting, :name, i, :include, 1)
+                end
+            end
+        end
     end
 
     # remove empty space or weird minus signs
     SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     SedTrace.df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
-    plotting = @chain begin
-        DataFrame(XLSX.gettable(model_config["output"])...)
-        @subset(:include .== 1)
-        leftjoin(select(substances, :substance, :type), on = [:name => :substance])
-    end
-
     SedTrace.df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+
+    subset!(substances,:include => ByRow(!ismissing))
+    subset!(reactions,:include => ByRow(!ismissing)) 
+    subset!(adsorption,:include => ByRow(!ismissing))
+    subset!(plotting,:include => ByRow(!ismissing))
+
+    leftjoin!(plotting,select(substances, :substance, :type), on = [:name => :substance])
+
 
     if !isempty(vars)
         plotting = @subset(plotting,:name .∈ Ref(vars))
@@ -142,7 +167,9 @@ function generate_substance_plot(modelconfig, solution,site,vars=[], saveplt=fal
             flux_top_message,
             :identity,
         )
-        display("image/svg+xml", p)
+
+        # display(Main.VSCodeServer.InlineDisplay(), "image/svg+xml", p)
+        display(p)
         if saveplt
             savefig(p, modelconfig.ModelDirectory * "$key.pdf")
         end
@@ -206,7 +233,8 @@ function generate_aux_plot(modelconfig, solution,site,vars=[], saveplt=false)
             nothing,
             :identity,
         )
-        display("image/svg+xml", p)        
+        # display(Main.VSCodeServer.InlineDisplay(), "image/svg+xml", p)
+        display(p)               
         if saveplt
             savefig(p, modelconfig.ModelDirectory * "$key.pdf")
         end
@@ -446,22 +474,26 @@ function secplot(
             xlabel = "Time (yr)",
             ylabel = "Benthic flux",
             title = flux_top_message,
+            formatter=:plain,
+            legend = :none
         )
     end
     p1 = contour(
-        t,
+        t/1e3,
         seddepth,
         var,
         levels = 10,
         fill = true,
         yflip = true,
-        linecolor = "black",
+        # linecolor = "black",
         fillcolor = cmap,
         ylims = y_lim,
-        xlabel = "Time (yr)",
+        xlabel = "Time (kyr)",
         ylabel = "Depth (cm)",
         title = label,
         yscale = yscale,
+        formatter=:plain,
+        legend = :none
     )
     p2 = plot(
         var[:, 1],
@@ -473,7 +505,8 @@ function secplot(
         ylabel = "Depth (cm)",
         title = label,
         yscale = yscale,
-        legend = :outerright,
+        legend = :none,
+        formatter=:plain
     )
     plot!(
         p2,
@@ -486,8 +519,8 @@ function secplot(
         ylabel = "Depth (cm)",
         title = label,
         yscale = yscale,
-        legend = :right,
-        dpi = 200,
+        formatter=:plain,
+        legend = :none,
     )
     if !isnothing(pwdata)
         if any(ismissing.(pwdata.error))
@@ -504,6 +537,8 @@ function secplot(
                 yscale = yscale,
                 markersize = 2,
                 orientation = :vertical,
+                formatter=:plain,
+                legend = :none,
             )
         else
             @df pwdata plot!(
@@ -522,6 +557,8 @@ function secplot(
                 markerstrokewidth = 0.5,
                 markerstrokecolor = "blue",
                 orientation = :vertical,
+                formatter=:plain,
+                legend = :none,
             )
         end
     end
@@ -534,14 +571,16 @@ function secplot(
         p2,
         p0,
         layout = grid(3, 1, heights = [0.45, 0.45, 0.1]),
-        guidefontsize = 12,
-        colorbar_tickfontsize = 6,
-        colorbar_titlefontsize = 6,
-        legendfontsize = 6,
-        legendtitlefontsize = 6,
-        titlefontsize = 12,
-        tickfontsize = 6,
-        margin = 2.0mm,
+        # guidefontsize = 16,
+        # colorbar_tickfontsize = 16,
+        # colorbar_titlefontsize = 16,
+        # legendfontsize = 16,
+        # legendtitlefontsize = 16,
+        # titlefontsize = 16,
+        # tickfontsize = 16,
+        # left_margin  = 15mm,
+        # right_margin = 15mm,
+        margin  = 15mm,
         background_color_legend = nothing,
         foreground_color_legend = nothing,
     )
