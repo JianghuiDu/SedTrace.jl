@@ -199,6 +199,7 @@ function generate_code(modelconfig::ModelConfig; ParamDict::Dict = Dict(),Enable
         modelconfig.MTK,
         modelconfig.AllowDiscontinuity,
         modelconfig.ModelDirectory,
+        modelconfig.ModelName
     )
 
     tran_param = identify_param(species_modelled, tran_expr, tran_cache, "tran")

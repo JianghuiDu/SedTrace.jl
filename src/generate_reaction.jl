@@ -1025,7 +1025,8 @@ function reaction_code(
     cf,
     MTK,
     discontinuity,
-    inputpath
+    inputpath,
+    modelname
 )
 
     # parse species from the chemical reaction equations
@@ -1156,7 +1157,7 @@ function reaction_code(
 
 
     XLSX.writetable(
-        inputpath*"ParsingDiagnostics.xlsx",
+        inputpath*modelname*"ParsingDiagnostics.xlsx",
         overwrite = true,
         rate = (
             [

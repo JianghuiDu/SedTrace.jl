@@ -310,7 +310,7 @@ function get_all_flux_top(substances, adsorption, OutputDict,nt)
                     push!(
                         flux_top_raw_expr,
                         "($(j.species)) ->
-                        calc_flux_top(phif[1],D$(j.species)[1],uf[1],x[1:3],$(j.species),Bc$(j.species)[1])",
+                        calc_flux_top_adsorbed(phif[1],D$(j.species)[1],uf[1],x[1:5],$(j.species)[1:5],Bc$(j.species)[1])",
                     )
                 else
                     push!(
@@ -447,6 +447,12 @@ function calc_flux_top(φ, D, u, x, C, BC)
 end
 
 
+function calc_flux_top_adsorbed(φ, D, u, x, C, BC)
+    spl = Spline1D(x, C,k=3,bc="extrapolate")
+    dCdz0 = derivative(spl, 0; nu=1)
+    c0 = spl(0.0)
+    return φ * D * dCdz0 - φ * u * c0
+end
 
 # plot
 function secplot(

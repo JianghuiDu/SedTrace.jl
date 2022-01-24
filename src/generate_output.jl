@@ -455,4 +455,11 @@ function calc_flux_top(φ, D, u, x, C, BC)
     return φ * D * dCdz0 - φ * u * c0
 end
 
+function calc_flux_top_adsorbed(φ, D, u, x, C, BC)
+    spl = Spline1D(x, C,k=3,bc="extrapolate")
+    dCdz0 = derivative(spl, 0; nu=1)
+    c0 = spl(0.0)
+    return φ * D * dCdz0 - φ * u * c0
+end
+
 nothing

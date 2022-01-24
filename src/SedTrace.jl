@@ -3,6 +3,7 @@ module SedTrace
 using Reexport
 using SciMLBase,OrdinaryDiffEq
 using Sundials
+using Dierckx
 @reexport using BenchmarkTools
 
 @reexport using SparseDiffTools
@@ -87,7 +88,7 @@ export generate_jacobian
 
 export fvcf_bc,fvcf
 
-export generate_substance_plot,generate_aux_plot
+export generate_substance_plot,generate_aux_plot,calc_flux_top
 
 export IncludeFiles
 
