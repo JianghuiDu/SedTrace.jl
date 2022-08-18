@@ -41,6 +41,7 @@ import SymPy:simplify,solve,nsimplify,sympify,symbols
 @reexport using SpecialFunctions
 
 
+# heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
 
 include("config.jl")
 include("generate_code.jl")

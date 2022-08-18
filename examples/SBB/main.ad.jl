@@ -2,7 +2,7 @@
 using SedTrace
 using JLD2
 
-modeldirectory = (@__DIR__)*"\\examples\\SBB\\"
+modeldirectory = (@__DIR__)*"\\"
 modelfile = "model_config.SBB.xlsx"
 modelname = "SBB"
 

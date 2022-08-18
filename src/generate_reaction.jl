@@ -466,6 +466,9 @@ end
 # dissolution/precipitation requires special treatment
 # Final results are expressions like R_reaction = rate expr
 #-------------------------------------------------------------------------------------------
+# heaviside(x::Vector{Float64}) = ifelse.(x.>= 0.0, 1.0, 0.0)
+# heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
+
 function format_rate_expr(react_df, discontinuity)
     n_react = size(react_df, 1)
     rate_expr = String[]
@@ -482,43 +485,15 @@ function format_rate_expr(react_df, discontinuity)
                 push!(
                     rate_expr,
                     discontinuity ?
-                    i.label *
-                    " = " *
-                    "(Omega" *
-                    "_" *
-                    i.label *
-                    " < 1.0) * (" *
-                    i.rate *
-                    ")" :
-                    i.label *
-                    " = " *
-                    "(-tanh(100.0*(Omega" *
-                    "_" *
-                    i.label *
-                    " - 1.0))/2+0.5) * (" *
-                    i.rate *
-                    ")",
+                    "$(i.label) = ifelse(Omega_$(i.label)<=1.0,1.0,0.0)*($(i.rate))" :
+                    "$(i.label)  = (-tanh(1e3*(Omega_$(i.label)- 1.0))/2+0.5) * ($(i.rate))",
                 )
             elseif !isnothing(match(r"_pre$", i.label)) # precipitation
                 push!(
                     rate_expr,
                     discontinuity ?
-                    i.label *
-                    " = " *
-                    "(Omega" *
-                    "_" *
-                    i.label *
-                    " > 1.0) * (" *
-                    i.rate *
-                    ")" :
-                    i.label *
-                    " = " *
-                    "(tanh(100.0*(Omega" *
-                    "_" *
-                    i.label *
-                    " - 1.0))/2+0.5) * (" *
-                    i.rate *
-                    ")",
+                    "$(i.label)  = ifelse(Omega_$(i.label)>=1.0,1.0,0.0)*($(i.rate))" :
+                    "$(i.label) = (tanh(1e3*(Omega_$(i.label)- 1.0))/2+0.5) * ($(i.rate))",
                 )
             end
         end

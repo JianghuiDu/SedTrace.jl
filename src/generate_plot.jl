@@ -1,4 +1,4 @@
-function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(), saveplt=false,dpi=300)
+function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(),showplt=true, saveplt=false,pltdir="",dpi=300,pltsize=nothing)
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     
@@ -105,6 +105,12 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
 
     df_species = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in species_vars]),vcat(:depth,Symbol.(species_vars)))
 
+    df_output_profile = DataFrame(vcat([solution.x],[OutputProfile[i][end,:] for i in plotting.name]),vcat(:depth,Symbol.(plotting.name)))
+    
+    
+    df_output_flux = DataFrame(name=collect(keys(OutputFlux)),flux=[OutputFlux[i][end] for i in keys(OutputFlux)])
+    
+
     XLSX.writetable(
         modelconfig.ModelDirectory*modelconfig.ModelName*"_output.xlsx",
         overwrite = true,
@@ -124,7 +130,14 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
             collect(DataFrames.eachcol(df_species)),
             DataFrames.names(df_species),
         ),
-
+        outputProfile = (
+            collect(DataFrames.eachcol(df_output_profile)),
+            DataFrames.names(df_output_profile),
+        ),
+        outputFlux = (
+            collect(DataFrames.eachcol(df_output_flux)),
+            DataFrames.names(df_output_flux),
+        ),
     )
 
 
@@ -169,15 +182,19 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
         )
 
         # display(Main.VSCodeServer.InlineDisplay(), "image/svg+xml", p)
-        display(p)
+        if showplt
+            display(p)
+        end
         if saveplt
-            savefig(p, modelconfig.ModelDirectory * "$key.pdf")
+            gr()
+            p = plot(p,size=pltsize)
+            savefig(p, "$pltdir/$key.pdf")
         end
 
     end
 end
 
-function generate_aux_plot(modelconfig, solution,site,vars=[], saveplt=false)
+function generate_aux_plot(modelconfig, solution,site,vars=[],showplt=true, saveplt=false,pltdir="")
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
@@ -234,9 +251,11 @@ function generate_aux_plot(modelconfig, solution,site,vars=[], saveplt=false)
             :identity,
         )
         # display(Main.VSCodeServer.InlineDisplay(), "image/svg+xml", p)
-        display(p)               
+        if showplt 
+            display(p) 
+        end            
         if saveplt
-            savefig(p, modelconfig.ModelDirectory * "$key.pdf")
+            savefig(p, pltdir * "$key.pdf")
         end
     end
 

@@ -186,6 +186,10 @@ function modelrun(OdeFunction, solver,solverctrlconfig::SolverCtrlConfig,outputc
 
     saveat = isnothing(solverctrlconfig.saveat) ? [] : vcat(1e-12,(solverctrlconfig.tspan[1]+solverctrlconfig.saveat):solverctrlconfig.saveat:solverctrlconfig.tspan[2])
 
+    # tstops = isnothing(solverctrlconfig.tstops) ? solverctrlconfig.tspan[1] : solverctrlconfig.tstops
+
+    # dtmax = isnothing(solverctrlconfig.dtmax) ? 100.0 : solverctrlconfig.dtmax
+
     @time sol = SciMLBase.solve(
         prob,
         solver,
@@ -194,9 +198,10 @@ function modelrun(OdeFunction, solver,solverctrlconfig::SolverCtrlConfig,outputc
         save_everystep = false,
         callback = solverctrlconfig.callback,
         saveat = saveat,
-        # dtmax = 1.0,
+        # dtmax = dtmax,
         maxiters = solverctrlconfig.maxiters,
-        save_start = false
+        save_start = false,
+        # tstops = tstops
     )
     println("$(sol.retcode) at t = $(sol.t[end]).")
 

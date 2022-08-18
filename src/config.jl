@@ -80,6 +80,7 @@ struct SolverCtrlConfig <: TEIConfig
     saveat::Union{Nothing,Real,AbstractArray}
     dtmax::Union{Nothing,Real}
     maxiters::Int
+    # tstops::Union{Nothing,Real}
 end
 
 function SolverCtrlConfig(
@@ -91,6 +92,7 @@ function SolverCtrlConfig(
     saveat = nothing,
     dtmax = nothing,
     maxiters = Int(1e5),
+    # tstops = nothing
 )
     return SolverCtrlConfig(
         u0,
@@ -101,6 +103,7 @@ function SolverCtrlConfig(
         saveat,
         dtmax,
         maxiters,
+        # tstops
     )
 end
 
