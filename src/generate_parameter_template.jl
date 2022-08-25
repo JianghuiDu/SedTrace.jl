@@ -16,7 +16,7 @@ function generat_template(input_path::String)
     model_config = XLSX.readxlsx(input_path)
 
     options = @chain begin
-        DataFrame(XLSX.gettable(model_config["options"])...)
+        DataFrame(XLSX.gettable(model_config["options"]))
         @transform(:options = replace.(:options, r"\s" => ""))
         @transform(:value = replace.(:value, r"\s" => ""))
         @transform(:value = lowercase.(:value))
@@ -198,7 +198,7 @@ function generat_template(input_path::String)
 
 
     substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
+        DataFrame(XLSX.gettable(model_config["substances"]))
         @transform(:substance = replace(:substance, r"\s" => ""))
         @transform(:type = replace(:type, r"\s" => ""))
         @transform(:top_bc_type = lowercase.(replace(:top_bc_type, r"\s" => "")))
@@ -224,7 +224,7 @@ function generat_template(input_path::String)
     adsParam = @transform(adsParam,:class = "adsorption")
 
     bc_options = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
+        DataFrame(XLSX.gettable(model_config["substances"]))
         @transform(:substance = replace(:substance, r"\s" => ""))
         @transform(:type = replace(:type, r"\s" => ""))
         @transform(:top_bc_type = lowercase.(replace(:top_bc_type, r"\s" => "")))
