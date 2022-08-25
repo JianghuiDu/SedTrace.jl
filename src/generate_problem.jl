@@ -138,8 +138,8 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
                 linear_solver = solverconfig.linsolve,
                 prec = prec,
                 psetup = psetup,
-                prec_side = 2,
-                krylov_dim = Int(0.1*size(JacPrototype,1)),
+                prec_side = solverconfig.PrecSide,
+                krylov_dim = Int(ceil(0.1*size(JacPrototype,1))),
             )
 
     end
