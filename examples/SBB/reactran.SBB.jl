@@ -112,9 +112,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     Age = @view C[AgeID]
     BSi = @view C[BSiID]
     MoS4 = @view C[MoS4ID]
-    Mn = @view C[MnID]
-    Fe = @view C[FeID]
-    NH4 = @view C[NH4ID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
     CH4 = @view C[CH4ID]
@@ -125,6 +122,9 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     TH3PO4 = @view C[TH3PO4ID]
     SO4 = @view C[SO4ID]
     TH4SiO4 = @view C[TH4SiO4ID]
+    Mn = @view C[MnID]
+    Fe = @view C[FeID]
+    NH4 = @view C[NH4ID]
     H = @view C[HID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
@@ -141,9 +141,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dAge = @view dC[AgeID]
     dBSi = @view dC[BSiID]
     dMoS4 = @view dC[MoS4ID]
-    dMn = @view dC[MnID]
-    dFe = @view dC[FeID]
-    dNH4 = @view dC[NH4ID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
     dCH4 = @view dC[CH4ID]
@@ -154,6 +151,9 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dTH3PO4 = @view dC[TH3PO4ID]
     dSO4 = @view dC[SO4ID]
     dTH4SiO4 = @view dC[TH4SiO4ID]
+    dMn = @view dC[MnID]
+    dFe = @view dC[FeID]
+    dNH4 = @view dC[NH4ID]
     dH = @view dC[HID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
@@ -416,37 +416,37 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S
     @.. RFeSH2S = kFeSH2S ⊗ FeS ⊗ TH2S
     @.. RFeS_dis =
-        (-tanh(100.0 ⊗ (Omega_RFeS_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        (-tanh(1e3 ⊗ (Omega_RFeS_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeSdis ⊗ FeS ⊗ (1 - Omega_RFeS_dis))
     @.. RFeS_pre =
-        (tanh(100.0 ⊗ (Omega_RFeS_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RFeS_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeSpre ⊗ (Omega_RFeS_pre - 1))
     @.. RCaCO3_dis =
-        (-tanh(100.0 ⊗ (Omega_RCaCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        (-tanh(1e3 ⊗ (Omega_RCaCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kCaCO3dis ⊗ CaCO3 ⊗ (1 - Omega_RCaCO3_dis))
     @.. RCaCO3_pre =
-        (tanh(100.0 ⊗ (Omega_RCaCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RCaCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kCaCO3pre ⊗ (Omega_RCaCO3_pre - 1))
     @.. RMnCO3_dis =
-        (-tanh(100.0 ⊗ (Omega_RMnCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        (-tanh(1e3 ⊗ (Omega_RMnCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kMnCO3dis ⊗ MnCO3 ⊗ (1 - Omega_RMnCO3_dis))
     @.. RMnCO3_pre =
-        (tanh(100.0 ⊗ (Omega_RMnCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RMnCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kMnCO3pre ⊗ (Omega_RMnCO3_pre - 1))
     @.. RFeCO3_dis =
-        (-tanh(100.0 ⊗ (Omega_RFeCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        (-tanh(1e3 ⊗ (Omega_RFeCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeCO3dis ⊗ FeCO3 ⊗ (1 - Omega_RFeCO3_dis))
     @.. RFeCO3_pre =
-        (tanh(100.0 ⊗ (Omega_RFeCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RFeCO3_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeCO3pre ⊗ (Omega_RFeCO3_pre - 1))
     @.. RBSi_dis =
-        (-tanh(100.0 ⊗ (Omega_RBSi_dis - 1.0)) / 2 ⊕ 0.5) ⊗
+        (-tanh(1e3 ⊗ (Omega_RBSi_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kBSidis ⊗ (1 - Omega_RBSi_dis) ⊗ BSi)
     @.. RASi_pre =
-        (tanh(100.0 ⊗ (Omega_RASi_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RASi_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kASipre ⊗ H4SiO4_pre_sat ⊗ (Omega_RASi_pre - 1))
     @.. RMoS4_pre =
-        (tanh(100.0 ⊗ (Omega_RMoS4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        (tanh(1e3 ⊗ (Omega_RMoS4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kMoS4_pre ⊗ Mo ⊗ TH2S)
 
     # species rates
@@ -564,9 +564,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dAge += S_Age
     @.. dBSi += S_BSi
     @.. dMoS4 += S_MoS4
-    @.. dMn += S_Mn
-    @.. dFe += S_Fe
-    @.. dNH4 += S_NH4
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
     @.. dCH4 += S_CH4
@@ -576,6 +573,9 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dTH3PO4 += S_TH3PO4
     @.. dSO4 += S_SO4
     @.. dTH4SiO4 += S_TH4SiO4
+    @.. dMn += S_Mn
+    @.. dFe += S_Fe
+    @.. dNH4 += S_NH4
     @.. dH += S_H
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S
