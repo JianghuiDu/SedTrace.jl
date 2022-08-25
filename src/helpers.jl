@@ -238,8 +238,8 @@ function errorcheck(param_model, options)
     Require = String[]
     append!(Require, ["depth", "salinity", "temp", "ds_rho"])
     append!(Require, ["L", "Ngrid"])
-    append!(Require, ["phi_Inf"])
-    append!(Require, ["delta"])
+    # append!(Require, ["phi_Inf"])
+    # append!(Require, ["delta"])
 
 
     for i in Require
