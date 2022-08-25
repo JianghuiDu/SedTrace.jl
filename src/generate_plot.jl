@@ -2,10 +2,10 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     
-    substances = DataFrame(XLSX.gettable(model_config["substances"])...)
-    reactions = DataFrame(XLSX.gettable(model_config["reactions"])...)
-    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"])...)
-    plotting = DataFrame(XLSX.gettable(model_config["output"])...)
+    substances = DataFrame(XLSX.gettable(model_config["substances"]))
+    reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
+    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"]))
+    plotting = DataFrame(XLSX.gettable(model_config["output"]))
     
     if !isempty(EnableList)
         if haskey(EnableList,"substances")
@@ -57,7 +57,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
     end
 
     data = @chain begin
-        DataFrame(XLSX.gettable(model_config["data"])...)
+        DataFrame(XLSX.gettable(model_config["data"]))
         @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
     end
@@ -198,12 +198,12 @@ function generate_aux_plot(modelconfig, solution,site,vars=[],showplt=true, save
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
+        DataFrame(XLSX.gettable(model_config["substances"]))
         @subset(:include .== 1)
     end
 
     adsorption = @chain begin
-        DataFrame(XLSX.gettable(model_config["adsorption"])...)
+        DataFrame(XLSX.gettable(model_config["adsorption"]))
         @subset(:include .== 1)
     end
 
@@ -212,7 +212,7 @@ function generate_aux_plot(modelconfig, solution,site,vars=[],showplt=true, save
     SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     plotting = @chain begin
-        DataFrame(XLSX.gettable(model_config["output"])...)
+        DataFrame(XLSX.gettable(model_config["output"]))
         @subset(:include .== 1)
         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
     end
@@ -224,7 +224,7 @@ function generate_aux_plot(modelconfig, solution,site,vars=[],showplt=true, save
     end
 
     data = @chain begin
-        DataFrame(XLSX.gettable(model_config["data"])...)
+        DataFrame(XLSX.gettable(model_config["data"]))
         @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
     end
