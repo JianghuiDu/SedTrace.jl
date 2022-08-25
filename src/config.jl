@@ -57,17 +57,20 @@ struct SolverConfig <: TEIConfig
     chunk_size::Int
     linsolve::Symbol
     Precondition::Symbol
+    PrecSide::Int
 end
 
 function SolverConfig(
     chunk_size,
     linsolve;
     Precondition = :ILU0,
+    PrecSide = 1
 )
     return SolverConfig(
         chunk_size,
         linsolve,
         Precondition,
+        PrecSide,
     )
 end
 
