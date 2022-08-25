@@ -30,12 +30,12 @@ function generate_code(modelconfig::ModelConfig; ParamDict::Dict = Dict(),Enable
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
 
-    substances = DataFrame(XLSX.gettable(model_config["substances"])...)
-    reactions = DataFrame(XLSX.gettable(model_config["reactions"])...)
-    speciation = DataFrame(XLSX.gettable(model_config["speciation"])...)
-    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"])...)
-    options = DataFrame(XLSX.gettable(model_config["options"])...)
-    parameters = DataFrame(XLSX.gettable(model_config["parameters"])...)
+    substances = DataFrame(XLSX.gettable(model_config["substances"]))
+    reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
+    speciation = DataFrame(XLSX.gettable(model_config["speciation"]))
+    adsorption = DataFrame(XLSX.gettable(model_config["adsorption"]))
+    options = DataFrame(XLSX.gettable(model_config["options"]))
+    parameters = DataFrame(XLSX.gettable(model_config["parameters"]))
 
     if !isempty(ParamDict)
         for (key, value) in ParamDict
