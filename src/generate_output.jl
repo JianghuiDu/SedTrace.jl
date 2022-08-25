@@ -13,12 +13,12 @@ function generate_output(
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
+        DataFrame(XLSX.gettable(model_config["substances"]))
         @subset(:include .== 1)
         @transform(:order = 1:length(:substance))
     end
     plotting = @chain begin
-        DataFrame(XLSX.gettable(model_config["output"])...)
+        DataFrame(XLSX.gettable(model_config["output"]))
         @subset(:include .== 1)
         # @transform(conversion = string(:conversion))
         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
@@ -30,7 +30,7 @@ function generate_output(
     end
 
     data = @chain begin
-        DataFrame(XLSX.gettable(model_config["data"])...)
+        DataFrame(XLSX.gettable(model_config["data"]))
         @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
     end
@@ -263,7 +263,7 @@ function generate_output(
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
-        DataFrame(XLSX.gettable(model_config["substances"])...)
+        DataFrame(XLSX.gettable(model_config["substances"]))
         @subset(:include .== 1)
         @subset(:substance .∈ Ref(vars))
         @transform(:order = 1:length(:substance))
