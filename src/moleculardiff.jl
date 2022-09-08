@@ -1,13 +1,13 @@
 
 function viscosity(salinity::Float64, temp::Float64, pres::Float64)
-  # unit in 1e-2 g cm-1 s-1
+  # dynamic viscosity unit in 1e-2 g cm-1 s-1
     1.7910 - temp*(6.144e-02 - temp*(1.4510e-03 - temp*1.6826e-05)) -
     1.5290e-04*pres + 8.3885e-08*pres*pres + 2.4727e-03*salinity +
     (6.0574e-06*pres - 2.6760e-09*pres*pres)*temp + (temp*(4.8429e-05-
      temp*(4.7172e-06 - temp*7.5986e-08)))*salinity
 end
 
-species = [
+species_default = [
     "O2",
     "NO3",
     "NO2",
@@ -43,11 +43,14 @@ species = [
     "Nd143",
     "Ndnr",
     "Ndr"
-    
 ]
 
 # return molecular diffusion in cm2/yr
-function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vector{String}=species)
+function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species_all::Vector{String})
+
+    species_not_in_list = [ i for i in species_all if !(i in species_default)]
+    species = [ i for i in species_all if (i in species_default)]
+
     nspec = length(species)
     diffcoef = fill(NaN,nspec)#Array{Float64}(undef, nspec)
     mdif = Dict(species[i] => diffcoef[i] for i = 1:nspec)
@@ -168,7 +171,7 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
       "H","Li","Na","K","Cs","Ag","NH4","Ca","Mg","Fe","Mn","Ba","Be",
       "Cd","Co","Cu","Hg","Ni","Sr","Pb","Ra","Zn","Al","Ce","La","Pu","Al(OH)[4]"]
 
-    for i = 1:length(ion)
+    for i in eachindex(ion)
         if haskey(mdif,ion[i])
             mdif[ion[i]] = (m0[i]+m1[i]*temp)*1e-6
         end
@@ -181,40 +184,40 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species::Vec
 
 
     if haskey(mdif, "Nd")
-       i = findfirst(x->x=="Ce",ion)
+      i = findfirst(x->x=="Ce",ion)
       mdif["Nd"] = (m0[i]+m1[i]*temp)*1e-6
     end
     if haskey(mdif, "Ndnr")
       i = findfirst(x->x=="Ce",ion)
-     mdif["Ndnr"] = (m0[i]+m1[i]*temp)*1e-6
-   end
-   if haskey(mdif, "Ndr")
-    i = findfirst(x->x=="Ce",ion)
-   mdif["Ndr"] = (m0[i]+m1[i]*temp)*1e-6
-  end
-  if haskey(mdif, "TNdnr")
-    i = findfirst(x->x=="Ce",ion)
-   mdif["TNdnr"] = (m0[i]+m1[i]*temp)*1e-6
- end
- if haskey(mdif, "TNdr")
-  i = findfirst(x->x=="Ce",ion)
- mdif["TNdr"] = (m0[i]+m1[i]*temp)*1e-6
-end
+      mdif["Ndnr"] = (m0[i]+m1[i]*temp)*1e-6
+    end
+    if haskey(mdif, "Ndr")
+      i = findfirst(x->x=="Ce",ion)
+      mdif["Ndr"] = (m0[i]+m1[i]*temp)*1e-6
+    end
+    if haskey(mdif, "TNdnr")
+      i = findfirst(x->x=="Ce",ion)
+      mdif["TNdnr"] = (m0[i]+m1[i]*temp)*1e-6
+    end
+    if haskey(mdif, "TNdr")
+      i = findfirst(x->x=="Ce",ion)
+      mdif["TNdr"] = (m0[i]+m1[i]*temp)*1e-6
+    end
 
     if haskey(mdif, "Nd144")
       i = findfirst(x->x=="Ce",ion)
-     mdif["Nd144"] = (m0[i]+m1[i]*temp)*1e-6
-   end
-   if haskey(mdif, "Nd143")
-    i = findfirst(x->x=="Ce",ion)
-   mdif["Nd143"] = (m0[i]+m1[i]*temp)*1e-6
-  end
+      mdif["Nd144"] = (m0[i]+m1[i]*temp)*1e-6
+    end
+    if haskey(mdif, "Nd143")
+      i = findfirst(x->x=="Ce",ion)
+      mdif["Nd143"] = (m0[i]+m1[i]*temp)*1e-6
+    end
 
     # Boundreau 1997 p112 table4.4
     A  = [3338, 3047, 2000, 818, 1608, 7238, 6393, 9007, 15877]
     Ea = [16.06,18.36,18.10,11.70,14.84,19.81,20.20,21.61,23.26]
     gas1 = ["H2","CH4","DMS","He","Ne","Ar","Kr","Xe","Rn"]
-    for i = 1:length(gas1)
+    for i in eachindex(gas1)
         if haskey(mdif,gas1[i])
             mdif[gas1[i]] = A[i]*exp(-Ea[i]*1000/(8.314472*TK))*1e-5
         end
@@ -223,7 +226,7 @@ end
     # Boundreau 1997 p111 table4.3
     Vb = [34.7,35.2,24.5,23.6,36.0,34.5,43.8]
     gas2 = ["N2","H2S","NH3","NO","N2O","CO","SO2"]
-    for i = 1:length(gas2)
+    for i in eachindex(gas2)
         if haskey(mdif,gas2[i])
           # a typo in equation 4.57, unit in m2/s not cm2/s, see original ref Hayduk and Laudie 1976
             mdif[gas2[i]] = 4.72e-07 * TK / (mu_0 * Vb[i]^0.6) 
@@ -235,7 +238,7 @@ end
     for i = 1:nspec
         mdif[species[i]] = mdif[species[i]]*mu_0/mu*365*24*3600
     end
-    return mdif
+    return (mdif,species_not_in_list)
 end
 
 
