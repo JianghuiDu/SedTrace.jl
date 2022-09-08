@@ -111,8 +111,10 @@
 #     println(sol.destats)
 #     return SolutionConfig(sol,x,L,Ngrid,IDdict)
 # end
+using LinearSolve
+using IncompleteLU
 
-function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
+function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,parm)
 
 
     if solverconfig.linsolve in [:Band, :LapackBand]
@@ -129,7 +131,7 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR]
-        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size,parm)
         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
         psetup = default_psetup(p_prec, JacPrototype, JacFun)
         prec = default_prec(p_prec)
@@ -145,12 +147,27 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
     end
 
     if solverconfig.linsolve == :FBDF
+
+        prec = SciMLprecSetup(JacPrototype)
         return FBDF(
-                autodiff = false,
-                # chunk_size = solverconfig.chunk_size
-            )
+            autodiff = true,
+            linsolve=KrylovJL_GMRES(),
+            precs=prec,
+            concrete_jac=true,
+            chunk_size = solverconfig.chunk_size
+        )
     end
 
+    if solverconfig.linsolve == :QNDF
+        prec = SciMLprecSetup(JacPrototype)
+          return QNDF(
+            autodiff = true,
+            linsolve=KrylovJL_GMRES(),
+            precs=prec,
+            concrete_jac=true,
+            chunk_size = solverconfig.chunk_size
+        )
+    end
 
 
 end
@@ -163,7 +180,7 @@ colorvec = matrix_colors(JacPrototype)
     end
 
     if solverconfig.linsolve == :KLU
-        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size)
+        JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size,parm)
         return  ODEFunction{true,true}(OdeFun; jac = JacFun, jac_prototype = JacPrototype,colorvec=colorvec)
 
     end
@@ -172,17 +189,18 @@ colorvec = matrix_colors(JacPrototype)
         return  ODEFunction{true,true}(OdeFun,colorvec=colorvec)
     end
 
-    if solverconfig.linsolve == :FBDF
-        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
-        return  ODEFunction{true,true}(OdeFun; jac_prototype = jac_prototype,colorvec=colorvec)
+    if solverconfig.linsolve in [:FBDF,:QNDF]
+        # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+        # jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
+        # Jv = JacVecOperator(OdeFun,u0,p,0.0)
+        return  ODEFunction{true,true}(OdeFun; jac_prototype = JacPrototype,colorvec=colorvec)
     end
 
 end
 
 
-function modelrun(OdeFunction, solver,solverctrlconfig::SolverCtrlConfig,outputconfig::OutputConfig)
-    prob = ODEProblem{true}(OdeFunction, solverctrlconfig.u0, solverctrlconfig.tspan, nothing)
+function modelrun(OdeFunction,parm, solver,solverctrlconfig::SolverCtrlConfig,outputconfig::OutputConfig)
+    prob = ODEProblem{true}(OdeFunction, solverctrlconfig.u0, solverctrlconfig.tspan, parm)
 
     saveat = isnothing(solverctrlconfig.saveat) ? [] : vcat(1e-12,(solverctrlconfig.tspan[1]+solverctrlconfig.saveat):solverctrlconfig.saveat:solverctrlconfig.tspan[2])
 
@@ -213,7 +231,7 @@ function modelrun(OdeFunction, solver,solverctrlconfig::SolverCtrlConfig,outputc
     VarVal = Dict(string(i) => Matrix{Float64}(undef, nt,  outputconfig.Ngrid) for i in VarName)
 
     for i in 1:nt
-        Base.@invokelatest OdeFunction.f(dC0, sol[i], nothing, 0)
+        Base.@invokelatest OdeFunction.f(dC0, sol[i], parm, 0)
         for j in VarName
             VarVal[string(j)][i, :] .= getfield(OdeFunction.f, j).du
         end
