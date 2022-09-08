@@ -1,15 +1,10 @@
-function generate_jacprototype(jac_type::Symbol, substances::DataFrame, adsorption::DataFrame,react_jp::DataFrame, cf::Bool)
+function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,react_jp::DataFrame, cf::Bool)
     substances = leftjoin(substances, react_jp, on = :substance)
 
     jp_str = String[]
-    push!(jp_str, "function JacType()")
-
-    if jac_type == :banded
-        push!(
-            jp_str,
-            "return BandedMatrix(ones(Nmat,Nmat),(Lwbdwth,Upbdwth))",
-        )
-    elseif jac_type == :sparse_banded || jac_type == :sparse
+    push!(jp_str, "function JacType(IDdict::Dict{Symbol, StepRangeLen{Int, Int, Int, Int}},Ngrid::Int,nspec::Int)")
+    push!(jp_str, "@unpack " * join(substances.substance.*"ID",",") *"=IDdict")
+    push!(jp_str,"")
 
         push!(jp_str, "rowID = Vector{Int}()")
         push!(jp_str, "colID = Vector{Int}()")
@@ -72,6 +67,7 @@ function generate_jacprototype(jac_type::Symbol, substances::DataFrame, adsorpti
                     adsorption
                     @subset(:substance.==i.substance)
                     @subset(:surface .!= "dissolved")
+                    @subset(:surface .!= "0")
                 end
                 for j in eachrow(ads_df)
                     push!(
@@ -108,7 +104,6 @@ function generate_jacprototype(jac_type::Symbol, substances::DataFrame, adsorpti
             jp_str,
             "return sparse(rowID,colID,ones(length(rowID)),Ngrid*nspec,Ngrid*nspec)",
         )
-    end
     push!(jp_str, "end")
     return jp_str
 
