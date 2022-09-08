@@ -1,6 +1,12 @@
 function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(),showplt=true, saveplt=false,pltdir="",dpi=300,pltsize=nothing)
+
+    if modelconfig.AssembleParam
+        include("$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl")
+    end
+    
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
+
     
     substances = DataFrame(XLSX.gettable(model_config["substances"]))
     reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
@@ -112,7 +118,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
     
 
     XLSX.writetable(
-        modelconfig.ModelDirectory*modelconfig.ModelName*"_output.xlsx",
+        modelconfig.ModelDirectory*"model_output."*modelconfig.ModelName*".xlsx",
         overwrite = true,
         substances = (
             collect(DataFrames.eachcol(df_substance)),
@@ -268,7 +274,7 @@ function get_all_vars(substances, solution::SolutionConfig)
 
 
     OutputDict = Dict(
-        i.substance => [solution.sol.u[j][m] for j = 1:nt, m in solution.IDdict[i.substance]] for
+        i.substance => [solution.sol.u[j][m] for j = 1:nt, m in solution.IDdict[Symbol(i.substance*"ID")]] for
         i in eachrow(substances)
     )
 
@@ -290,6 +296,7 @@ function get_all_vars(substances, solution::SolutionConfig)
 
     return merge!(OutputDict, solution.VarVal)
 end
+
 
 # get the benthic fluxes of all modelled substances and species
 function get_all_flux_top(substances, adsorption, OutputDict,nt)
@@ -323,21 +330,36 @@ function get_all_flux_top(substances, adsorption, OutputDict,nt)
             )
         elseif i.type == "dissolved_adsorbed_summed"
             ads_df = @subset(adsorption, :substance .== i.substance)
+            dis_sp = ads_df.dissolved[1]
+            push!(flux_top_raw_name, dis_sp)
+            push!(
+                flux_top_raw_expr,
+                "($(dis_sp)) ->
+                calc_flux_top_adsorbed(phif[1],D$(dis_sp)[1],uf[1],x[1:5],$(dis_sp)[1:5],Bc$(dis_sp)[1])",
+            )
+            # for j in eachrow(ads_df)
+                # push!(flux_top_raw_name, j.species)
+                # if j.surface == "dissolved"
+                #     # push!(
+                #     #     flux_top_raw_expr,
+                #     #     "($(j.species)) ->
+                #     #     calc_flux_top_adsorbed(phif[1],D$(j.species)[1],uf[1],x[1:5],$(j.species)[1:5],Bc$(j.species)[1])",
+                #     # )
+                # else
+                #     push!(
+                #         flux_top_raw_expr,
+                #         "($(j.species)) ->
+                #         calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(j.species),Bc$(j.species)[1])",
+                #     )
+                # end
+            # end
             for j in eachrow(ads_df)
-                push!(flux_top_raw_name, j.species)
-                if j.surface == "dissolved"
-                    push!(
+                push!(flux_top_raw_name, j.adsorbed)
+                push!(
                         flux_top_raw_expr,
-                        "($(j.species)) ->
-                        calc_flux_top_adsorbed(phif[1],D$(j.species)[1],uf[1],x[1:5],$(j.species)[1:5],Bc$(j.species)[1])",
-                    )
-                else
-                    push!(
-                        flux_top_raw_expr,
-                        "($(j.species)) ->
-                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(j.species),Bc$(j.species)[1])",
-                    )
-                end
+                        "($(j.adsorbed)) ->
+                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(j.adsorbed),Bc$(j.adsorbed)[1])",
+                )
             end
         end
     end
@@ -346,7 +368,7 @@ function get_all_flux_top(substances, adsorption, OutputDict,nt)
 
     SpecFluxTop = Dict(i => Vector{Float64}(undef, nt) for i in flux_top_raw_name)
 
-    for i = 1:length(flux_top_raw_name)
+    for i = 1 : length(flux_top_raw_name)
         for j = 1:nt
             SpecFluxTop[flux_top_raw_name[i]][j] = Base.invokelatest(
                 function_flux_top_raw[i],
@@ -364,11 +386,16 @@ function get_all_flux_top(substances, adsorption, OutputDict,nt)
             SpecFluxTop[i.substance] = Base.invokelatest(fun_expr,input...)
         elseif i.type == "dissolved_adsorbed_summed"
             ads_df = @subset(adsorption, :substance .== i.substance)
-            nsub = length(ads_df.species)
+            # nsub = length(ads_df.species)
+            # fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
+            # input = Tuple(SpecFluxTop[j] for j in ads_df.species)
+            # SpecFluxTop[i.substance] = Base.invokelatest(fun_expr,input...)
+            spec = vcat(ads_df.adsorbed,ads_df.dissolved[1])
+            nsub = length(spec) 
             fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
-            input = Tuple(SpecFluxTop[j] for j in ads_df.species)
+            input = Tuple(SpecFluxTop[j] for j in spec)
             SpecFluxTop[i.substance] = Base.invokelatest(fun_expr,input...)
-        end
+       end
     end
 
     return SpecFluxTop
@@ -510,7 +537,7 @@ function secplot(
         levels = 10,
         fill = true,
         yflip = true,
-        # linecolor = "black",
+        linecolor = "black",
         fillcolor = cmap,
         ylims = y_lim,
         xlabel = "Time (kyr)",
