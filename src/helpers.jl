@@ -62,6 +62,16 @@ function str_simplify(str::Array{String})
     return to_rational.(str)
 end
 
+
+function df_str_replace!(df::DataFrame, strs_old, strs_new)
+    # replace strings in a dataframe
+    transform!(
+        df,
+        names(df) .=> (x -> passmissing(multi_replace).(x, Ref(strs_old), Ref(strs_new))),
+        renamecols = false,
+    )
+end
+
 function df_str_replace!(df::DataFrame, strs_old::Regex, strs_new::Union{String,Char})
     # replace strings in a dataframe
     transform!(
@@ -74,35 +84,12 @@ end
 
 function multi_replace(x, str1, str2)
     x = string(x)
-    for i = 1:length(str1)
+    for i in eachindex(str1)
         x = replace(x, str1[i] => str2[i])
     end
     return x
 end
 
-function df_str_replace!(df::DataFrame, strs_old, strs_new)
-    # replace strings in a dataframe
-    transform!(
-        df,
-        names(df) .=> (x -> passmissing(multi_replace).(x, Ref(strs_old), Ref(strs_new))),
-        renamecols = false,
-    )
-end
-
-
-function check_illegal_char(df, reg = r"[^\+\-\*\/\{\}\[\]\(\)\=\w\.\,\^]")
-    # check illegal characters in dataframe, throw errors
-    for i = 1:size(df, 2)
-        for j = 1:size(df, 1)
-            str_match = passmissing(mymatch)(reg, passmissing(string)(df[j, i]))
-            if !ismissing(str_match)
-                if !isnothing(str_match)
-                    throw(error(df[j, i] * " contains illegal characters " * str_match))
-                end
-            end
-        end
-    end
-end
 
 
 
@@ -143,7 +130,7 @@ function getvalALL!(df, coltoindex, rowtoindex, coltogetval)
 end
 
 
-function appendtostr!(str, df, comment)
+function appendtostr!(str, df, comment,assemble=false)
     if isempty(df)
         return nothing
     else
@@ -151,9 +138,10 @@ function appendtostr!(str, df, comment)
         push!(str, "#----------------------------------------------")
         push!(str, "# " * comment)
         push!(str, "#----------------------------------------------")
+        header = assemble ? "" : "const "
         append!(
             str,
-            "const " .* df.parameter .*
+            header .* df.parameter .*
             # ifelse.(df.type .== "function"," "," = ") .*
             # string.(df.value) .*
             # ifelse.(df.type .== "function"," end","") .*
@@ -186,190 +174,6 @@ function densitySW(depth, temp, salinity)
     ) / 1000.0
 end
 
-function errorcheck(param_model, options)
-    uniform_grid = getval!(options, :options, "uniform_grid", :value) == "yes"
-    constant_porosity_profile =
-        getval!(options, :options, "constant_porosity_profile", :value) == "yes"
-    default_porosity_constant =
-        getval!(options, :options, "default_porosity_constant", :value) == "yes"
-    constant_bioturbation_profile =
-        getval!(options, :options, "constant_bioturbation_profile", :value) == "yes"
-    default_bioturbation_constant =
-        getval!(options, :options, "default_bioturbation_constant", :value) == "yes"
-    constant_bioirrigation_profile =
-        getval!(options, :options, "constant_bioirrigation_profile", :value) == "yes"
-    default_bioirrigation_constant =
-        getval!(options, :options, "default_bioirrigation_constant", :value) == "yes"
-    default_total_sediment_flux =
-        getval!(options, :options, "default_total_sediment_flux", :value) == "yes"
-
-    #-----------------------------------------------------------------------------
-    #error checking
-    #-----------------------------------------------------------------------------
-    for i in eachrow(param_model)
-        if ismissing(i.parameter)
-            throw(error("A parameter is missing at row `" * join(i, ";") * "`!"))
-        elseif ismissing(i.value)
-            throw(error("Parameter " * i.parameter * " does not have a value!"))
-            # elseif i.type == "function" && !occursin(r"\(x\)$", i.parameter)
-            #     throw(
-            #         error(
-            #             i.parameter *
-            #             "(" *
-            #             i.comment *
-            #             ")" *
-            #             " must be a function! Either you forget to add `(x)` to the name of the parameter. Or you forget to disable the options to make it constant!",
-            #         ),
-            #     )
-            # elseif i.type == "const" && occursin(r"\(x\)$", i.parameter)
-            #     throw(
-            #         error(
-            #             i.parameter *
-            #             "(" *
-            #             i.comment *
-            #             ")" *
-            #             " must be a constant! Either you forgot to remove  `(x)` after the name of the parameter. Or you forget to disable the options to make is a function!",
-            #         ),
-            #     )
-        end
-    end
-
-
-    Require = String[]
-    append!(Require, ["depth", "salinity", "temp", "ds_rho"])
-    append!(Require, ["L", "Ngrid"])
-    # append!(Require, ["phi_Inf"])
-    # append!(Require, ["delta"])
-
-
-    for i in Require
-        if !(i in param_model.parameter)
-            throw(error("`" * i * "` not found in parameter spreadsheet!"))
-        end
-    end
-
-    errdf = DataFrame(
-        parameter = ["phi", "Dbt", "Dbir"],
-        constant = [
-            "constant_porosity_profile",
-            "constant_bioturbation_profile",
-            "constant_bioirrigation_profile",
-        ],
-        constant_val = [
-            constant_porosity_profile,
-            constant_bioturbation_profile,
-            constant_bioirrigation_profile,
-        ],
-        default_val = [
-            default_porosity_constant,
-            default_bioturbation_constant,
-            default_bioirrigation_constant,
-        ],
-        default = [
-            "default_porosity_constant",
-            "default_bioturbation_constant",
-            "default_bioirrigation_constant",
-        ],
-    )
-
-    for i in eachrow(errdf)
-        if i.constant_val
-            if getval!(param_model, :parameter, i.parameter, :type) == "function" #i.parameter * "(x)" in param_model.parameter
-                throw(
-                    error(
-                        i.constant *
-                        " = yes is NOT consistent with function " *
-                        i.parameter *
-                        "! Either make " *
-                        i.constant *
-                        " = no or use the constant " *
-                        i.parameter,
-                    ),
-                )
-            elseif i.default_val && (i.parameter in param_model.parameter)
-                throw(
-                    error(
-                        "Do NOT supply constant " *
-                        i.parameter *
-                        " when " *
-                        i.default *
-                        " = yes. Delete it from the parameter spreadsheet.",
-                    ),
-                )
-            elseif !(i.default_val) && !(i.parameter in param_model.parameter)
-                throw(
-                    error(
-                        i.constant *
-                        " = yes, " *
-                        i.default *
-                        " = no, but " *
-                        i.parameter *
-                        " is not found in the parameter spreadsheet",
-                    ),
-                )
-            end
-        else
-            if getval!(param_model, :parameter, i.parameter, :type) == "const"#i.parameter in param_model.parameter
-                throw(
-                    error(
-                        i.constant *
-                        " = no is NOT consistent with constant " *
-                        i.parameter *
-                        "! Either make " *
-                        i.constant *
-                        " = yes or use the function " *
-                        i.parameter *
-                        "",
-                    ),
-                )
-                # elseif #!(i.parameter * "(x)" in param_model.parameter)
-                #     throw(
-                #         error(
-                #             i.constant *
-                #             " = no but " *
-                #             i.parameter *
-                #             "(x)" *
-                #             " is not found in the parameter spreadsheet",
-                #         ),
-                #     )
-            end
-        end
-    end
-
-
-    if uniform_grid
-        if "gridtran" in param_model.parameter
-            throw(
-                error(
-                    "uniform_grid = yes is not consistent with user supplied function gridtran!",
-                ),
-            )
-        end
-    else
-        if !("gridtran" in param_model.parameter)
-            throw(error("uniform_grid = no requires user supplied function gridtran!"))
-        end
-    end
-
-
-    if default_total_sediment_flux
-        if "Fsed" in param_model.parameter
-            throw(
-                error(
-                    "default_total_sediment_flux = yes is not consistent with user supplied constant Fsed!",
-                ),
-            )
-        end
-    else
-        if !("Fsed" in param_model.parameter)
-            throw(
-                error(
-                    "default_total_sediment_flux = no requires user supplied constant Fsed!",
-                ),
-            )
-        end
-    end
-end
 
 function newdf()
     DataFrame(
