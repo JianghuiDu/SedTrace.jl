@@ -108,6 +108,7 @@ function generate_preconditioner(PrecType::Symbol, p_sparse::SparseMatrixCSC)
 end
 
 
+                  
 
 # p_prec_ILU0 = ilu0(p_sparse);
 # prec = default_prec(p_prec_ILU0)
@@ -115,6 +116,20 @@ end
 
 # p_sparse = jacptype();
 # p_trimat = Tridiagonal(ones(Nmat - 1), ones(Nmat), ones(Nmat - 1));
+
+
+ function SciMLprecSetup(p_sparse::SparseMatrixCSC)
+    return function SciMLPrec(W,du,u,p,t,newW,Plprev,Prprev,solverdata)
+        if newW === nothing 
+        Plprev = ilu0(p_sparse)
+        elseif newW
+        ilu0!(Plprev,convert(AbstractMatrix,W))
+        end
+        Plprev,nothing
+    end
+end
+            
+
 nothing
 
 
