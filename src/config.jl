@@ -7,47 +7,32 @@ struct ModelConfig <: TEIConfig
     ModelDirectory::String
     ModelFile::String
     ModelName::String
-    UpdateParamOnly::Bool
-    JacType::Symbol
     AssembleParam::Bool
-    Template::Bool
-    AutoDiff::Bool
     CompleteFlux::Bool
     AllowDiscontinuity::Bool
     FastBroadcast::Bool
     UnflattenOp::Bool
-    MTK::Bool
 end
 
 function ModelConfig(
     ModelDirectory,
     ModelFile,
     ModelName;
-    UpdateParamOnly = true,
-    JacType = :sparse_banded,
-    AssembleParam = false,
-    Template = false,
-    AutoDiff = true,
+    AssembleParam = true,
     CompleteFlux = false,
     AllowDiscontinuity = false,
     FastBroadcast = true,
     UnflattenOp = true,
-    MTK = false,
 )
     return ModelConfig(
         ModelDirectory,
         ModelFile,
         ModelName,
-        UpdateParamOnly,
-        JacType,
         AssembleParam,
-        Template,
-        AutoDiff,
         CompleteFlux,
         AllowDiscontinuity,
         FastBroadcast,
         UnflattenOp,
-        MTK,
     )
 end
 
@@ -94,7 +79,7 @@ function SolverCtrlConfig(
     callback = nothing,
     saveat = nothing,
     dtmax = nothing,
-    maxiters = Int(1e5),
+    maxiters = Int(1e6),
     # tstops = nothing
 )
     return SolverCtrlConfig(
@@ -114,7 +99,7 @@ struct OutputConfig
     x::Vector{Float64}
     L::Float64
     Ngrid::Int
-    IDdict::Dict{String, StepRange{Int64, Int64}}
+    IDdict::Dict{Symbol, StepRange{Int64, Int64}}
 end
 
 struct SolutionConfig
@@ -122,7 +107,7 @@ struct SolutionConfig
     x::Vector{Float64}
     L::Float64
     Ngrid::Int
-    IDdict::Dict{String, StepRange{Int64, Int64}}
+    IDdict::Dict{Symbol, StepRange{Int64, Int64}}
     VarVal::Dict{String,Matrix{Float64}}
 end
 
