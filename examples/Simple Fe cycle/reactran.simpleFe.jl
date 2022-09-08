@@ -1,4 +1,87 @@
-function (f::Cache.Reactran)(dC, C, parms, t)
+function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
+    @unpack TFeID,
+    POCID,
+    FeOOHID,
+    FeSID,
+    O2ID,
+    SO4ID,
+    HID,
+    TCO2ID,
+    TH2SID,
+    AmPOC,
+    AmFeOOH,
+    AmFeS,
+    AmO2,
+    AmSO4,
+    AmH,
+    AmOH,
+    AmHCO3,
+    AmCO3,
+    AmCO2,
+    AmH2S,
+    AmHS,
+    AmFe,
+    AmFe_ads,
+    BcAmPOC,
+    BcCmPOC,
+    BcAmFeOOH,
+    BcCmFeOOH,
+    BcAmFeS,
+    BcCmFeS,
+    BcAmO2,
+    BcCmO2,
+    BcAmSO4,
+    BcCmSO4,
+    Ngrid,
+    BcAmH,
+    BcCmH,
+    BcAmOH,
+    BcCmOH,
+    BcAmHCO3,
+    BcCmHCO3,
+    BcAmCO3,
+    BcCmCO3,
+    BcAmCO2,
+    BcCmCO2,
+    BcAmH2S,
+    BcCmH2S,
+    BcAmHS,
+    BcCmHS,
+    BcAmFe,
+    BcCmFe,
+    BcAmFe_ads,
+    BcCmFe_ads,
+    alpha,
+    O20,
+    SO40,
+    H0,
+    OH0,
+    HCO30,
+    CO30,
+    CO20,
+    H2S0,
+    HS0,
+    Fe0,
+    KFe_ads,
+    dstopw,
+    KH2O,
+    KCO2,
+    KHCO3,
+    KH2S,
+    Cl,
+    KspFeS,
+    pwtods,
+    KO2,
+    k_POC,
+    KFeOOH,
+    KSO4,
+    kO2Fe,
+    kO2Fe_ads,
+    kO2H2S,
+    kFeOOHH2S,
+    kFeSdis,
+    kFeSpre = parms
+
     Fe = PreallocationTools.get_tmp(f.Fe, C)
     Fe_tran = PreallocationTools.get_tmp(f.Fe_tran, C)
     Fe_ads = PreallocationTools.get_tmp(f.Fe_ads, C)
@@ -21,6 +104,10 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dTA_dTCO2 = PreallocationTools.get_tmp(f.dTA_dTCO2, C)
     dTA_dTH2S = PreallocationTools.get_tmp(f.dTA_dTH2S, C)
     Fe_free = PreallocationTools.get_tmp(f.Fe_free, C)
+    FeCl_aq = PreallocationTools.get_tmp(f.FeCl_aq, C)
+    FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
+    FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
+    FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
     Omega_RFeS_dis = PreallocationTools.get_tmp(f.Omega_RFeS_dis, C)
     Omega_RFeS_pre = PreallocationTools.get_tmp(f.Omega_RFeS_pre, C)
     RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
@@ -91,7 +178,7 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     mul!(Fe_ads_tran, AmFe_ads, Fe_ads)
     Fe_ads_tran[1] += BcAmFe_ads[1] ⊗ Fe_ads[1] ⊕ BcCmFe_ads[1]
     Fe_ads_tran[Ngrid] += BcAmFe_ads[2] ⊗ Fe_ads[Ngrid] ⊕ BcCmFe_ads[2]
-    @.. dTFe = Fe_tran ⊗ 1 ⊕ Fe_ads_tran ⊗ dstopw
+    @.. dTFe = Fe_ads_tran ⊗ dstopw ⊕ Fe_tran ⊗ 1
     @.. dTFe += alpha ⊗ (Fe0 - Fe)
 
 
@@ -161,9 +248,29 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dH = dH / dTA_dH
     # speciation
     @.. Fe_free =
-        Fe / (
-            4466.83592150963 ⊗ CO3 ⊕ 0.758577575029184 ⊗ Cl ⊕
-            251188.643150958 ⊗ HS ⊕ 9.1201083935591 ⊗ SO4 ⊕ 1
+        3.98107170553497e-6 ⊗ Fe / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
+        )
+    @.. FeCl_aq =
+        3.019951720402014e-6 ⊗ Cl ⊗ Fe / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
+        )
+    @.. FeSO4_aq =
+        3.630780547701011e-5 ⊗ Fe ⊗ SO4 / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
+        )
+    @.. FeCO3_aq =
+        0.01778279410038921 ⊗ CO3 ⊗ Fe / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
+        )
+    @.. FeHS_aq =
+        1.0 ⊗ Fe ⊗ HS / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
 
     # reaction rates

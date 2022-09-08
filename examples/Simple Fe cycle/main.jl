@@ -10,53 +10,47 @@ modelconfig = ModelConfig(
     modeldirectory,
     modelfile,
     modelname,
-    UpdateParamOnly = false,
-    JacType = :sparse_banded,
-    Template = true,
-    AutoDiff = true,
-    CompleteFlux = false,
 )
+
+@time generate_parameter_template(modelconfig)
 
 @time generate_code(modelconfig)
 
 IncludeFiles(modelconfig)
 
 
-JacPrototype = SedTrace.JacType()
+chunk_size = 10;
 
-ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
-chunk_size = 9;
-dCdtFun = SedTrace.Cache.init(SedTrace.C_uni, SedTrace.Ngrid, chunk_size);
-
+C0 = SedTrace.Param.C0;
+parm = SedTrace.Param.ParamStruct();
+OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
+JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
 solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,1)
+solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
+OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
+outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
 
-solver = generate_ODESolver(dCdtFun, JacPrototype, solverconfig);
-ModelFunction = generate_ODEFun(dCdtFun, JacPrototype, solverconfig);
 
 
-TestJacobian(JacPrototype,dCdtFun,chunk_size)
-BenchmarkReactran(dCdtFun,SedTrace.C_uni)
-BenchmarkJacobian(JacPrototype,dCdtFun,chunk_size)
-BenchmarkPreconditioner(JacPrototype,dCdtFun,chunk_size)
-
+TestOdeFun(OdeFun,C0,parm)
+TestJacobian(JacPrototype,OdeFun,chunk_size,parm)
+BenchmarkReactran(OdeFun,C0,parm)
+BenchmarkJacobian(JacPrototype,OdeFun,chunk_size,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size,parm)
 
 
 solverctrlconfig = SolverCtrlConfig(
-    SedTrace.C_uni,
+    C0,
     # solution.sol[end],
     (0.0, 3000.0),
     reltol = 1e-6,
     abstol = 1e-18,
     saveat = 100.0,
     callback = TerminateSteadyState(1e-16, 1e-6, DiffEqCallbacks.allDerivPass),
-    maxiters = Int(1e6),
-    # dtmax = 0.1
 );
 
-outputconfig = OutputConfig(SedTrace.x, SedTrace.L, SedTrace.Ngrid, SedTrace.IDdict);
 
-
-@time solution = modelrun(ModelFunction, solver, solverctrlconfig, outputconfig);
+@time solution = modelrun(OdeFunction, parm, solver, solverctrlconfig, outputconfig);
 
 gr(; size = (400, 1000))
 

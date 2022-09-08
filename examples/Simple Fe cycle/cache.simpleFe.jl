@@ -23,6 +23,10 @@ mutable struct Reactran{T}
     dTA_dTCO2::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     dTA_dTH2S::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Fe_free::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeCl_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeSO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeCO3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeHS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RFeS_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RFeS_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RO2POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -69,6 +73,10 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     dTA_dTCO2 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     dTA_dTH2S = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Fe_free = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeCl_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeSO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeCO3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeHS_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RFeS_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RFeS_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     RO2POC = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -114,6 +122,10 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         dTA_dTCO2,
         dTA_dTH2S,
         Fe_free,
+        FeCl_aq,
+        FeSO4_aq,
+        FeCO3_aq,
+        FeHS_aq,
         Omega_RFeS_dis,
         Omega_RFeS_pre,
         RO2POC,
@@ -139,4 +151,3 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     return cache
 end
 end
-nothing

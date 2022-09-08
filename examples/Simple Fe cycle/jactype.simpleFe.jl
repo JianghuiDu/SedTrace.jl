@@ -1,4 +1,11 @@
-function JacType()
+function JacType(
+    IDdict::Dict{Symbol,StepRangeLen{Int,Int,Int,Int}},
+    Ngrid::Int,
+    nspec::Int,
+)
+    @unpack HID, POCID, O2ID, TCO2ID, FeOOHID, TFeID, SO4ID, TH2SID, FeSID =
+        IDdict
+
     rowID = Vector{Int}()
     colID = Vector{Int}()
     append!(rowID, getindex(HID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
