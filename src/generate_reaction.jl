@@ -181,7 +181,7 @@ function species_decomp(species)
     # now break components down into elements
     element_coef = DataFrame(element = String[], coef = String[])
 
-    for i = 1:length(comp)
+    for i in eachindex(comp)
         # breaks components into elemental parts,
         #  in the format of element name followed by stoichiometry
         # like C-H2-O
@@ -202,7 +202,7 @@ function check_react_balance(label, equation_ind)
     element_df = DataFrame(element = String[], coef = String[])
     component_df = DataFrame(component = String[], charge = String[])
 
-    for i = 1:length(equation_ind.species)
+    for i in eachindex(equation_ind.species)
         # decompose species into elements and components
         # get the "total" stoichiometries of elements and charges
         elements_i = species_decomp(equation_ind.species[i])
@@ -231,7 +231,18 @@ function check_react_balance(label, equation_ind)
     )
 
     # if mass_sum != 0 # if not mass balanced
-    if abs(mass_sum) > 5eps()
+    report_error = false
+    if typeof(SymPy.N(mass_sum)) <: Real
+        if abs(SymPy.N(mass_sum)) > 10eps()
+            report_error = true
+        end
+    else
+        if any(SymPy.sympy.Poly(mass_sum).coeffs().>10eps())
+            report_error = true
+        end
+    end
+
+    if report_error
         throw(
             error(
                 "Reaction " *
@@ -257,7 +268,18 @@ function check_react_balance(label, equation_ind)
         )
     end
 
-    if abs(charge_sum) > 5eps() # if not charge balanced
+    report_error = false
+    if typeof(SymPy.N(charge_sum)) <: Real
+        if abs(SymPy.N(charge_sum)) > 10eps()
+            report_error = true
+        end
+    else
+        if any(SymPy.sympy.Poly(charge_sum).coeffs().>10eps())
+            report_error = true
+        end
+    end
+
+    if report_error# if not charge balanced
         throw(
             error(
                 "Reaction " *
@@ -300,18 +322,20 @@ function species_from_equation(reactions_list)
         # parse the chemical reaction into species, their stoichiometries and the roles (reactant/product)
         equation_ind = parse_equation(i.equation)
 
-        # check if the chemical equations are balanced
-        element_ind = check_react_balance(name, equation_ind)
-
         append!(species_eq.label, fill(name, size(equation_ind, 1)))
         append!(species_eq.species_eq, equation_ind.species)
         append!(species_eq.stoichiometry, equation_ind.stoichiometry)
         append!(species_eq.charge, equation_ind.charge)
         append!(species_eq.role, equation_ind.role)
 
+        if !ismissing(i.check)
+        # check if the chemical equations are balanced
+        element_ind = check_react_balance(name, equation_ind)
+
         append!(element_eq.label, fill(name, size(element_ind, 1)))
         append!(element_eq.element, element_ind.element)
         append!(element_eq.coef, element_ind.coef)
+        end
     end
 
     return (species_eq, element_eq)
@@ -322,25 +346,14 @@ end
 # the reaction equations from column "equation" with the modelled
 # substance/species in the columns "substance" and "species_modelled".
 #-------------------------------------------------------------------------------------------
-function join_eq_to_model(species_eq, species_modelled)
-    # substances with only one species
-    # species_modelled = @transform(
-    #     species_modelled,
-    #     species_modelled =
-    #         ifelse.(
-    #             ismissing.(:species_modelled),
-    #             :substance,
-    #             :substance .* "," .* :species_modelled,
-    #         ),
-    # )
-    species_modelled = @chain begin
-        species_modelled
-        transform(
-            [:species_modelled, :substance] =>
-                ((a, b) -> ifelse.(ismissing.(a), b, b .* "," .* a)) =>
-                    :species_modelled,
-        )
-    end
+function join_eq_to_model(species_eq, species_modelled,adsorption)
+        
+    transform!(
+        species_modelled,
+        [:species_modelled, :substance] => 
+        ((a, b) -> ifelse.(ismissing.(a), b, b .* "," .* a)) => 
+        :species_modelled,
+    )
 
     # get the unique species read from the chemical equations
     # to join to the species_modelled list
@@ -357,7 +370,7 @@ function join_eq_to_model(species_eq, species_modelled)
         # reg1 = Regex("(?<!\\w)" * "\\Q" * i[:species_eq] * "\\E" * "(?!\\w)")
         reg1 = Regex("(?<=,|\\/|^|;)" * "\\Q" * i[:species_eq] * "\\E" * "(?=,|\\/|\$|;|{)")
         reg2 = Regex(
-            "(?<=" * "\\Q" * i[:species_eq] * "\\E" * ")(\\{[\\+\\-\\d*]?\\})?\\/\\K\\w+",
+            "(?<=\\," * "\\Q" * i[:species_eq] * "\\E" * ")(\\{[\\+\\-\\d*]?\\})?\\/\\K\\w+",
         ) # codename is after chemical name/
         for j in eachrow(species_modelled)
             if occursin(reg1, j[:species_modelled])
@@ -367,38 +380,23 @@ function join_eq_to_model(species_eq, species_modelled)
         end
     end
     # species that are in the equation but not modelled
-    # species_eq_not_modelled =
-    #     @linq where(species_eq_unique, ismissing.(:species_modelled)) |>
-    #           rename!(:species_eq => :species) |>
-    #           select(:species) |>
-    #           transform(comment = "in chemical equation but not modelled")
-    species_eq_not_modelled = @chain begin
-        species_eq_unique
-        @subset(ismissing.(:species_modelled))
-        rename!(:species_eq => :species)
-        select!(:species)
-        insertcols!(:comment => "in chemical equation but not modelled")
-    end
+    species_eq_not_modelled = @subset(species_eq_unique,ismissing.(:species_modelled))
+    rename!(species_eq_not_modelled,:species_eq => :species)
+    select!(species_eq_not_modelled,:species)
+    insertcols!(species_eq_not_modelled,:comment => "in chemical equation but not modelled")
 
 
     # join the species in equations to modelled
-    species_eq_unique = @subset(species_eq_unique, .!ismissing.(:species_modelled))
+    @subset!(species_eq_unique, .!ismissing.(:species_modelled))
     species_join = leftjoin(species_eq, species_eq_unique; on = :species_eq)
-    species_join = @subset(species_join, .!ismissing.(:species_modelled))
+    @subset!(species_join, .!ismissing.(:species_modelled))
     species_join = outerjoin(species_join, species_modelled; on = :species_modelled)
 
     # species not modelled but in the equations
-    # species_modelled_not_eq = @linq where(species_join, ismissing.(:species_eq)) |>
-    #       rename!(:species_modelled => :species) |>
-    #       select(:species) |>
-    #       transform(comment = "modelled but not in chemical equation")
-    species_modelled_not_eq = @chain begin
-        species_join
-        @subset(ismissing.(:species_eq))
-        rename!(:species_modelled => :species)
-        select!(:species)
-        insertcols!(:comment => "modelled but not in chemical equation")
-    end
+    species_modelled_not_eq = @subset(species_join,ismissing.(:species_eq))
+    rename!(species_modelled_not_eq,:species_modelled => :species)
+    select!(species_modelled_not_eq,:species)
+    insertcols!(species_modelled_not_eq,:comment => "modelled but not in chemical equation")
 
     # collect those extra species and report them to the user
     species_extra = outerjoin(
@@ -414,29 +412,20 @@ function join_eq_to_model(species_eq, species_modelled)
 
 
     # make type changes to the adsorbed species
-    # species_join = @linq transform(
-    #           species_join,
-    #           species_type = ifelse.(occursin.(r"Surf_", :species_eq), "adsorbed", :type),
-    #       ) |>
-    #       rename!(:type => :substance_type) |>
-    #       groupby(:label) |>
-    #       transform(
-    #           reaction_type = ifelse(
-    #               any(occursin.(r"solid|\badsorbed\b", :species_type[:role.=="reactant"])),
-    #               "solid",
-    #               "dissolved",
-    #           ),
-    #       )
-    species_join = @chain begin
-        species_join
-        transform(
+    species_join_ads = @subset(species_join,.!ismissing.(:codename)) 
+
+    ads_df = leftjoin(adsorption,select!(species_join_ads,:species_eq,:codename),on=:adsorbed=>:codename)
+    
+    ads_spec = skipmissing(vcat(ads_df.adsorbed,ads_df.species_eq))
+
+    transform!(species_join,
             [:species_eq, :type] =>
-                ((a, b) -> ifelse.(occursin.(r"Surf_", a), "adsorbed", b)) =>
+                ((a, b) -> ifelse.(in.(a,Ref(ads_spec)), "adsorbed", b)) =>
                     :species_type,
-        )
-        rename(:type => :substance_type)
-        groupby(:label)
-        transform(
+    )
+    rename!(species_join,:type => :substance_type)
+    species_join = groupby(species_join,:label)
+    species_join = transform!(species_join,
             [:species_type, :role] =>
                 (
                     (a, b) -> ifelse(
@@ -445,15 +434,9 @@ function join_eq_to_model(species_eq, species_modelled)
                         "dissolved",
                     )
                 ) => :reaction_type,
-        )
-        # need to delete later. If precipitation
-        @transform(
-            :reaction_type =
-                ifelse.(occursin.(r"CO3_pre", :label), "solid", :reaction_type)
-        )
-    end
-
-
+                ungroup = true,
+    )
+    select!(species_join,Not([:top_bc_type,:bot_bc_type,:bioirrigation_scale]))
 
     return (species_join, species_extra)
 end
@@ -707,7 +690,7 @@ end
 # assmeble all species rate expressions
 #-------------------------------------------------------------------------------------------
 
-function species_rate_expr(species_join, species_extra, MTK)
+function species_rate_expr(species_join, species_extra)
     # Assemble rate expressions for each model substance
     # input constains reaction labe, species name (both supplied and inferred from chemical equations),
     # stoichiometries, role speciation and type (solid, dissolved)
@@ -719,7 +702,7 @@ function species_rate_expr(species_join, species_extra, MTK)
 
     for i in uni_species[findall(x -> x != "H", uni_species)] # loop over species (except proton)
         if i == "Age" # age tracer
-            push!(dCdt, !MTK ? "S_Age = 1" : "S_Age = ones(Ngrid)")
+            push!(dCdt,  "S_Age = 1")
         elseif i in species_join.substance
             df = @subset(species_join, :substance .== i)
             conversion_fac = convfac(df)
@@ -743,7 +726,7 @@ function species_rate_expr(species_join, species_extra, MTK)
 
     reacspec = uni_species # list of modelled substance
     if "Age" in species_extra.species
-        push!(dCdt, !MTK ? "S_Age = 1" : "S_Age = ones(Ngrid)")
+        push!(dCdt,  "S_Age = 1")
         push!(reacspec, "Age")
     end
     return dCdt, reacspec
@@ -755,7 +738,7 @@ end
 # for solid substances the FVCF scheme: dPOC += (1+B_POC)*S_POC
 # for dissolved substances the FVCF scheme: dO2 += S_O2,
 #-------------------------------------------------------------------------------------------
-function dCdt_expr(substances, reacspec, cf, MTK)
+function dCdt_expr(substances, reacspec, cf)
     substances = @subset(substances, :substance .∈ Ref(reacspec))
 
     dCdt_expr = String[]
@@ -773,8 +756,7 @@ function dCdt_expr(substances, reacspec, cf, MTK)
         for i in species_solid.substance
             push!(
                 dCdt_expr_adv,
-                !MTK ? "mul!(d" * i * ", Bm" * i * ", S_" * i * ", 1.0, 1.0)" :
-                "d" * i * "+= Bm" * i * "* S_" * i,
+                "mul!(d" * i * ", Bm" * i * ", S_" * i * ", 1.0, 1.0)"
             )
         end
         for i in species_solid.substance
@@ -792,44 +774,45 @@ end
 
 function speciation_code(speciation_df)
 
-    if length(unique(speciation_df.substance)) != 1
-        throw(error("multiple substances " * join(unique(speciation_df.substance), " & ")))
-    end
+    # if length(unique(speciation_df.substance)) != 1
+    #     throw(error("multiple substances " * join(unique(speciation_df.substance), " & ")))
+    # end
     substance_model = speciation_df.substance[1]
     speciation_df = @chain begin
         speciation_df
-        @subset(.!ismissing.(:include))
-        transform!(
-            :equation =>
-                (
-                    x ->
-                        mymatch.(
-                            Regex(
-                                "(?<=\\=).*?\\K" * substance_model * "[\\w\\(\\)\\[\\]]*",
-                            ),
-                            x,
-                        )
-                ) => :label,
-        )
+    #     # @subset(.!ismissing.(:include))
+    #     # transform!(
+    #     #     :equation =>
+    #     #         (
+    #     #             x ->
+    #     #                 mymatch.(
+    #     #                     Regex(
+    #     #                         "(?<=\\=).*?\\K" * substance_model * "[\\w\\(\\)\\[\\]]*",
+    #     #                     ),
+    #     #                     x,
+    #     #                 )
+    #     #         ) => :label,
+    #     # )
         transform(:label => (x -> replace.(x, r"[\(\)\[\]]+" => "_")), renamecols = false)
         transform(:label => (x -> replace.(x, r"\_$" => "")), renamecols = false)
     end
 
     speciation_logK = @chain begin
         speciation_df
-        @transform(:K = 10.0 .^ parse.(Float64, :logK))
+        # @transform(:K = 10.0 .^ parse.(Float64, :logK))
         select(:substance, :label, :K)
     end
 
     speciation_Eq = @chain begin
         speciation_df
+        # @transform(:check = 1)
         species_from_equation()
         _[1]
         @transform(:substance = substance_model)
-        transform!(
-            :species_eq => (a -> ifelse.(a .== substance_model, a .* "_free", a)),
-            renamecols = false,
-        )
+        # transform!(
+        #     :species_eq => (a -> ifelse.(a .== substance_model, a .* "_free", a)),
+        #     renamecols = false,
+        # )
         transform!(
             :species_eq => (x -> replace.(x, r"[\(\)\[\]]+" => "_")),
             renamecols = false,
@@ -850,42 +833,112 @@ function speciation_code(speciation_df)
         transform!(:Eq => (x -> SymPy.sympify.(x)), renamecols = false)
     end
 
-    var1 = SymPy.solve.(speciation_Eq.Eq, SymPy.symbols.(speciation_Eq.label))
-    var2 = sum(var1) / (SymPy.symbols(substance_model * "_free"))
-    var3 = SymPy.symbols(substance_model) / (var2[1] + 1)
-    substance_free = SymPy.simplify(var3)
+    # var1 = SymPy.solve.(speciation_Eq.Eq, SymPy.symbols.(speciation_Eq.label))
+    # var2 = sum(var1) / (SymPy.symbols(substance_model * "_free"))
+    # var3 = SymPy.symbols(substance_model) / (var2[1] + 1)
+    # substance_free = SymPy.simplify(var3)
+    base_species = speciation_Eq.label[speciation_Eq.Eq .== 0][1]
 
 
-    return substance_model * "_free = " * string(substance_free)
+    speciation_Eq_sys = @chain begin
+        speciation_Eq
+        @subset(:label .!= base_species)
+        # @select!(:label,:Eq)
+        # push!(
+        #     [substance_model,SymPy.sympify(join(speciation_Eq.label,"+")*"-"*substance_model)]
+        # )
+    end
+
+    var1 = SymPy.solveset.(speciation_Eq_sys.Eq, SymPy.symbols.(speciation_Eq_sys.label))
+    sumvar = SymPy.sum(SymPy.elements.(var1))[1]
+
+    if base_species != substance_model
+        var2 = SymPy.solveset(sumvar+SymPy.symbols(base_species) - SymPy.symbols(substance_model),SymPy.symbols(base_species))
+        varele = SymPy.elements(var2)[1]
+        speciation_Str = [base_species * "=" * string(varele)]
+        for i in eachrow(speciation_Eq_sys)
+
+            res = SymPy.solveset(i.Eq[1](SymPy.symbols(base_species)=>varele),SymPy.symbols(i.label))
+
+             push!(
+                 speciation_Str,
+                 i.label * "_aq=" * string(SymPy.elements(res)[1])
+             )
+         end
+     
+    else
+        var2 = SymPy.solveset(sumvar+SymPy.symbols(base_species) - SymPy.symbols("Dissolved_"*substance_model),SymPy.symbols(base_species))
+        varele = SymPy.elements(var2)[1]
+
+        speciation_Str = [base_species*"_free" * "=" * 
+        replace(string(varele),"Dissolved_"*substance_model=>substance_model)]
+        for i in eachrow(speciation_Eq_sys)
+
+            res = SymPy.solveset(i.Eq[1](SymPy.symbols(base_species)=>varele),SymPy.symbols(i.label))
+     
+             push!(
+                 speciation_Str,
+                 i.label * "_aq=" * 
+                 replace(string(SymPy.elements(res)[1]),
+                 "Dissolved_"*substance_model=>substance_model)
+             )
+         end
+     
+    end
+
+
+
+
+    # return substance_model * "_free = " * string(substance_free)
+    return speciation_Str
 end
 
 
 
+# function species_in_model(species_join, species_extra)
+#     # all the modelled species from species_joi and _extra
+#     species_modelled = @chain begin
+#         species_extra
+#         @subset(:comment .== "modelled but not in chemical equation")
+#         _.species
+#         vcat(species_join.species_modelled)
+#         unique
+#         split.(",")
+#         reduce(vcat, _)
+#         split.("/")
+#         reduce(vcat, _)
+#         split.("{")
+#     end
 
+#     for i in species_modelled
+#         if length(i) > 1
+#             deleteat!(i, 2)
+#         end
+#     end
+
+#     species_modelled = unique(reduce(vcat, species_modelled))
+#     return species_modelled
+# end
 
 function species_in_model(species_join, species_extra)
     # all the modelled species from species_joi and _extra
-    species_modelled = @chain begin
-        species_extra
-        @subset(:comment .== "modelled but not in chemical equation")
-        _.species
-        vcat(species_join.species_modelled)
-        unique
-        split.(",")
-        reduce(vcat, _)
-        split.("/")
-        reduce(vcat, _)
-        split.("{")
-    end
+    spec_in_model = @subset(species_extra,:comment .== "modelled but not in chemical equation")
+    spec = vcat(spec_in_model.species,species_join.species_modelled)
+    unique!(spec)
+    spec = split.(spec,",")
+    spec = reduce(vcat, spec)
+    spec = split.(spec,"/")
+    spec = reduce(vcat, spec)
+    spec = split.(spec,"{")
 
-    for i in species_modelled
+    for i in spec
         if length(i) > 1
             deleteat!(i, 2)
         end
     end
 
-    species_modelled = unique(reduce(vcat, species_modelled))
-    return species_modelled
+    spec = unique(reduce(vcat, spec))
+    return spec
 end
 
 
@@ -901,91 +954,6 @@ end
 
 
 
-function jac_ract_dependence(
-    species_join,
-    species_modelled,
-    spec_expr,
-    ads_expr,
-    omega_expr,
-    rate_expr,
-    cache_str,
-    pHspecies,
-    adsorption
-)
-    p_spec = @chain begin
-        find_param_in_expr(species_modelled, spec_expr, cache_str, "react")
-        @subset(.!:isparam)
-        @select!(:label, :variable)
-    end
-
-    p_ads = @chain begin
-        find_param_in_expr_ads(species_modelled, ads_expr, cache_str, adsorption)
-        @subset(.!:isparam)
-        @select!(:label, :variable)
-    end
-
-
-    p_omega = @chain begin
-        find_param_in_expr(species_modelled, omega_expr, cache_str, "react")
-        @subset(.!:isparam)
-        @select!(:label, :variable)
-    end
-
-
-    for i in eachrow(pHspecies)
-        if i.sumspecies != "H"
-            append!(pHspecies, DataFrame(sumspecies = "H", subspecies = i.subspecies))
-        end
-    end
-
-    p_rate = @chain begin
-        find_param_in_expr(species_modelled, rate_expr, cache_str, "react")
-        @subset(.!:isparam)
-        @select!(:label, :variable)
-        leftjoin(_, _, on = [:variable => :label], renamecols = "" => "_tmp")
-        @transform(:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
-        @select!(:label, :variable)
-        leftjoin(p_omega, on = [:variable => :label], renamecols = "" => "_tmp")
-        @transform(:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
-        @select!(:label, :variable)
-        leftjoin(p_spec, on = [:variable => :label], renamecols = "" => "_tmp")
-        @transform(:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
-        @select!(:label, :variable)
-        leftjoin(p_ads, on = [:variable => :label], renamecols = "" => "_tmp")
-        @transform(
-            :dependence = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp)
-        )
-        @select!(:label, :dependence)
-        leftjoin(pHspecies, on = [:dependence => :subspecies])
-        @transform(:dependence = ifelse.(ismissing.(:sumspecies), :dependence, :sumspecies))
-        @select!(:label, :dependence)
-        unique()
-    end
-    species_join_H = @chain begin
-        species_join
-        @subset(:substance_type .== "dissolved_summed_pH")
-        @select(:label, :substance)
-        @transform(:substance = "H")
-        unique()
-    end
-
-    react_dependence = @chain begin
-        species_join
-        @select(:substance, :label)
-        outerjoin(species_join_H, on = [:label, :substance])
-        unique()
-        leftjoin(p_rate, on = :label)
-        @select!(:substance, :dependence)
-        unique()
-        groupby(:substance)
-        combine(:dependence => (x -> join(x, ",")), renamecols = false)
-    end
-
-
-    return react_dependence
-end
-
-
 #-------------------------------------------------------------------------------------------
 # Generate reaction code
 #-------------------------------------------------------------------------------------------
@@ -995,47 +963,45 @@ function reaction_code(
     substances,
     speciation,
     adsorption,
-    tran_cache,
-    ads_summed_expr_str,
     cf,
-    MTK,
     discontinuity,
-    inputpath,
-    modelname
 )
 
     # parse species from the chemical reaction equations
     species_eq, element_eq = species_from_equation(reactions)
     # join that to the modelled species list
-    species_join, species_extra = join_eq_to_model(species_eq, substances)
+    species_join, species_extra = join_eq_to_model(species_eq, substances,adsorption)
 
     # speciation
     spec_expr = map(speciation_code, [i for i in groupby(speciation, :substance)])
+    spec_expr = reduce(vcat,spec_expr)
 
     # adsorbed species
-    sp_ads = @subset(species_join, occursin.("Surf_", :species_eq))
-    ads_expr = String[]
-    for i in eachrow(sp_ads)
-        push!(ads_expr, i.codename * "=" * i.substance * "*K" * i.codename)
-    end
+    # sp_ads = @subset(species_join, occursin.("Surf_", :species_eq))
+    # ads_expr = String[]
+    # for i in eachrow(sp_ads)
+    #     push!(ads_expr, i.codename * "=" * i.substance * "*K" * i.codename)
+    # end
+    # sp_ads = @subset(adsorption,:surface .!= "dissolved")
+    # ads_expr = String[]
+    # for i in eachrow(adsorption)
+    #         push!(ads_expr, i.adsorbed * "=" * i.expression)
+    # end
 
-
-    append!(ads_expr, ads_summed_expr_str)
+    # append!(ads_expr, ads_summed_expr_str)
 
 
     # formate rate expressions
     rate_expr, omega_expr = format_rate_expr(reactions, discontinuity)
 
     # rate expression for each species
-    species_rate, reacspec = species_rate_expr(species_join, species_extra, MTK)
+    species_rate, reacspec = species_rate_expr(species_join, species_extra)
 
     # append reaction rate expressions to total rate expressions
-    dCdt = dCdt_expr(substances, reacspec, cf, MTK)
+    dCdt = dCdt_expr(substances, reacspec, cf)
 
-    reac_expr = vcat(spec_expr, ads_expr, rate_expr, omega_expr, species_rate)
 
-    if !MTK
-        code = vcat(
+    code = vcat(
             "# speciation",
             "@. " .* spec_expr,
             "",
@@ -1048,123 +1014,49 @@ function reaction_code(
             "",
             "@. " .* dCdt,
             "",
-        )
-    else
-        code = vcat(
-            "# speciation",
-            replace.(spec_expr, r"\=" => "= @."),
-            "",
-            "# reaction rates",
-            replace.(omega_expr, r"\=" => "= @."),
-            replace.(rate_expr, r"\=" => "= @."),
-            "",
-            "# species rates",
-            replace.(species_rate, r"\=" => "= @."),
-            "",
-            replace.(dCdt, r"\=" => "= @."),
-            "",
-        )
-    end
+    )
 
-    # if MTK
-    #     for i in eachrow(substances)
-    #         push!(code,
-    #         "dC[$(i.substance)ID] .= d$(i.substance)",
-    #         )
-    #     end
+
+
+
+    # speciation_new = @chain begin
+    #     speciation
+    #     # @transform(:label = :substance .* "_ligand")
+    #     select(:substance,:label, :equation)
+    #     @transform(:check = 1)
     # end
 
 
-    cache_str = vcat(spec_expr, omega_expr, rate_expr, species_rate)
-    cache_str = split.(cache_str, r"\=|\+\=|\*\=|\-\=|\/\=")
-    cache_str = unique([replace(i[1], r"\s" => "") for i in cache_str])
-    cache_str = vcat(cache_str, tran_cache)
+    # species_eq_specition, element_eq_speciation = species_from_equation(speciation)
+    # transform!(species_eq_specition,:species_eq => (x -> replace.(x, r"[\(\)\[\]]+" => "_")), renamecols = false)
+    # transform!(species_eq_specition,:species_eq => (x -> replace.(x, r"\_$" => "")), renamecols = false)
+    # transform!(species_eq_specition,:species_eq => (x -> x.*"_aq"), renamecols = false)
+
+    # # join that to the modelled species list
+    # species_join_specition, species_extra_specition =
+    #     join_eq_to_model(species_eq_specition, substances,adsorption)
 
 
-    speciation_new = @chain begin
-        speciation
-        @transform(:label = :substance .* "_" .* :type)
-        select(:label, :equation)
-    end
-
-
-    species_eq_specition, element_eq_speciation = species_from_equation(speciation_new)
-    # join that to the modelled species list
-    species_join_specition, species_extra_specition =
-        join_eq_to_model(species_eq_specition, substances)
-
-
-    species_join_all = vcat(species_join,species_join_specition)
-    species_extra_all = vcat(species_extra,species_extra_specition)
+    # species_join_all = vcat(species_join,species_join_specition)
+    # species_extra_all = vcat(species_extra,species_extra_specition)
 
     species_modelled = species_in_model(species_join, species_extra)
 
 
 
-    pHspecies = pH_rate_species(species_join_all)
+    # pHspecies = pH_rate_species(species_join_all)
+    pHspecies = pH_rate_species(species_join)
 
 
-    react_jp = jac_ract_dependence(
-        species_join,
-        species_modelled,
-        spec_expr,
-        ads_expr,
-        omega_expr,
-        rate_expr,
-        cache_str,
-        pHspecies,
-        adsorption
-    )
+    reac_expr = (spec_expr = spec_expr, rate_expr = rate_expr, omega_expr = omega_expr,species_rate=species_rate)
 
-    # for i in eachrow(react_jp)
-    #     if getval!(substances,:substance,i.substance,:type) == "dissolved_adsorbed_summed"
-    #         ads_df = @chain begin
-    #         adsorption
-    #         @subset(:substance.==i.substance)
-    #         @subset(:surface.!="dissolved")
-    #         end
-    #         for k in ads_df.surface
-    #             tmp_dep = split(getval!(react_jp,:substance,k,:dependence),",")
-    #             i.dependence = join(unique(vcat(split(i.dependence,","),tmp_dep)),",")
-    #         end
-    #     end
-    # end
+    cache_str = vcat(spec_expr, omega_expr, rate_expr, species_rate)
+    cache_str = split.(cache_str, r"\=|\+\=|\*\=|\-\=|\/\=")
+    cache_str = unique([replace(i[1], r"\s" => "") for i in cache_str])
 
-
-    XLSX.writetable(
-        inputpath*modelname*"ParsingDiagnostics.xlsx",
-        overwrite = true,
-        rate = (
-            [
-                vcat(
-                    "# reaction rates",
-                    vcat(omega_expr, rate_expr),
-                    "",
-                    "",
-                    "# species rates",
-                    species_rate,
-                ),
-            ],
-            [""],
-        ),
-        species = (
-            collect(DataFrames.eachcol(species_join_all)),
-            DataFrames.names(species_join),
-        ),
-        species_extra = (
-            collect(DataFrames.eachcol(species_extra_all)),
-            DataFrames.names(species_extra),
-        ),
-        react_jp = (collect(DataFrames.eachcol(react_jp)), DataFrames.names(react_jp)),
-        element = (collect(DataFrames.eachcol(element_eq)), DataFrames.names(element_eq)),
-        # parameters = (
-        #     collect(DataFrames.eachcol(parameters)),
-        #     DataFrames.names(parameters),
-        # ),
-    )
-
-    # return code, parameters, cache_str, react_jp
-    return code, species_modelled, reac_expr, cache_str, react_jp
+    parsing_df = (species_model_df = species_join,species_extra_df = species_extra,elements_df = element_eq)
+    # return code, species_modelled, reac_expr, cache_str, react_jp
+    return code, parsing_df, species_modelled,reac_expr,cache_str,pHspecies
 
 end
 
