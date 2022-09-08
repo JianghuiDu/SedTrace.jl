@@ -29,8 +29,8 @@ import DataStructures:OrderedDict
 @reexport import StatsPlots:@df
 
 using RCall
-import SymPy:simplify,solve,nsimplify,sympify,symbols
-
+# import SymPy:simplify,solve,nsimplify,sympify,symbols
+import SymPy
 # using CSV
 
 @reexport using DiffEqCallbacks
@@ -40,7 +40,7 @@ import SymPy:simplify,solve,nsimplify,sympify,symbols
 @reexport using ForwardDiff
 @reexport using SpecialFunctions
 
-
+using Parameters, UnPack
 # heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
 
 include("config.jl")
@@ -62,16 +62,27 @@ include("generate_struct.jl")
 include("generate_initval.jl")
 include("generate_jacprototype.jl")
 include("generate_plot.jl")
+include("parsing_jacobian.jl")
+include("generate_parameter_struct.jl")
+include("preprocessing.jl")
 
 include("benchmark.jl")
 
 using .CodeGeneration: generate_code
+using .TemplateGeneration: generate_parameter_template
 
 function IncludeFiles(modelconfig::ModelConfig)
-    include(modelconfig.ModelDirectory*"parm."*modelconfig.ModelName*".jl");
-    include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
-    include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
-    include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
+    if modelconfig.AssembleParam
+        include(modelconfig.ModelDirectory*"parm.struct."*modelconfig.ModelName*".jl");
+        include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
+        include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
+        include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
+    else
+        include(modelconfig.ModelDirectory*"parm."*modelconfig.ModelName*".jl");
+        include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
+        include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
+        include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
+    end
     return nothing
 end
 
@@ -83,7 +94,7 @@ export ⊕, ⊗
 
 export SolverConfig, ModelConfig, SolutionConfig,SolverCtrlConfig,OutputConfig
 
-export generate_code,generate_ODESolver,generate_ODEFun
+export generate_code,generate_ODESolver,generate_ODEFun,generate_parameter_template
 export modelrun
 export generate_jacobian
 
@@ -93,6 +104,7 @@ export generate_substance_plot,generate_aux_plot,calc_flux_top
 
 export IncludeFiles
 
+export TestOdeFun
 export TestJacobian
 export BenchmarkJacobian
 export BenchmarkPreconditioner
