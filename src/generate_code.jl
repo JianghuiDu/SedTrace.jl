@@ -2,7 +2,8 @@ module CodeGeneration
 using SedTrace: ModelConfig
 import XLSX
 import SymPy
-using DataFrames, DataFramesMeta, Chain, RCall, Printf, LinearAlgebra, JuliaFormatter
+using DataFrames,
+    DataFramesMeta, Chain, RCall, Printf, LinearAlgebra, JuliaFormatter, UnPack, Parameters
 
 
 include("helpers.jl")
@@ -10,219 +11,156 @@ include("moleculardiff.jl")
 include("generate_reaction.jl")
 include("generate_transport.jl")
 include("generate_parameter.jl")
-include("generate_parameter_template.jl")
 include("generate_struct.jl")
 include("generate_initval.jl")
 include("generate_jacprototype.jl")
 include("pH_helpers.jl")
 include("identify_parameters.jl")
+include("preprocessing.jl")
+include("parsing_jacobian.jl")
+include("generate_parameter_struct.jl")
 
-# export generate_code
-function generate_code(modelconfig::ModelConfig; ParamDict::Dict = Dict(),EnableList::Dict=Dict())
-    if !(modelconfig.JacType in [:banded, :sparse_banded, :sparse])
-        throw(
-            error(
-                "Jacobian of type $(modelconfig.JacType) is not allowed. Choose one from banded, sparse_banded or sparse!",
-            ),
-        )
-    end
 
+function generate_code(
+    modelconfig::ModelConfig;
+    ParamDict::Dict = Dict(),
+    EnableList::Dict = Dict(),
+)
+
+    #-----------------------------------------------------------------------------------------
+    # read Excel sheets and preprocess
+    #-----------------------------------------------------------------------------------------
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
+
+    for i in ["substances", "reactions", "parameters", "speciation", "adsorption"]
+        if !(i in XLSX.sheetnames(model_config))
+            throw(error("Sheet $i is not found in $model_path."))
+        end
+    end
 
     substances = DataFrame(XLSX.gettable(model_config["substances"]))
     reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
     speciation = DataFrame(XLSX.gettable(model_config["speciation"]))
     adsorption = DataFrame(XLSX.gettable(model_config["adsorption"]))
-    options = DataFrame(XLSX.gettable(model_config["options"]))
     parameters = DataFrame(XLSX.gettable(model_config["parameters"]))
 
-    if !isempty(ParamDict)
-        for (key, value) in ParamDict
-            if !in(key,parameters.parameter)
-                throw(error("$key is not a parameter!"))
-            else
-                setval!(parameters, :parameter, key, :value, value)
-            end
-        end
-    end
 
-    
-    if !isempty(EnableList)
-        if haskey(EnableList,"substances")
-            for i in EnableList["substances"]
-                if !in(i,substances.substance)
-                    throw(error("$i is not a substance!"))
-                else
-                    setval!(substances, :substance, i, :include, 1)
-                end
-            end
-        end
-        if haskey(EnableList,"parameters")
-            for i in EnableList["parameters"]
-                if !in(i,parameters.parameter)
-                    throw(error("$i is not a parameter!"))
-                else
-                    setval!(parameters, :parameter, i, :include, 1)
-                end
-            end
-        end
-        if haskey(EnableList,"reactions")
-            for i in EnableList["reactions"]
-                if !in(i,reactions.label)
-                    throw(error("$i is not a reaction!"))
-                else
-                    setval!(reactions, :label, i, :include, 1)
-                end
-            end
-        end
-    end
+    preprocessSubstances!(substances, EnableList)
+    preprocessReactions!(reactions, EnableList)
+    preprocessAdsorption!(adsorption, EnableList)
+    preprocessSpeciation!(speciation, EnableList)
+    preprocessParameters!(parameters, ParamDict, EnableList)
+
+    #-----------------------------------------------------------------------------------------
+    # generate parameter, transport and reaction code
+    #-----------------------------------------------------------------------------------------
+    params_code =
+        parameter_code(parameters, substances, adsorption, modelconfig.AssembleParam)
 
 
-    subset!(substances,:include => ByRow(!ismissing))
-    subset!(reactions,:include => ByRow(!ismissing)) 
-    subset!(speciation,:include => ByRow(!ismissing))
-    subset!(adsorption,:include => ByRow(!ismissing))
-    subset!(parameters,:include => ByRow(!ismissing))
-    
-    
-    # substance must be sorted by TYPE otherwise will NOT get banded jacobian!
-    ord = [
-        "dissolved_adsorbed_summed",
-        "solid",
-        "dissolved",
-        "dissolved_adsorbed",
-        "dissolved_summed",
-        "dissolved_summed_pH",
-    ]
-    orderdict = Dict(x => i for (i, x) in enumerate(ord))
+    tran_code, tran_expr, tran_cache, ads_str = transport_code(substances, adsorption)
 
 
-    substances = @chain begin
-        substances
-        sort!(:type, by = x -> orderdict[x])
-        @transform(:bioirrigation_scale = ifelse.(ismissing.(:bioirrigation_scale), "",:bioirrigation_scale))
-    end
-
-    # remove empty space or weird minus signs
-    df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-    df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-    df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-    df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
-    substances = @chain begin
-        substances
-        transform(
-            [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
-            renamecols = false,
+    react_code, parsing_df, species_modelled, react_expr, react_cache, pHspecies =
+        reaction_code(
+            reactions,
+            substances,
+            speciation,
+            adsorption,
+            modelconfig.CompleteFlux,
+            modelconfig.AllowDiscontinuity,
         )
-        @transform(:order = 1:length(:substance))
-    end
-    options = @chain begin
-        options
-        transform(
-            [:options, :value] .=> ByRow(x -> lowercase((replace(x, r"\s" => "")))),
-            renamecols = false,
-        )
-    end
-    parameters = @chain begin
-        parameters
-        transform(
-            [:class, :type, :parameter] .=> ByRow(x -> replace(x, r"\s" => "")),
-            renamecols = false,
-        )
-        transform(
-            :value => ByRow(
-                x ->
-                    (typeof(x) <: Real || !isnothing(tryparse(Float64, x))) ? x :
-                    replace(x, r"\s" => ""),
-            ),
-            renamecols = false,
-        )
-    end
 
+    #-----------------------------------------------------------------------------------------
+    # generate jacobian pattern
+    #-----------------------------------------------------------------------------------------
 
-    check_illegal_char(substances)
-    check_illegal_char(reactions)
-    check_illegal_char(speciation)
-    check_illegal_char(adsorption)
-    check_illegal_char(select(options, :options, :value))
-    check_illegal_char(select(parameters, :class, :type, :parameter, :value))
+    cache_str = unique(vcat(react_cache, tran_cache))
+    @unpack species_model_df, species_extra_df, elements_df = parsing_df
 
+    tran_param = identify_tran_param(species_modelled, tran_expr, cache_str)
 
-    params_code = parameter_code(
-        parameters,
+    react_jp, react_param = jac_react_dependence(
+        species_model_df,
+        species_modelled,
+        react_expr,
+        cache_str,
+        ads_str,
+        adsorption,
+        pHspecies,
+    )
+
+    jp_code = generate_jacprototype(
         substances,
         adsorption,
-        options,
+        react_jp,
         modelconfig.CompleteFlux,
     )
 
 
+    #-----------------------------------------------------------------------------------------
+    # assemble parameters if necessary
+    #-----------------------------------------------------------------------------------------
+    if modelconfig.AssembleParam
+        param_required = generate_parameter_struct(tran_param, react_param, parameters)
 
-    if modelconfig.JacType == :banded || modelconfig.JacType == :sparse_banded
-        initval_code("banded", substances, params_code)
-    elseif modelconfig.JacType == :sparse
-        initval_code("Notbanded", substances, params_code)
-    end
-
-    open(modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl", "w") do io
-        # for i in vcat(params_code,"# Assmeble parameters",param_assemble)
-        for i in params_code
-            write(io, i * "\n")
+        ParamDict = String[]
+        for i in eachrow(param_required)
+            push!(ParamDict, "$(i.parameter)$(i.jtype) = $(i.parameter)")
         end
-        write(io, "nothing")
+
+        pfile = "$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl"
+
+        param_struct_code = vcat(
+            "module Param",
+            "using SedTrace: fvcf,fvcf_bc",
+            "using Parameters, LinearAlgebra,SpecialFunctions",
+            "include(\"$(escape_string(pfile))\")",
+            "",
+            "#--------------------------------------------------------------------",
+            "# assemble parameter struct",
+            "#--------------------------------------------------------------------",
+            "@with_kw mutable struct ParamStruct{T}",
+            ParamDict,
+            "end",
+            "end",
+        )
+        unpack_str = "@unpack " * join(param_required.parameter, ",") * "=parms"
+    
+    else
+        param_struct_code = [""]
     end
-    format_file(
-        modelconfig.ModelDirectory * "parm.$(modelconfig.ModelName).jl",
-        overwrite = true,
-        verbose = true,
-        margin = 80,
+
+
+    #-----------------------------------------------------------------------------------------
+    # cache code 
+    #-----------------------------------------------------------------------------------------
+
+    cache = unique(vcat(tran_cache, react_cache))
+    cache_code = vcat(
+        "module Cache",
+        "using PreallocationTools,ForwardDiff",
+        struct_code(cache),
+        "end",
     )
 
-    if modelconfig.UpdateParamOnly
-        return nothing
+    #-----------------------------------------------------------------------------------------
+    # reaction-transport code 
+    #-----------------------------------------------------------------------------------------
+    if modelconfig.AssembleParam
+        reactran_header = [
+            "function (f::Cache.Reactran)(dC,C,parms::Param.ParamStruct,t)",
+            unpack_str,
+            ""
+        ]
+    else
+        reactran_header = ["function (f::Cache.Reactran)(dC,C,parms,t)"]
     end
 
-
-    tran_code, tran_expr, tran_cache, ads_summed_expr_str =
-        transport_code(substances, adsorption, options, modelconfig.MTK)
-
-    react_code, species_modelled, react_expr, react_cache, react_jp = reaction_code(
-        reactions,
-        substances,
-        speciation,
-        adsorption,
-        tran_cache,
-        ads_summed_expr_str,
-        modelconfig.CompleteFlux,
-        modelconfig.MTK,
-        modelconfig.AllowDiscontinuity,
-        modelconfig.ModelDirectory,
-        modelconfig.ModelName
-    )
-
-    tran_param = identify_param(species_modelled, tran_expr, tran_cache, "tran")
-    react_param = identify_param(species_modelled, react_expr, react_cache, "react")
-
-    # if modelconfig.AssembleParam
-    #     param_required = @chain begin
-    #         outerjoin(tran_param,react_param,on=[:class, :type, :parameter, :value, :unit, :comment])
-    #         select!(:parameter,:comment)
-    #         groupby(:parameter)
-    #         combine(:comment => x->join(x,"/"),renamecols=false)
-    #     end
-    #     # CSV.write("p.csv",param_required)
-    #     ParamDict = String[]
-    #     for i in eachrow(param_required)
-    #         push!(ParamDict,"\"$(i.parameter)\" => $(i.parameter)")
-    #     end
-
-    #     param_assemble = "ParamDict = Dict("*join(ParamDict,",")*")"
-    # end
-
-
-
+    for i in cache
+        push!(reactran_header, "$i = PreallocationTools.get_tmp(f.$i, C)")
+    end
 
     code = vcat(tran_code, react_code)
 
@@ -236,114 +174,63 @@ function generate_code(modelconfig::ModelConfig; ParamDict::Dict = Dict(),Enable
     end
 
 
+    reactran_code = vcat(reactran_header, "",code, ["return nothing", "end"])
 
-    cache = unique(vcat(tran_cache, react_cache))
 
-    if !modelconfig.AutoDiff
-        open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
-            for i in cache
-                # write(io, "const $i = @MVector(zeros(Ngrid)) \n")
-                write(io, "const $i = zeros(Ngrid) \n")
+    #-----------------------------------------------------------------------------------------
+    # write code into julia files and format
+    #-----------------------------------------------------------------------------------------
+    allcode = (params_code,param_struct_code,cache_code,reactran_code,jp_code)
+    tags = ["parm","parm.struct","cache","reactran","jactype"]
+
+    for i in eachindex(allcode)
+        open(modelconfig.ModelDirectory * "$(tags[i]).$(modelconfig.ModelName).jl", "w") do io
+            # for i in vcat(params_code,"# Assmeble parameters",param_assemble)
+            for j in allcode[i]
+                write(io, j * "\n")
             end
             # write(io, "nothing")
         end
-
-        header = "function reactran_fvcf_auto(dC,C,parms,t)"
-        footer = ["return nothing", "end"]
-
-        open(modelconfig.ModelDirectory * "reactran.$(modelconfig.ModelName).jl", "w") do io
-            for i in vcat(header, code, footer)
-                write(io, i * "\n")
-            end
-        end
-
         format_file(
-            modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl",
+            modelconfig.ModelDirectory * "$(tags[i]).$(modelconfig.ModelName).jl",
             overwrite = true,
             verbose = true,
             margin = 80,
-        )
-        format_file(
-            modelconfig.ModelDirectory * "reactran.$(modelconfig.ModelName).jl",
-            overwrite = true,
-            verbose = true,
-            margin = 80,
-        )
-    else
-        cache_code = struct_code(cache)
-        cache_struct = String[]
-        for i in cache
-            push!(cache_struct, "$i = PreallocationTools.get_tmp(f.$i, C)")
-        end
-        push!(cache_struct, "")
-
-        open(modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl", "w") do io
-            for i in vcat(
-                "module Cache",
-                "using PreallocationTools,ForwardDiff",
-                cache_code,
-                "end",
-            )
-                write(io, i * "\n")
-            end
-            write(io, "nothing")
-        end
-
-        header = "function (f::Cache.Reactran)(dC,C,parms,t)"
-        footer = ["return nothing", "end"]
-        open(modelconfig.ModelDirectory * "reactran.$(modelconfig.ModelName).jl", "w") do io
-            for i in vcat(header, cache_struct, code, footer)
-                write(io, i * "\n")
-            end
-        end
-
-        format_file(
-            modelconfig.ModelDirectory * "cache.$(modelconfig.ModelName).jl",
-            overwrite = true,
-            verbose = true,
-            margin = 80,
-        )
-        format_file(
-            modelconfig.ModelDirectory * "reactran.$(modelconfig.ModelName).jl",
-            overwrite = true,
-            verbose = true,
-            margin = 80,
-        )
+        )        
     end
 
-    jp_str = generate_jacprototype(
-        modelconfig.JacType,
-        substances,
-        adsorption,
-        react_jp,
-        modelconfig.CompleteFlux,
-    )
-    open(modelconfig.ModelDirectory * "jactype.$(modelconfig.ModelName).jl", "w") do io
-        for i in jp_str
-            write(io, i * "\n")
-        end
-    end
-    format_file(
-        modelconfig.ModelDirectory * "jactype.$(modelconfig.ModelName).jl",
+
+    #-----------------------------------------------------------------------------------------
+    # write parsing results into excel sheets
+    #-----------------------------------------------------------------------------------------
+    XLSX.writetable(
+        modelconfig.ModelDirectory * "model_parsing_diagnostics."* modelconfig.ModelName * ".xlsx",
         overwrite = true,
-        verbose = true,
-        margin = 80,
+        species_in_model = (
+            collect(DataFrames.eachcol(species_model_df)),
+            DataFrames.names(species_model_df),
+        ),
+        species_extra = (
+            collect(DataFrames.eachcol(species_extra_df)),
+            DataFrames.names(species_extra_df),
+        ),
+        elements_in_reactions = (
+            collect(DataFrames.eachcol(elements_df)),
+            DataFrames.names(elements_df),
+        ),
+        reaction_dependency = (
+            collect(DataFrames.eachcol(react_jp)),
+            DataFrames.names(react_jp),
+        ),
+        transport_parameters = (
+            collect(DataFrames.eachcol(tran_param)),
+            DataFrames.names(tran_param),
+        ),
+        reaction_parameters = (
+            collect(DataFrames.eachcol(react_param)),
+            DataFrames.names(react_param),
+        ),
     )
-
-    if modelconfig.Template
-        params = generat_parameter_template(model_path)
-        param_all = append!(params, react_param)
-        template_path = replace(model_path, r".xlsx" => "_parameter_template.xlsx")
-
-        XLSX.writetable(
-            template_path,
-            overwrite = true,
-            parameters = (
-                collect(DataFrames.eachcol(param_all)),
-                DataFrames.names(param_all),
-            ),
-        )
-    end
 
     return nothing
 end
