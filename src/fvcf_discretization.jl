@@ -22,6 +22,7 @@
 
 
 function fvcf(φ, D, u, dx, N)
+    D.+=eps()
     Pe = u .* dx ./ D
     Aₗ = zeros(N - 1)
     Aᵤ = zeros(N - 1)
@@ -77,7 +78,7 @@ function fvcf_bc(φ, D, u, dx, BC::Tuple{Tuple,Tuple}, N, ads = false)
         α⁰, β⁰, γ⁰ = BC[1]
         αᴸ, βᴸ, γᴸ = BC[2]
 
-
+        D.+=eps()
         Pe = u .* dx ./ D
 
         A_bc[1] =
