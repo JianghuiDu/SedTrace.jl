@@ -3,7 +3,7 @@ using SedTrace: ModelConfig
 import XLSX
 import SymPy
 using DataFrames,
-    DataFramesMeta, Chain, RCall, UnPack
+    DataFramesMeta, Chain, UnPack
 
 include("helpers.jl")
 include("generate_reaction.jl")
@@ -94,7 +94,7 @@ function generate_template(modelconfig::ModelConfig)
                 "function",
                 "phi",
                 "",
-                "dimentionless",
+                "dimensionless",
                 "return a depth-dependent porosity profile, if the functions requires external constants, enter in the row underneath",
             ],
         )
@@ -104,7 +104,7 @@ function generate_template(modelconfig::ModelConfig)
                 "const",
                 "phi_Inf",
                 "",
-                "dimentionless",
+                "dimensionless",
                 "porosity at infinite sediment depth (normally where porosity stops changing). Needed to calculate burial velocities. If constant_porosity_profile = no, then phi_Inf should be consistent with the depth dependent porosity function",
             ],
         )
@@ -126,7 +126,7 @@ function generate_template(modelconfig::ModelConfig)
                 "function",
                 "Dbt",
                 "",
-                "dimentionless",
+                "cm^2/yr",
                 "return a depth-dependent bioturbation profile, if the functions requires external constants, enter in the row underneath",
             ],
         )
@@ -143,7 +143,7 @@ function generate_template(modelconfig::ModelConfig)
                 "function",
                 "Dbir",
                 "",
-                "dimentionless",
+                "yr^-1",
                 "return a depth-dependent bioirrigation profile, if the functions requires external constants, enter in the row underneath",
             ],
         )
@@ -399,6 +399,7 @@ function generate_template(modelconfig::ModelConfig)
         append!(reacParam)
         select!(:class, :type, :parameter, :value, :unit, :comment)
     end
+    @transform!(parameters,:include = 1)
 
     return parameters
 end
