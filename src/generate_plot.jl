@@ -66,6 +66,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
         DataFrame(XLSX.gettable(model_config["data"]))
         @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
+        @subset(:depth .<= solution.L)
     end
 
     nt = length(solution.sol.t)
@@ -160,6 +161,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
             else
                 pwdata = select(data_select, :depth, :value, :error, :site)
                 sort!(pwdata, :depth)
+                # @subset!(pwdata,:depth .<= solution.L)
             end
         else
             pwdata = nothing
@@ -520,14 +522,18 @@ function secplot(
         p0 = plot(legend = false, grid = false, foreground_color_subplot = :white)
     else
         p0 = plot(
-            t,
+            t/1e3,
             var_flux_top,
             linecolor = "red",
-            xlabel = "Time (yr)",
+            xlabel = "Time (kyr)",
             ylabel = "Benthic flux",
             title = flux_top_message,
-            formatter=:plain,
-            legend = :none
+            formatter=:auto,
+            legend = :none,
+            top_margin = 1mm,
+            bottom_margin = 2mm,
+            # left_margin = 2mm,
+            # right_margin = 2mm
         )
     end
     p1 = contour(
@@ -544,35 +550,45 @@ function secplot(
         ylabel = "Depth (cm)",
         title = label,
         yscale = yscale,
-        formatter=:plain,
-        legend = :none
-    )
+        formatter=:auto,
+        legend_position = :best,
+        top_margin = 2mm,
+        bottom_margin = 1mm,
+        # left_margin = 2mm,
+        # right_margin = 2mm
+)
     p2 = plot(
         var[:, 1],
         seddepth,
         linecolor = "black",
+        linestyle = :dash,
         yflip = true,
         ylims = y_lim,
         label = "initial",
         ylabel = "Depth (cm)",
-        title = label,
+        # title = "",
         yscale = yscale,
-        legend = :none,
-        formatter=:plain
-    )
+        legend_position = :outerright,
+        formatter=:auto,
+        top_margin = 1mm,
+        bottom_margin = 1mm,
+        # left_margin = 2mm,
+        # right_margin = 2mm
+)
     plot!(
         p2,
         var[:, end],
         seddepth,
         linecolor = "red",
+        linestyle = :solid,
         yflip = true,
         ylims = y_lim,
         label = "model",
         ylabel = "Depth (cm)",
-        title = label,
+        # title = "",
         yscale = yscale,
         formatter=:plain,
-        legend = :none,
+        # legend_position = :best,
     )
     if !isnothing(pwdata)
         if any(ismissing.(pwdata.error))
@@ -580,17 +596,19 @@ function secplot(
                 p2,
                 :value,
                 :depth,
-                seriestype = :path,
+                seriestype = :scatter,
                 group = :site,
-                linestyle = :solid,
-                markershape = :utriangle,
+                markershape = :circle,
+                markersize = 2,
+                markerstrokewidth = 0.5,
+                markercolor = "blue",
+                markerstrokecolor = "blue",
                 yflip = true,
                 ylims = y_lim,
                 yscale = yscale,
-                markersize = 2,
                 orientation = :vertical,
                 formatter=:plain,
-                legend = :none,
+                # legend_position = :none,
             )
         else
             @df pwdata plot!(
@@ -598,19 +616,18 @@ function secplot(
                 :value,
                 :depth,
                 xerror = (:error, :error),
-                seriestype = :path,
+                seriestype = :scatter,
                 group = :site,
-                linestyle = :solid,
-                markershape = :utriangle,
-                yflip = true,
-                ylims = y_lim,
-                yscale = yscale,
+                markershape = :circle,
                 markersize = 2,
                 markerstrokewidth = 0.5,
                 markerstrokecolor = "blue",
+                yflip = true,
+                ylims = y_lim,
+                yscale = yscale,
                 orientation = :vertical,
                 formatter=:plain,
-                legend = :none,
+                # legend_position = :best,
             )
         end
     end
@@ -622,7 +639,7 @@ function secplot(
         p1,
         p2,
         p0,
-        layout = grid(3, 1, heights = [0.45, 0.45, 0.1]),
+        layout = grid(3, 1, heights = [0.4, 0.4, 0.2]),
         # guidefontsize = 16,
         # colorbar_tickfontsize = 16,
         # colorbar_titlefontsize = 16,
@@ -632,7 +649,7 @@ function secplot(
         # tickfontsize = 16,
         # left_margin  = 15mm,
         # right_margin = 15mm,
-        margin  = 15mm,
+        margin  = 8mm,
         background_color_legend = nothing,
         foreground_color_legend = nothing,
     )
