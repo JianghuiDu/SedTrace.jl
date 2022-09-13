@@ -1,7 +1,8 @@
 # SparseDiffTools AD with sparsity pattern
 function generate_jacobian(
     f,
-    jp::Union{BandedMatrix{T},SparseMatrixCSC{T,Int}},
+    # jp::Union{BandedMatrix{T},SparseMatrixCSC{T,Int}},
+    jp::SparseMatrixCSC{T,Int},
     # C0::Vector{T},
     chunk_size::Int,
     parm
