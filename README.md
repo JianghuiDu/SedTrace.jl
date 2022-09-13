@@ -27,7 +27,7 @@ julia> import Pkg; Pkg.add("SedTrace")
 
 ## Documentation
 
-- [**DEVEL**][docs-dev-url] &mdash; *documentation of the in-development version.*
+- [**STABLE**][docs-stable-url] &mdash; **documentation of the most recent version.**
 
 ## Project Status
 
