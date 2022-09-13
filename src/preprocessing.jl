@@ -1,4 +1,17 @@
 
+function checkismissing!(df::DataFrame,cols::Vector{Symbol},col_id::Symbol,sheet::String)
+    if !isempty(df)
+        for i in eachindex(df[!,col_id])
+            for j in cols
+                if ismissing(df[i,j])
+                    throw(error(
+                        "The row $i of column $j in Excel sheet [$sheet] is emtpy."
+                    ))
+                end
+            end
+        end
+    end
+end
 
 # test if substance type and boundary condition type are compatible
 function iscompatible(substance_type, bc_type, top)
@@ -183,6 +196,8 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     subset!(substances, :include => ByRow(!ismissing))
     select!(substances, Not(:include))
 
+    check_illegal_char(substances)
+    checkismissing!(substances,[:substance,:type,:top_bc_type,:bot_bc_type],:substance,"substances")
 
     transform!(
         substances,
@@ -196,21 +211,20 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
         [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
         renamecols = false,
     )
-    check_illegal_char(substances)
     checkerrorSubstance!(substances)
 
-    ord = [
-        "dissolved_adsorbed_summed",
-        "solid",
-        "dissolved",
-        "dissolved_adsorbed",
-        "dissolved_summed",
-        "dissolved_summed_pH",
-    ]
-    orderdict = Dict(x => i for (i, x) in enumerate(ord))
-    sort!(substances, :type, by = x -> orderdict[x])
+    # ord = [
+    #     "dissolved_adsorbed_summed",
+    #     "solid",
+    #     "dissolved",
+    #     "dissolved_adsorbed",
+    #     "dissolved_summed",
+    #     "dissolved_summed_pH",
+    # ]
+    # orderdict = Dict(x => i for (i, x) in enumerate(ord))
+    # sort!(substances, :type, by = x -> orderdict[x])
     insertcols!(substances, :order => 1:length(substances.substance))
-
+    select!(substances,:substance,:type,:species_modelled,:top_bc_type,:bot_bc_type,:bioirrigation_scale,:order)
 end
 
 
@@ -238,6 +252,10 @@ function preprocessReactions!(reactions::DataFrame, EnableList::Dict = Dict())
     select!(reactions, Not(:include))
     df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     check_illegal_char(reactions)
+
+    checkismissing!(reactions,	[ :label, :equation, :rate],:label,"reactions")
+
+    select!(reactions,	:check, :label, :equation, :rate, :Omega)
 end
 
 
@@ -264,10 +282,14 @@ function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
     subset!(speciation, :include => ByRow(!ismissing))
     select!(speciation, Not(:include))
     df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    check_illegal_char(speciation)
+    checkismissing!(speciation,[:substance,:label,:equation,:logK],:label,"speciation")
+
     insertcols!(speciation, :K => 10.0 .^ parse.(Float64, speciation.logK))
     select!(speciation, Not(:logK))
     insertcols!(speciation, :check .=> 1)
-    check_illegal_char(speciation)
+    select!(speciation,:check,:substance,:label,:equation,:K)
 end
 
 
@@ -302,12 +324,28 @@ function preprocessAdsorption!(adsorption::DataFrame, EnableList::Dict = Dict())
     subset!(adsorption, :include => ByRow(!ismissing))
     select!(adsorption, Not(:include))
     df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+
+    check_illegal_char(adsorption)
+    checkismissing!(
+        adsorption,
+        [:substance,:dissolved,:adsorbed,:expression, :top_bc_type,:bot_bc_type],
+        :adsorbed,"adsorption"
+    )
+
+
     transform!(
         adsorption,
         [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
         renamecols = false,
     )
-    check_illegal_char(adsorption)
+    select!(adsorption,:substance,
+    :dissolved,
+    :adsorbed,
+    :surface,
+    :expression,
+    :top_bc_type,
+    :bot_bc_type)
 end
 
 
@@ -346,7 +384,9 @@ function preprocessParameters!(
 
     subset!(parameters, :include => ByRow(!ismissing))
     select!(parameters, Not(:include))
-    select!(parameters, :class, :type, :parameter, :value, :unit, :comment)
+    checkismissing!(parameters,[:class, :type, :parameter, :value],:parameter,"parameters")
+
+
     transform!(
         parameters,
         [:class, :type, :parameter] .=> ByRow(x -> replace(x, r"\s" => "")),
@@ -361,9 +401,11 @@ function preprocessParameters!(
         ),
         renamecols = false,
     )
+
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
     checkerrorParameters!(parameters)
+    select!(parameters,:class, :type, :parameter, :value, :unit,:comment)
 end
 
 
