@@ -11,7 +11,7 @@ using Dierckx
 @reexport using PreallocationTools
 
 @reexport using SparseArrays
-@reexport using BandedMatrices
+# @reexport using BandedMatrices
 @reexport import LinearAlgebra:Tridiagonal,mul!,ldiv!
 using ILUZero
 
@@ -22,13 +22,13 @@ using DataFramesMeta
 @reexport using XLSX
 import Printf:@sprintf
 import JuliaFormatter:format_file
-import DataStructures:OrderedDict
+# import DataStructures:OrderedDict
 
 @reexport import Plots:plot,contour,plot!,grid,gr,savefig
 @reexport import Plots.PlotMeasures:mm
 @reexport import StatsPlots:@df
 
-using RCall
+# using RCall
 # import SymPy:simplify,solve,nsimplify,sympify,symbols
 import SymPy
 # using CSV
@@ -40,7 +40,10 @@ import SymPy
 @reexport using ForwardDiff
 @reexport using SpecialFunctions
 
-using Parameters, UnPack
+using Parameters, UnPack, OrderedCollections
+
+using JLD2, Interpolations
+
 # heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
 
 include("config.jl")
