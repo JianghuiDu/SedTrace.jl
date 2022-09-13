@@ -10,7 +10,6 @@ modelconfig = ModelConfig(
     modeldirectory,
     modelfile,
     modelname,
-    AssembleParam = true
 )
 
 ParamList = Dict(
@@ -33,7 +32,7 @@ C0 = SedTrace.Param.C0;
 parm = SedTrace.Param.ParamStruct();
 OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
 JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
-solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,1)
+solverconfig = SolverConfig(chunk_size, :GMRES)
 solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
 OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
 outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
@@ -63,7 +62,7 @@ solverctrlconfig = SolverCtrlConfig(
 
 @time solution = modelrun(OdeFunction, parm, solver, solverctrlconfig, outputconfig);
 
-gr(; size = (400, 1000))
+gr(; size = (400, 650))
 
 generate_substance_plot(
     modelconfig,

@@ -1,4 +1,18 @@
-function (f::Cache.Reactran)(dC, C, parms, t)
+function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
+    @unpack POCID,
+    SO4ID,
+    AmPOC,
+    AmSO4,
+    BcAmPOC,
+    BcCmPOC,
+    BcAmSO4,
+    BcCmSO4,
+    Ngrid,
+    alpha,
+    SO40,
+    dstopw,
+    k_POC = parms
+
     RPOCSO4 = PreallocationTools.get_tmp(f.RPOCSO4, C)
     S_POC = PreallocationTools.get_tmp(f.S_POC, C)
     S_SO4 = PreallocationTools.get_tmp(f.S_SO4, C)
@@ -20,7 +34,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dSO4 += alpha ⊗ (SO40 - SO4)
 
 
-    # speciation
 
     # reaction rates
     @.. RPOCSO4 = k_POC ⊗ POC

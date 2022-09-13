@@ -34,4 +34,3 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     return cache
 end
 end
-nothing

@@ -179,32 +179,32 @@ pHL = 8.06 # free pH scale # pH at the BOTTOM of sediment column
 TCO2L = 0.015 # mmol cm^-3 # Concentration of TCO2 at the BOTTOM of sediment column
 TH2SL = 0.002 # mmol cm^-3 # Concentration of TH2S at the BOTTOM of sediment column
 NH4_adsL = NH4L * 1.6 * ds_rho # mmol cm^-3 # missing
-H3PO4BW = 8.9918240462660341E-13 # mmol cm^-3 # Bottom water concentration of H3PO4
-H2PO4BW = 7.5830248328992573E-07 # mmol cm^-3 # Bottom water concentration of H2PO4
-HPO4BW = 1.8885901450114915E-05 # mmol cm^-3 # Bottom water concentration of HPO4
-PO4BW = 3.5579516741275194E-07 # mmol cm^-3 # Bottom water concentration of PO4
-HSO4BW = 3.2389274732856869E-09 # mmol cm^-3 # Bottom water concentration of HSO4
-SO4BW = 2.7999996761072527E-02 # mmol cm^-3 # Bottom water concentration of SO4
-HSO4L = 5.8794199843798414E-10 # mmol cm^-3 # Concentration of HSO4 at the BOTTOM of sediment column
-SO4L = 1.4999999412058001E-02 # mmol cm^-3 # Concentration of SO4 at the BOTTOM of sediment column
+H3PO4BW = 8.9900624585157894E-13 # mmol cm^-3 # Bottom water concentration of H3PO4
+H2PO4BW = 7.5819350627520392E-07 # mmol cm^-3 # Bottom water concentration of H2PO4
+HPO4BW = 1.8885935685038669E-05 # mmol cm^-3 # Bottom water concentration of HPO4
+PO4BW = 3.5586990967988541E-07 # mmol cm^-3 # Bottom water concentration of PO4
+HSO4BW = 3.2386882559394723E-09 # mmol cm^-3 # Bottom water concentration of HSO4
+SO4BW = 2.7999996761311746E-02 # mmol cm^-3 # Bottom water concentration of SO4
+HSO4L = 5.8789857482430019E-10 # mmol cm^-3 # Concentration of HSO4 at the BOTTOM of sediment column
+SO4L = 1.4999999412101424E-02 # mmol cm^-3 # Concentration of SO4 at the BOTTOM of sediment column
 HBW = 2.5703957827688646E-08 # mmol cm^-3 # Bottom water concentration of H
-OHBW = 2.9591486602166374E-07 # mmol cm^-3 # Bottom water concentration of OH
+OHBW = 2.9596859476699120E-07 # mmol cm^-3 # Bottom water concentration of OH
 HL = 8.7096358995607965E-09 # mmol cm^-3 # Concentration of H at the BOTTOM of sediment column
-OHL = 8.7330668291088267E-07 # mmol cm^-3 # Concentration of OH at the BOTTOM of sediment column
-HCO3BW = 2.2343015802033985E-03 # mmol cm^-3 # Bottom water concentration of HCO3
-CO3BW = 3.8068382897268649E-05 # mmol cm^-3 # Bottom water concentration of CO3
-CO2BW = 7.2630036899332684E-05 # mmol cm^-3 # Bottom water concentration of CO2
-HCO3L = 1.4133637501992702E-02 # mmol cm^-3 # Concentration of HCO3 at the BOTTOM of sediment column
-CO3L = 7.1068407611604408E-04 # mmol cm^-3 # Concentration of CO3 at the BOTTOM of sediment column
-CO2L = 1.5567842189125337E-04 # mmol cm^-3 # Concentration of CO2 at the BOTTOM of sediment column
-H2SBW = 8.5713310596138506E-18 # mmol cm^-3 # Bottom water concentration of H2S
-HSBW = 2.1347327386541718E-16 # mmol cm^-3 # Bottom water concentration of HS
-H2SL = 2.6845155697795634E-05 # mmol cm^-3 # Concentration of H2S at the BOTTOM of sediment column
-HSL = 1.9731548443022045E-03 # mmol cm^-3 # Concentration of HS at the BOTTOM of sediment column
-H3BO3BW = 8.2918819970310585E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
-H4BO4BW = 4.1431800296894127E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
-HFBW = 5.7547304619899126E-10 # mmol cm^-3 # Bottom water concentration of HF
-FBW = 7.4999424526953784E-05 # mmol cm^-3 # Bottom water concentration of F
+OHL = 8.7346524767983025E-07 # mmol cm^-3 # Concentration of OH at the BOTTOM of sediment column
+HCO3BW = 2.2343121173691470E-03 # mmol cm^-3 # Bottom water concentration of HCO3
+CO3BW = 3.8072240982730215E-05 # mmol cm^-3 # Bottom water concentration of CO3
+CO2BW = 7.2615641648122881E-05 # mmol cm^-3 # Bottom water concentration of CO2
+HCO3L = 1.4133602560252352E-02 # mmol cm^-3 # Concentration of HCO3 at the BOTTOM of sediment column
+CO3L = 7.1075099211287927E-04 # mmol cm^-3 # Concentration of CO3 at the BOTTOM of sediment column
+CO2L = 1.5564644763476832E-04 # mmol cm^-3 # Concentration of CO2 at the BOTTOM of sediment column
+H2SBW = 8.5701318657608387E-18 # mmol cm^-3 # Bottom water concentration of H2S
+HSBW = 2.1347447305927019E-16 # mmol cm^-3 # Bottom water concentration of HS
+H2SL = 2.6841301505782044E-05 # mmol cm^-3 # Concentration of H2S at the BOTTOM of sediment column
+HSL = 1.9731586984942178E-03 # mmol cm^-3 # Concentration of HS at the BOTTOM of sediment column
+H3BO3BW = 8.2917756658925951E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
+H4BO4BW = 4.1442433410740532E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
+HFBW = 5.7547054713086795E-10 # mmol cm^-3 # Bottom water concentration of HF
+FBW = 7.4999424529452870E-05 # mmol cm^-3 # Bottom water concentration of F
 
 #----------------------------------------------
 # assemble boundary conditions
@@ -394,16 +394,16 @@ AmNH4_ads, BmNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport mat
 #----------------------------------------------
 # Acid dissociation constants
 #----------------------------------------------
-KH3PO4 = 2.1676775424903760E-02 #  # TH3PO4 1th dissociation constant
-KH2PO4 = 6.4016988617197496E-07 #  # TH3PO4 2th dissociation constant
-KHPO4 = 4.8424185642550565E-10 #  # TH3PO4 3th dissociation constant
-KHSO4 = 2.2220649948420301E-01 #  # THSO4 1th dissociation constant
-KH2O = 7.6061832368069808E-15 #  # H 1th dissociation constant
-KCO2 = 7.9072510553018769E-07 #  # TCO2 1th dissociation constant
-KHCO3 = 4.3794808956390707E-10 #  # TCO2 2th dissociation constant
-KH2S = 6.4016988617197496E-07 #  # TH2S 1th dissociation constant
-KH3BO3 = 1.2843420202288193E-09 #  # TH3BO3 1th dissociation constant
-KHF = 3.3499084933252209E-03 #  # THF 1th dissociation constant
+KH3PO4 = 2.1677907134076451E-02 #  # TH3PO4 1th dissociation constant
+KH2PO4 = 6.4026305997992953E-07 #  # TH3PO4 2th dissociation constant
+KHPO4 = 4.8434270364489024E-10 #  # TH3PO4 3th dissociation constant
+KHSO4 = 2.2222291219548190E-01 #  # THSO4 1th dissociation constant
+KH2O = 7.6075642782110119E-15 #  # H 1th dissociation constant
+KCO2 = 7.9088558794322597E-07 #  # TCO2 1th dissociation constant
+KHCO3 = 4.3799040833112669E-10 #  # TCO2 2th dissociation constant
+KH2S = 6.4026305997992953E-07 #  # TH2S 1th dissociation constant
+KH3BO3 = 1.2846881097473576E-09 #  # TH3BO3 1th dissociation constant
+KHF = 3.3499230409225031E-03 #  # THF 1th dissociation constant
 
 #----------------------------------------------
 # Reaction parameters
@@ -471,9 +471,6 @@ kCFA_pre = 1.5e-8 # mmol cm-3 yr-1 # missing
 # Inital values
 #----------------------------------------------
 C_ini = [
-    Mn0,
-    Fe0,
-    NH40,
     FPOC0 / (phis[1] * us[1]),
     FMnO20 / (phis[1] * us[1]),
     FFeOOH0 / (phis[1] * us[1]),
@@ -485,15 +482,18 @@ C_ini = [
     FAge0 / (phis[1] * us[1]),
     FBSi0 / (phis[1] * us[1]),
     FSMo0 / (phis[1] * us[1]),
+    Mn0,
+    Fe0,
+    NH40,
     O2BW,
     NO3BW,
     CH4BW,
     NO2BW,
     CaBW,
     MoBW,
-    H4SiO4BW,
     TH3PO4BW,
     THSO4BW,
+    H4SiO4BW,
     HBW,
     TCO2BW,
     TH2SBW,
@@ -505,38 +505,35 @@ C0 = repeat(C_ini, outer = Ngrid) # initial conditions
 #----------------------------------------------
 # Indices
 #----------------------------------------------
-TMnID = ((1:Ngrid) .- 1)nspec .+ 1 #  # TMn index
-TFeID = ((1:Ngrid) .- 1)nspec .+ 2 #  # TFe index
-TNH4ID = ((1:Ngrid) .- 1)nspec .+ 3 #  # TNH4 index
-POCID = ((1:Ngrid) .- 1)nspec .+ 4 #  # POC index
-MnO2ID = ((1:Ngrid) .- 1)nspec .+ 5 #  # MnO2 index
-FeOOHID = ((1:Ngrid) .- 1)nspec .+ 6 #  # FeOOH index
-FeSID = ((1:Ngrid) .- 1)nspec .+ 7 #  # FeS index
-FeS2ID = ((1:Ngrid) .- 1)nspec .+ 8 #  # FeS2 index
-CaCO3ID = ((1:Ngrid) .- 1)nspec .+ 9 #  # CaCO3 index
-MnCO3ID = ((1:Ngrid) .- 1)nspec .+ 10 #  # MnCO3 index
-FeCO3ID = ((1:Ngrid) .- 1)nspec .+ 11 #  # FeCO3 index
-AgeID = ((1:Ngrid) .- 1)nspec .+ 12 #  # Age index
-BSiID = ((1:Ngrid) .- 1)nspec .+ 13 #  # BSi index
-SMoID = ((1:Ngrid) .- 1)nspec .+ 14 #  # SMo index
+POCID = ((1:Ngrid) .- 1)nspec .+ 1 #  # POC index
+MnO2ID = ((1:Ngrid) .- 1)nspec .+ 2 #  # MnO2 index
+FeOOHID = ((1:Ngrid) .- 1)nspec .+ 3 #  # FeOOH index
+FeSID = ((1:Ngrid) .- 1)nspec .+ 4 #  # FeS index
+FeS2ID = ((1:Ngrid) .- 1)nspec .+ 5 #  # FeS2 index
+CaCO3ID = ((1:Ngrid) .- 1)nspec .+ 6 #  # CaCO3 index
+MnCO3ID = ((1:Ngrid) .- 1)nspec .+ 7 #  # MnCO3 index
+FeCO3ID = ((1:Ngrid) .- 1)nspec .+ 8 #  # FeCO3 index
+AgeID = ((1:Ngrid) .- 1)nspec .+ 9 #  # Age index
+BSiID = ((1:Ngrid) .- 1)nspec .+ 10 #  # BSi index
+SMoID = ((1:Ngrid) .- 1)nspec .+ 11 #  # SMo index
+TMnID = ((1:Ngrid) .- 1)nspec .+ 12 #  # TMn index
+TFeID = ((1:Ngrid) .- 1)nspec .+ 13 #  # TFe index
+TNH4ID = ((1:Ngrid) .- 1)nspec .+ 14 #  # TNH4 index
 O2ID = ((1:Ngrid) .- 1)nspec .+ 15 #  # O2 index
 NO3ID = ((1:Ngrid) .- 1)nspec .+ 16 #  # NO3 index
 CH4ID = ((1:Ngrid) .- 1)nspec .+ 17 #  # CH4 index
 NO2ID = ((1:Ngrid) .- 1)nspec .+ 18 #  # NO2 index
 CaID = ((1:Ngrid) .- 1)nspec .+ 19 #  # Ca index
 MoID = ((1:Ngrid) .- 1)nspec .+ 20 #  # Mo index
-H4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 21 #  # H4SiO4 index
-TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 22 #  # TH3PO4 index
-THSO4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # THSO4 index
+TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 21 #  # TH3PO4 index
+THSO4ID = ((1:Ngrid) .- 1)nspec .+ 22 #  # THSO4 index
+H4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # H4SiO4 index
 HID = ((1:Ngrid) .- 1)nspec .+ 24 #  # H index
 TCO2ID = ((1:Ngrid) .- 1)nspec .+ 25 #  # TCO2 index
 TH2SID = ((1:Ngrid) .- 1)nspec .+ 26 #  # TH2S index
 TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TH3BO3 index
 THFID = ((1:Ngrid) .- 1)nspec .+ 28 #  # THF index
 IDdict = Dict(
-    :TMnID => TMnID,
-    :TFeID => TFeID,
-    :TNH4ID => TNH4ID,
     :POCID => POCID,
     :MnO2ID => MnO2ID,
     :FeOOHID => FeOOHID,
@@ -548,15 +545,18 @@ IDdict = Dict(
     :AgeID => AgeID,
     :BSiID => BSiID,
     :SMoID => SMoID,
+    :TMnID => TMnID,
+    :TFeID => TFeID,
+    :TNH4ID => TNH4ID,
     :O2ID => O2ID,
     :NO3ID => NO3ID,
     :CH4ID => CH4ID,
     :NO2ID => NO2ID,
     :CaID => CaID,
     :MoID => MoID,
-    :H4SiO4ID => H4SiO4ID,
     :TH3PO4ID => TH3PO4ID,
     :THSO4ID => THSO4ID,
+    :H4SiO4ID => H4SiO4ID,
     :HID => HID,
     :TCO2ID => TCO2ID,
     :TH2SID => TH2SID,

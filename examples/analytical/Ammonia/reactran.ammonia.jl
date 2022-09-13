@@ -1,22 +1,40 @@
-function (f::Cache.Reactran)(dC, C, parms, t)
+function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
+    @unpack TNH4ID,
+    N_orgID,
+    AmN_org,
+    AmNH4,
+    AmNH4_ads,
+    BcAmN_org,
+    BcCmN_org,
+    Ngrid,
+    BcAmNH4,
+    BcCmNH4,
+    BcAmNH4_ads,
+    BcCmNH4_ads,
+    alpha,
+    NH40,
+    KNH4_ads,
+    dstopw,
+    k = parms
+
     NH4 = PreallocationTools.get_tmp(f.NH4, C)
     NH4_tran = PreallocationTools.get_tmp(f.NH4_tran, C)
     NH4_ads = PreallocationTools.get_tmp(f.NH4_ads, C)
     NH4_ads_tran = PreallocationTools.get_tmp(f.NH4_ads_tran, C)
-    Rdenitr = PreallocationTools.get_tmp(f.Rdenitr, C)
+    Rremin = PreallocationTools.get_tmp(f.Rremin, C)
     S_TNH4 = PreallocationTools.get_tmp(f.S_TNH4, C)
-    S_NH3 = PreallocationTools.get_tmp(f.S_NH3, C)
+    S_N_org = PreallocationTools.get_tmp(f.S_N_org, C)
 
     TNH4 = @view C[TNH4ID]
-    NH3 = @view C[NH3ID]
+    N_org = @view C[N_orgID]
 
     dTNH4 = @view dC[TNH4ID]
-    dNH3 = @view dC[NH3ID]
+    dN_org = @view dC[N_orgID]
 
-    mul!(dNH3, AmNH3, NH3)
+    mul!(dN_org, AmN_org, N_org)
 
-    dNH3[1] += BcAmNH3[1] ⊗ NH3[1] ⊕ BcCmNH3[1]
-    dNH3[Ngrid] += BcAmNH3[2] ⊗ NH3[Ngrid] ⊕ BcCmNH3[2]
+    dN_org[1] += BcAmN_org[1] ⊗ N_org[1] ⊕ BcCmN_org[1]
+    dN_org[Ngrid] += BcAmN_org[2] ⊗ N_org[Ngrid] ⊕ BcCmN_org[2]
 
 
     @.. NH4 = TNH4 / (KNH4_ads ⊗ dstopw ⊕ 1)
@@ -27,21 +45,20 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     mul!(NH4_ads_tran, AmNH4_ads, NH4_ads)
     NH4_ads_tran[1] += BcAmNH4_ads[1] ⊗ NH4_ads[1] ⊕ BcCmNH4_ads[1]
     NH4_ads_tran[Ngrid] += BcAmNH4_ads[2] ⊗ NH4_ads[Ngrid] ⊕ BcCmNH4_ads[2]
-    @.. dTNH4 = NH4_tran ⊗ 1 ⊕ NH4_ads_tran ⊗ dstopw
+    @.. dTNH4 = NH4_ads_tran ⊗ dstopw ⊕ NH4_tran ⊗ 1
     @.. dTNH4 += alpha ⊗ (NH40 - NH4)
 
 
-    # speciation
 
     # reaction rates
-    @.. Rdenitr = k_N ⊗ NH3
+    @.. Rremin = k ⊗ N_org
 
     # species rates
-    @.. S_TNH4 = 1 ⊗ Rdenitr ⊗ dstopw
-    @.. S_NH3 = -1 ⊗ Rdenitr
+    @.. S_TNH4 = 1 ⊗ Rremin ⊗ dstopw
+    @.. S_N_org = -1 ⊗ Rremin
 
     @.. dTNH4 += S_TNH4
-    @.. dNH3 += S_NH3
+    @.. dN_org += S_N_org
 
     return nothing
 end

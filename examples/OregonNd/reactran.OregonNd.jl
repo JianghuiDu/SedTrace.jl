@@ -1,4 +1,271 @@
-function (f::Cache.Reactran)(dC, C, parms, t)
+function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
+    @unpack MnO2ID,
+    FeOOHID,
+    POCID,
+    FeSID,
+    FeS2ID,
+    CaCO3ID,
+    AgeID,
+    BSiID,
+    NdnrPO4ID,
+    NdrPO4ID,
+    SurfMn_NdnrID,
+    SurfMn_NdrID,
+    SurfFe_NdnrID,
+    SurfFe_NdrID,
+    O2ID,
+    NO3ID,
+    TMnID,
+    TFeID,
+    CH4ID,
+    NO2ID,
+    CaID,
+    AlID,
+    TNH4ID,
+    SO4ID,
+    TNdnrID,
+    TNdrID,
+    TH4SiO4ID,
+    TCO2ID,
+    TH2SID,
+    TH3BO3ID,
+    TH3PO4ID,
+    HID,
+    AmMnO2,
+    AmFeOOH,
+    AmPOC,
+    AmFeS,
+    AmFeS2,
+    AmCaCO3,
+    AmAge,
+    AmBSi,
+    AmNdnrPO4,
+    AmNdrPO4,
+    AmSurfMn_Ndnr,
+    AmSurfMn_Ndr,
+    AmSurfFe_Ndnr,
+    AmSurfFe_Ndr,
+    AmO2,
+    AmNO3,
+    AmCH4,
+    AmNO2,
+    AmCa,
+    AmAl,
+    AmSO4,
+    AmTH4SiO4,
+    AmHCO3,
+    AmCO3,
+    AmCO2,
+    AmH2S,
+    AmHS,
+    AmH3BO3,
+    AmH4BO4,
+    AmH3PO4,
+    AmH2PO4,
+    AmHPO4,
+    AmPO4,
+    AmH,
+    AmOH,
+    AmMn,
+    AmMn_ads_Fe,
+    AmMn_ads_Mn,
+    AmFe,
+    AmFe_ads_Fe,
+    AmFe_ads_Mn,
+    AmNH4,
+    AmNH4_ads,
+    AmNdnr,
+    AmNdnr_ads_Fe,
+    AmNdnr_ads_Mn,
+    AmNdr,
+    AmNdr_ads_Fe,
+    AmNdr_ads_Mn,
+    BcAmMnO2,
+    BcCmMnO2,
+    BcAmFeOOH,
+    BcCmFeOOH,
+    BcAmPOC,
+    BcCmPOC,
+    BcAmFeS,
+    BcCmFeS,
+    BcAmFeS2,
+    BcCmFeS2,
+    BcAmCaCO3,
+    BcCmCaCO3,
+    BcAmAge,
+    BcCmAge,
+    BcAmBSi,
+    BcCmBSi,
+    BcAmNdnrPO4,
+    BcCmNdnrPO4,
+    BcAmNdrPO4,
+    BcCmNdrPO4,
+    BcAmSurfMn_Ndnr,
+    BcCmSurfMn_Ndnr,
+    BcAmSurfMn_Ndr,
+    BcCmSurfMn_Ndr,
+    BcAmSurfFe_Ndnr,
+    BcCmSurfFe_Ndnr,
+    BcAmSurfFe_Ndr,
+    BcCmSurfFe_Ndr,
+    BcAmO2,
+    BcCmO2,
+    BcAmNO3,
+    BcCmNO3,
+    BcAmCH4,
+    BcCmCH4,
+    BcAmNO2,
+    BcCmNO2,
+    BcAmCa,
+    BcCmCa,
+    BcAmAl,
+    BcCmAl,
+    BcAmSO4,
+    BcCmSO4,
+    BcAmTH4SiO4,
+    BcCmTH4SiO4,
+    Ngrid,
+    BcAmHCO3,
+    BcCmHCO3,
+    BcAmCO3,
+    BcCmCO3,
+    BcAmCO2,
+    BcCmCO2,
+    BcAmH2S,
+    BcCmH2S,
+    BcAmHS,
+    BcCmHS,
+    BcAmH3BO3,
+    BcCmH3BO3,
+    BcAmH4BO4,
+    BcCmH4BO4,
+    BcAmH3PO4,
+    BcCmH3PO4,
+    BcAmH2PO4,
+    BcCmH2PO4,
+    BcAmHPO4,
+    BcCmHPO4,
+    BcAmPO4,
+    BcCmPO4,
+    BcAmH,
+    BcCmH,
+    BcAmOH,
+    BcCmOH,
+    BcAmMn,
+    BcCmMn,
+    BcAmMn_ads_Fe,
+    BcCmMn_ads_Fe,
+    BcAmMn_ads_Mn,
+    BcCmMn_ads_Mn,
+    BcAmFe,
+    BcCmFe,
+    BcAmFe_ads_Fe,
+    BcCmFe_ads_Fe,
+    BcAmFe_ads_Mn,
+    BcCmFe_ads_Mn,
+    BcAmNH4,
+    BcCmNH4,
+    BcAmNH4_ads,
+    BcCmNH4_ads,
+    BcAmNdnr,
+    BcCmNdnr,
+    BcAmNdnr_ads_Fe,
+    BcCmNdnr_ads_Fe,
+    BcAmNdnr_ads_Mn,
+    BcCmNdnr_ads_Mn,
+    BcAmNdr,
+    BcCmNdr,
+    BcAmNdr_ads_Fe,
+    BcCmNdr_ads_Fe,
+    BcAmNdr_ads_Mn,
+    BcCmNdr_ads_Mn,
+    alpha,
+    O2BW,
+    NO3BW,
+    CH4BW,
+    NO2BW,
+    CaBW,
+    AlBW,
+    SO4BW,
+    TH4SiO4BW,
+    HCO3BW,
+    CO3BW,
+    CO2BW,
+    H2SBW,
+    HSBW,
+    H3BO3BW,
+    H4BO4BW,
+    H3PO4BW,
+    H2PO4BW,
+    HPO4BW,
+    PO4BW,
+    HBW,
+    OHBW,
+    Mn0,
+    Fe0,
+    NH40,
+    Ndnr0,
+    Ndr0,
+    KMn_ads_Fe,
+    dstopw,
+    KMn_ads_Mn,
+    KFe_ads_Fe,
+    KFe_ads_Mn,
+    KNH4_ads,
+    KNd_ads_Fe,
+    KNd_ads_Mn,
+    KCO2,
+    KHCO3,
+    KH2S,
+    KH3BO3,
+    KH3PO4,
+    KH2PO4,
+    KHPO4,
+    KH2O,
+    KH4SiO4,
+    Cl,
+    KspFeS,
+    KspCaCO3_dis,
+    H4SiO4_dis_sat,
+    KspNdPO4,
+    rNC,
+    rPC,
+    pwtods,
+    rAlSi,
+    KO2,
+    nu,
+    a,
+    KNO2,
+    KNO3,
+    KMnO2,
+    KFeOOH,
+    KSO4,
+    kO2NO2,
+    kO2NH4,
+    kO2Mn,
+    kO2Mn_ads,
+    kO2Fe,
+    kO2Fe_ads,
+    kO2H2S,
+    kO2FeS,
+    kO2CH4,
+    kNO2NH4,
+    kAOM,
+    KAOM,
+    kMnO2Fe,
+    kMnO2H2S,
+    kFeOOHH2S,
+    kFeSH2S,
+    kFeSdis,
+    kFeSpre,
+    kCaCO3dis0,
+    kCaCO3dis1,
+    nCaCO3dis,
+    kBSi_dis,
+    DNdMn,
+    DNdFe,
+    kNdPO4_pre = parms
+
     Mn = PreallocationTools.get_tmp(f.Mn, C)
     Mn_tran = PreallocationTools.get_tmp(f.Mn_tran, C)
     Mn_ads_Fe = PreallocationTools.get_tmp(f.Mn_ads_Fe, C)
@@ -174,11 +441,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     S_H = PreallocationTools.get_tmp(f.S_H, C)
     S_Age = PreallocationTools.get_tmp(f.S_Age, C)
 
-    TMn = @view C[TMnID]
-    TFe = @view C[TFeID]
-    TNH4 = @view C[TNH4ID]
-    TNdnr = @view C[TNdnrID]
-    TNdr = @view C[TNdrID]
     MnO2 = @view C[MnO2ID]
     FeOOH = @view C[FeOOHID]
     POC = @view C[POCID]
@@ -195,11 +457,16 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     SurfFe_Ndr = @view C[SurfFe_NdrID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
+    TMn = @view C[TMnID]
+    TFe = @view C[TFeID]
     CH4 = @view C[CH4ID]
     NO2 = @view C[NO2ID]
     Ca = @view C[CaID]
     Al = @view C[AlID]
+    TNH4 = @view C[TNH4ID]
     SO4 = @view C[SO4ID]
+    TNdnr = @view C[TNdnrID]
+    TNdr = @view C[TNdrID]
     TH4SiO4 = @view C[TH4SiO4ID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
@@ -207,11 +474,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     TH3PO4 = @view C[TH3PO4ID]
     H = @view C[HID]
 
-    dTMn = @view dC[TMnID]
-    dTFe = @view dC[TFeID]
-    dTNH4 = @view dC[TNH4ID]
-    dTNdnr = @view dC[TNdnrID]
-    dTNdr = @view dC[TNdrID]
     dMnO2 = @view dC[MnO2ID]
     dFeOOH = @view dC[FeOOHID]
     dPOC = @view dC[POCID]
@@ -228,11 +490,16 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     dSurfFe_Ndr = @view dC[SurfFe_NdrID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
+    dTMn = @view dC[TMnID]
+    dTFe = @view dC[TFeID]
     dCH4 = @view dC[CH4ID]
     dNO2 = @view dC[NO2ID]
     dCa = @view dC[CaID]
     dAl = @view dC[AlID]
+    dTNH4 = @view dC[TNH4ID]
     dSO4 = @view dC[SO4ID]
+    dTNdnr = @view dC[TNdnrID]
+    dTNdr = @view dC[TNdrID]
     dTH4SiO4 = @view dC[TH4SiO4ID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
@@ -904,18 +1171,18 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S
     @.. RFeSH2S = kFeSH2S ⊗ FeS ⊗ TH2S
     @.. RFeS_dis =
-        ifelse(Omega_RFeS_dis <= 1.0, 1.0, 0.0) ⊗
+        (-tanh(1e3 ⊗ (Omega_RFeS_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeSdis ⊗ FeS ⊗ (1 - Omega_RFeS_dis))
     @.. RFeS_pre =
-        ifelse(Omega_RFeS_pre >= 1.0, 1.0, 0.0) ⊗
+        (tanh(1e3 ⊗ (Omega_RFeS_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeSpre ⊗ Fe ⊗ TH2S ⊗ (Omega_RFeS_pre - 1))
     @.. RCaCO3_dis =
-        ifelse(Omega_RCaCO3_dis <= 1.0, 1.0, 0.0) ⊗ (
+        (-tanh(1e3 ⊗ (Omega_RCaCO3_dis - 1.0)) / 2 ⊕ 0.5) ⊗ (
             kCaCO3dis0 ⊗ CaCO3 ⊕
             kCaCO3dis1 ⊗ CaCO3 ⊗ (1 - Omega_RCaCO3_dis)^nCaCO3dis
         )
     @.. RBSi_dis =
-        ifelse(Omega_RBSi_dis <= 1.0, 1.0, 0.0) ⊗
+        (-tanh(1e3 ⊗ (Omega_RBSi_dis - 1.0)) / 2 ⊕ 0.5) ⊗
         (kBSi_dis ⊗ BSi ⊗ (1 - Omega_RBSi_dis))
     @.. RMnRe_Ndnr =
         (RMnO2POC ⊗ 2 ⊕ RMnO2H2S ⊕ RMnO2Fe / 2) ⊗ SurfMn_Ndnr / MnO2
@@ -927,10 +1194,10 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. RFeOx_Ndnr = (RO2Fe ⊕ RO2Fe_ads ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndnr / Fe ⊗ DNdFe
     @.. RFeOx_Ndr = (RO2Fe ⊕ RO2Fe_ads ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndr / Fe ⊗ DNdFe
     @.. RNdnrPO4_pre =
-        ifelse(Omega_RNdnrPO4_pre >= 1.0, 1.0, 0.0) ⊗
+        (tanh(1e3 ⊗ (Omega_RNdnrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kNdPO4_pre ⊗ NdnrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdnrPO4_pre - 1))
     @.. RNdrPO4_pre =
-        ifelse(Omega_RNdrPO4_pre >= 1.0, 1.0, 0.0) ⊗
+        (tanh(1e3 ⊗ (Omega_RNdrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kNdPO4_pre ⊗ NdrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdrPO4_pre - 1))
 
     # species rates
@@ -1021,11 +1288,6 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. S_H = S_H / dTA_dH
     @.. S_Age = 1
 
-    @.. dTMn += S_TMn
-    @.. dTFe += S_TFe
-    @.. dTNH4 += S_TNH4
-    @.. dTNdnr += S_TNdnr
-    @.. dTNdr += S_TNdr
     @.. dMnO2 += S_MnO2
     @.. dFeOOH += S_FeOOH
     @.. dPOC += S_POC
@@ -1042,11 +1304,16 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     @.. dSurfFe_Ndr += S_SurfFe_Ndr
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
+    @.. dTMn += S_TMn
+    @.. dTFe += S_TFe
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
     @.. dAl += S_Al
+    @.. dTNH4 += S_TNH4
     @.. dSO4 += S_SO4
+    @.. dTNdnr += S_TNdnr
+    @.. dTNdr += S_TNdr
     @.. dTH4SiO4 += S_TH4SiO4
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S

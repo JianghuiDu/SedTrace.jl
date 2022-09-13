@@ -1,4 +1,24 @@
-function (f::Cache.Reactran)(dC, C, parms, t)
+function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
+    @unpack TH3PO4ID,
+    PorgID,
+    AmPorg,
+    AmH3PO4,
+    AmP_ads,
+    BcAmPorg,
+    BcCmPorg,
+    Ngrid,
+    BcAmH3PO4,
+    BcCmH3PO4,
+    BcAmP_ads,
+    BcCmP_ads,
+    alpha,
+    H3PO40,
+    K_ads,
+    dstopw,
+    k_P,
+    k_pre,
+    Csat = parms
+
     H3PO4 = PreallocationTools.get_tmp(f.H3PO4, C)
     H3PO4_tran = PreallocationTools.get_tmp(f.H3PO4_tran, C)
     P_ads = PreallocationTools.get_tmp(f.P_ads, C)
@@ -28,11 +48,10 @@ function (f::Cache.Reactran)(dC, C, parms, t)
     mul!(P_ads_tran, AmP_ads, P_ads)
     P_ads_tran[1] += BcAmP_ads[1] ⊗ P_ads[1] ⊕ BcCmP_ads[1]
     P_ads_tran[Ngrid] += BcAmP_ads[2] ⊗ P_ads[Ngrid] ⊕ BcCmP_ads[2]
-    @.. dTH3PO4 = H3PO4_tran ⊗ 1 ⊕ P_ads_tran ⊗ dstopw
+    @.. dTH3PO4 = P_ads_tran ⊗ dstopw ⊕ H3PO4_tran ⊗ 1
     @.. dTH3PO4 += alpha ⊗ (H3PO40 - H3PO4)
 
 
-    # speciation
 
     # reaction rates
     @.. Rremin = k_P ⊗ Porg

@@ -1,8 +1,5 @@
 function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
-    @unpack TMnID,
-    TFeID,
-    TNH4ID,
-    POCID,
+    @unpack POCID,
     MnO2ID,
     FeOOHID,
     FeSID,
@@ -13,15 +10,18 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AgeID,
     BSiID,
     SMoID,
+    TMnID,
+    TFeID,
+    TNH4ID,
     O2ID,
     NO3ID,
     CH4ID,
     NO2ID,
     CaID,
     MoID,
-    H4SiO4ID,
     TH3PO4ID,
     THSO4ID,
+    H4SiO4ID,
     HID,
     TCO2ID,
     TH2SID,
@@ -387,9 +387,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     S_H = PreallocationTools.get_tmp(f.S_H, C)
     S_Age = PreallocationTools.get_tmp(f.S_Age, C)
 
-    TMn = @view C[TMnID]
-    TFe = @view C[TFeID]
-    TNH4 = @view C[TNH4ID]
     POC = @view C[POCID]
     MnO2 = @view C[MnO2ID]
     FeOOH = @view C[FeOOHID]
@@ -401,24 +398,24 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Age = @view C[AgeID]
     BSi = @view C[BSiID]
     SMo = @view C[SMoID]
+    TMn = @view C[TMnID]
+    TFe = @view C[TFeID]
+    TNH4 = @view C[TNH4ID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
     CH4 = @view C[CH4ID]
     NO2 = @view C[NO2ID]
     Ca = @view C[CaID]
     Mo = @view C[MoID]
-    H4SiO4 = @view C[H4SiO4ID]
     TH3PO4 = @view C[TH3PO4ID]
     THSO4 = @view C[THSO4ID]
+    H4SiO4 = @view C[H4SiO4ID]
     H = @view C[HID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
     TH3BO3 = @view C[TH3BO3ID]
     THF = @view C[THFID]
 
-    dTMn = @view dC[TMnID]
-    dTFe = @view dC[TFeID]
-    dTNH4 = @view dC[TNH4ID]
     dPOC = @view dC[POCID]
     dMnO2 = @view dC[MnO2ID]
     dFeOOH = @view dC[FeOOHID]
@@ -430,15 +427,18 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dAge = @view dC[AgeID]
     dBSi = @view dC[BSiID]
     dSMo = @view dC[SMoID]
+    dTMn = @view dC[TMnID]
+    dTFe = @view dC[TFeID]
+    dTNH4 = @view dC[TNH4ID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
     dCH4 = @view dC[CH4ID]
     dNO2 = @view dC[NO2ID]
     dCa = @view dC[CaID]
     dMo = @view dC[MoID]
-    dH4SiO4 = @view dC[H4SiO4ID]
     dTH3PO4 = @view dC[TH3PO4ID]
     dTHSO4 = @view dC[THSO4ID]
+    dH4SiO4 = @view dC[H4SiO4ID]
     dH = @view dC[HID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
@@ -968,9 +968,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. S_H = S_H / dTA_dH
     @.. S_Age = 1
 
-    @.. dTMn += S_TMn
-    @.. dTFe += S_TFe
-    @.. dTNH4 += S_TNH4
     @.. dPOC += S_POC
     @.. dMnO2 += S_MnO2
     @.. dFeOOH += S_FeOOH
@@ -982,15 +979,18 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dAge += S_Age
     @.. dBSi += S_BSi
     @.. dSMo += S_SMo
+    @.. dTMn += S_TMn
+    @.. dTFe += S_TFe
+    @.. dTNH4 += S_TNH4
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
     @.. dMo += S_Mo
-    @.. dH4SiO4 += S_H4SiO4
     @.. dTH3PO4 += S_TH3PO4
     @.. dTHSO4 += S_THSO4
+    @.. dH4SiO4 += S_H4SiO4
     @.. dH += S_H
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S

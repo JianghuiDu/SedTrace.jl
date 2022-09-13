@@ -5,13 +5,10 @@ include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\SBB\\parm.SBB.jl",
 )
 
-#--------------------------------------------------------------------
+#---------------------------------------------------------------
 # assemble parameter struct
-#--------------------------------------------------------------------
+#---------------------------------------------------------------
 @with_kw mutable struct ParamStruct{T}
-    TMnID::StepRange{Int64,Int64} = TMnID
-    TFeID::StepRange{Int64,Int64} = TFeID
-    TNH4ID::StepRange{Int64,Int64} = TNH4ID
     POCID::StepRange{Int64,Int64} = POCID
     MnO2ID::StepRange{Int64,Int64} = MnO2ID
     FeOOHID::StepRange{Int64,Int64} = FeOOHID
@@ -23,15 +20,18 @@ include(
     AgeID::StepRange{Int64,Int64} = AgeID
     BSiID::StepRange{Int64,Int64} = BSiID
     SMoID::StepRange{Int64,Int64} = SMoID
+    TMnID::StepRange{Int64,Int64} = TMnID
+    TFeID::StepRange{Int64,Int64} = TFeID
+    TNH4ID::StepRange{Int64,Int64} = TNH4ID
     O2ID::StepRange{Int64,Int64} = O2ID
     NO3ID::StepRange{Int64,Int64} = NO3ID
     CH4ID::StepRange{Int64,Int64} = CH4ID
     NO2ID::StepRange{Int64,Int64} = NO2ID
     CaID::StepRange{Int64,Int64} = CaID
     MoID::StepRange{Int64,Int64} = MoID
-    H4SiO4ID::StepRange{Int64,Int64} = H4SiO4ID
     TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     THSO4ID::StepRange{Int64,Int64} = THSO4ID
+    H4SiO4ID::StepRange{Int64,Int64} = H4SiO4ID
     HID::StepRange{Int64,Int64} = HID
     TCO2ID::StepRange{Int64,Int64} = TCO2ID
     TH2SID::StepRange{Int64,Int64} = TH2SID
