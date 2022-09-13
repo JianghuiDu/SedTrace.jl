@@ -1,9 +1,11 @@
 module CodeGeneration
 using SedTrace: ModelConfig
 import XLSX
+using JLD2,Interpolations
 import SymPy
 using DataFrames,
-    DataFramesMeta, Chain, RCall, Printf, LinearAlgebra, JuliaFormatter, UnPack, Parameters
+    DataFramesMeta, Chain, Printf, 
+    LinearAlgebra, JuliaFormatter, UnPack, Parameters
 
 
 include("helpers.jl")
@@ -27,9 +29,9 @@ function generate_code(
     EnableList::Dict = Dict(),
 )
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # read Excel sheets and preprocess
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(model_path)
 
@@ -52,9 +54,9 @@ function generate_code(
     preprocessSpeciation!(speciation, EnableList)
     preprocessParameters!(parameters, ParamDict, EnableList)
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # generate parameter, transport and reaction code
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     params_code =
         parameter_code(parameters, substances, adsorption, modelconfig.AssembleParam)
 
@@ -72,9 +74,9 @@ function generate_code(
             modelconfig.AllowDiscontinuity,
         )
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # generate jacobian pattern
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     cache_str = unique(vcat(react_cache, tran_cache))
     @unpack species_model_df, species_extra_df, elements_df = parsing_df
@@ -99,9 +101,9 @@ function generate_code(
     )
 
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # assemble parameters if necessary
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     if modelconfig.AssembleParam
         param_required = generate_parameter_struct(tran_param, react_param, parameters)
 
@@ -118,9 +120,9 @@ function generate_code(
             "using Parameters, LinearAlgebra,SpecialFunctions",
             "include(\"$(escape_string(pfile))\")",
             "",
-            "#--------------------------------------------------------------------",
+            "#---------------------------------------------------------------",
             "# assemble parameter struct",
-            "#--------------------------------------------------------------------",
+            "#---------------------------------------------------------------",
             "@with_kw mutable struct ParamStruct{T}",
             ParamDict,
             "end",
@@ -133,9 +135,9 @@ function generate_code(
     end
 
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # cache code 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
 
     cache = unique(vcat(tran_cache, react_cache))
     cache_code = vcat(
@@ -145,9 +147,9 @@ function generate_code(
         "end",
     )
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # reaction-transport code 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     if modelconfig.AssembleParam
         reactran_header = [
             "function (f::Cache.Reactran)(dC,C,parms::Param.ParamStruct,t)",
@@ -177,9 +179,9 @@ function generate_code(
     reactran_code = vcat(reactran_header, "",code, ["return nothing", "end"])
 
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # write code into julia files and format
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     allcode = (params_code,param_struct_code,cache_code,reactran_code,jp_code)
     tags = ["parm","parm.struct","cache","reactran","jactype"]
 
@@ -200,9 +202,9 @@ function generate_code(
     end
 
 
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     # write parsing results into excel sheets
-    #-----------------------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
     XLSX.writetable(
         modelconfig.ModelDirectory * "model_parsing_diagnostics."* modelconfig.ModelName * ".xlsx",
         overwrite = true,
