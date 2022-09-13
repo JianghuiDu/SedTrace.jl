@@ -1,4 +1,4 @@
-# Package Guide
+# User Guide
 
 Documenter is designed to do one thing -- combine markdown files and inline docstrings from
 Julia's docsystem into a single inter-linked document. What follows is a step-by-step guide
