@@ -369,66 +369,53 @@ function parameter_code(param_model, substances, adsorption, assemble)
         end
     end
 
+    myInterp(ranges::NTuple{N,AbstractRange}, vs::AbstractArray{T,N};
+    bc = Line(OnGrid()), extrapolation_bc = Throw()) where {N,T} = scale(interpolate(vs, BSpline(Cubic(bc))), ranges...)
 
 
     if any(substances.type .== "dissolved_summed_pH")
         #---------------------------------------------------------------------
         # pH calculation of boundary conditions
         #---------------------------------------------------------------------
-        R"""
-        library(AquaEnv)
-        diss_const <- function(salinity,temp,pres){
-          KW <- K_W(S=salinity,t=temp,p=pres)
-          KH3BO3 <- K_BOH3(S=salinity,t=temp,p=pres)
-          KCO2 <- K_CO2(S=salinity,t=temp,p=pres)
-          KHCO3 <- K_HCO3(S=salinity,t=temp,p=pres)
-          KHF <- K_HF(S=salinity,t=temp,p=pres)
-          KHSO4 <- K_HSO4(S=salinity,t=temp,p=pres)
-          KH2S <- K_H2PO4(S=salinity,t=temp,p=pres)
-          KH3PO4 <- K_H3PO4(S=salinity,t=temp,p=pres)
-          KH2PO4 <- K_H2PO4(S=salinity,t=temp,p=pres)
-          KHPO4 <- K_HPO4(S=salinity,t=temp,p=pres)
-          KNH4 <- K_NH4(S=salinity,t=temp,p=pres)
-          KH4SiO4 <- K_SiOH4(S=salinity,t=temp,p=pres)
-          KCaCO3 <- Ksp_calcite(S=salinity,t=temp,p=pres)
-          return(data.frame(KW,KH3BO3,KCO2,KHCO3,KHF,KHSO4,KH2S,
-                   KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4,KCaCO3))
-        }
-        K_diss <- diss_const(salinity=$salinity,temp=$temperature,pres=$pressure)/$sw_dens^2
-        # units in (mmol cm^3)^2
-        """
+        path = (@__DIR__)*"//"
+        KH2O,KH3BO3,KCO2,KHCO3,KHF,KHSO4,KH2S,KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4 = JLD2.load(path*"dissociation_constants.jld2","K_diss");
 
-        K_diss = @rget K_diss
+        SAL = 0:0.5:40
+        TEM = 0:0.5:40
+        PRE = 0:75:6000
+                
+        itp_KH2O = myInterp((SAL,TEM,PRE),KH2O);
+        itp_KH3BO3 = myInterp((SAL,TEM,PRE), KH3BO3);
+        itp_KCO2 = myInterp((SAL,TEM,PRE), KCO2);
+        itp_KHCO3 = myInterp((SAL,TEM,PRE), KHCO3);
+        itp_KHF = myInterp((SAL,TEM,PRE), KHF);
+        itp_KHSO4 = myInterp((SAL,TEM,PRE), KHSO4);
+        itp_KH2S = myInterp((SAL,TEM,PRE), KH2S);
+        itp_KH3PO4 = myInterp((SAL,TEM,PRE), KH3PO4);
+        itp_KH2PO4 = myInterp((SAL,TEM,PRE), KH2PO4);
+        itp_KHPO4 = myInterp((SAL,TEM,PRE), KHPO4);
+        itp_KNH4 = myInterp((SAL,TEM,PRE), KNH4);
+        itp_KH4SiO4 = myInterp((SAL,TEM,PRE), KH4SiO4);
+        
+        
+        Ks = Dict(
+            "KH2O" => itp_KH2O(salinity,temperature,pressure),
+            "KCO2" => itp_KCO2(salinity,temperature,pressure),
+            "KHCO3" => itp_KHCO3(salinity,temperature,pressure),
+            "KH2S" => itp_KH2S(salinity,temperature,pressure),
+            "KH3BO3" => itp_KH3BO3(salinity,temperature,pressure),
+            "KHSO4" => itp_KHSO4(salinity,temperature,pressure),
+            "KHF" => itp_KHF(salinity,temperature,pressure),
+            "KNH4" => itp_KNH4(salinity,temperature,pressure),
+            "KH3PO4" => itp_KH3PO4(salinity,temperature,pressure),
+            "KH2PO4" => itp_KH2PO4(salinity,temperature,pressure),
+            "KHPO4" => itp_KHPO4(salinity,temperature,pressure),
+            "KH4SiO4" => itp_KH4SiO4(salinity,temperature,pressure),
+        )
 
-        KH2O = K_diss.KW[1]
-        KCO2 = K_diss.KCO2[1]
-        KHCO3 = K_diss.KHCO3[1]
-        KH2S = K_diss.KH2S[1]
-        KH3BO3 = K_diss.KH3BO3[1]
-        KHSO4 = K_diss.KHSO4[1]
-        KHF = K_diss.KHF[1]
-        KNH4 = K_diss.KNH4[1]
-        KH3PO4 = K_diss.KH3PO4[1]
-        KH2PO4 = K_diss.KH2PO4[1]
-        KHPO4 = K_diss.KHPO4[1]
-        KH4SiO4 = K_diss.KH4SiO4[1]
 
         KpHParam = newdf()
 
-        Ks = Dict(
-            "KH2O" => KH2O,
-            "KCO2" => KCO2,
-            "KHCO3" => KHCO3,
-            "KH2S" => KH2S,
-            "KH3BO3" => KH3BO3,
-            "KHSO4" => KHSO4,
-            "KHF" => KHF,
-            "KNH4" => KNH4,
-            "KH3PO4" => KH3PO4,
-            "KH2PO4" => KH2PO4,
-            "KHPO4" => KHPO4,
-            "KH4SiO4" => KH4SiO4,
-        )
     end
 
 
@@ -703,7 +690,9 @@ function parameter_code(param_model, substances, adsorption, assemble)
     appendtostr!(param_str, bdParam, "assemble boundary conditions", assemble)
     appendtostr!(param_str, tranBCParam, "Boundary transport matrix", assemble)
     appendtostr!(param_str, tranIntParam, "Interior transport matrix", assemble)
-    appendtostr!(param_str, KpHParam, "Acid dissociation constants", assemble)
+    if nsummed != 0
+        appendtostr!(param_str, KpHParam, "Acid dissociation constants", assemble)
+    end
     appendtostr!(param_str, reactionParam, "Reaction parameters", assemble)
     
 
