@@ -111,20 +111,20 @@
 #     println(sol.destats)
 #     return SolutionConfig(sol,x,L,Ngrid,IDdict)
 # end
-using LinearSolve
-using IncompleteLU
+# using LinearSolve
+# using IncompleteLU
 
 function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,parm)
 
 
-    if solverconfig.linsolve in [:Band, :LapackBand]
-        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        return CVODE_BDF(
-                linear_solver = solverconfig.linsolve,
-                jac_upper = Upbdwth,
-                jac_lower = Lwbdwth,
-            )
-    end
+    # if solverconfig.linsolve in [:Band, :LapackBand]
+    #     Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+    #     return CVODE_BDF(
+    #             linear_solver = solverconfig.linsolve,
+    #             jac_upper = Upbdwth,
+    #             jac_lower = Lwbdwth,
+    #         )
+    # end
 
     if solverconfig.linsolve == :KLU
         return CVODE_BDF(linear_solver = solverconfig.linsolve)
@@ -146,28 +146,28 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
 
     end
 
-    if solverconfig.linsolve == :FBDF
+    # if solverconfig.linsolve == :FBDF
 
-        prec = SciMLprecSetup(JacPrototype)
-        return FBDF(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-            chunk_size = solverconfig.chunk_size
-        )
-    end
+    #     prec = SciMLprecSetup(JacPrototype)
+    #     return FBDF(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #         chunk_size = solverconfig.chunk_size
+    #     )
+    # end
 
-    if solverconfig.linsolve == :QNDF
-        prec = SciMLprecSetup(JacPrototype)
-          return QNDF(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-            chunk_size = solverconfig.chunk_size
-        )
-    end
+    # if solverconfig.linsolve == :QNDF
+    #     prec = SciMLprecSetup(JacPrototype)
+    #       return QNDF(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #         chunk_size = solverconfig.chunk_size
+    #     )
+    # end
 
 
 end
@@ -175,9 +175,9 @@ end
 function generate_ODEFun(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
 colorvec = matrix_colors(JacPrototype)
 
-    if solverconfig.linsolve in [:Band, :LapackBand]
-        return ODEFunction{true,true}(OdeFun,colorvec=colorvec)
-    end
+    # if solverconfig.linsolve in [:Band, :LapackBand]
+    #     return ODEFunction{true,true}(OdeFun,colorvec=colorvec)
+    # end
 
     if solverconfig.linsolve == :KLU
         JacFun = generate_jacobian(OdeFun, JacPrototype, solverconfig.chunk_size,parm)
@@ -189,12 +189,12 @@ colorvec = matrix_colors(JacPrototype)
         return  ODEFunction{true,true}(OdeFun,colorvec=colorvec)
     end
 
-    if solverconfig.linsolve in [:FBDF,:QNDF]
-        # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        # jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
-        # Jv = JacVecOperator(OdeFun,u0,p,0.0)
-        return  ODEFunction{true,true}(OdeFun; jac_prototype = JacPrototype,colorvec=colorvec)
-    end
+    # if solverconfig.linsolve in [:FBDF,:QNDF]
+    #     # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+    #     # jac_prototype = BandedMatrix(Zeros(size(JacPrototype)), (Lwbdwth,Upbdwth))
+    #     # Jv = JacVecOperator(OdeFun,u0,p,0.0)
+    #     return  ODEFunction{true,true}(OdeFun; jac_prototype = JacPrototype,colorvec=colorvec)
+    # end
 
 end
 
@@ -220,6 +220,7 @@ function modelrun(OdeFunction,parm, solver,solverctrlconfig::SolverCtrlConfig,ou
         maxiters = solverctrlconfig.maxiters,
         save_start = false,
         # tstops = tstops
+        # dtmin = 1e-10
     )
     println("$(sol.retcode) at t = $(sol.t[end]).")
 
