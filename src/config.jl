@@ -49,7 +49,7 @@ function SolverConfig(
     chunk_size,
     linsolve;
     Precondition = :ILU0,
-    PrecSide = 1
+    PrecSide = 2
 )
     return SolverConfig(
         chunk_size,
