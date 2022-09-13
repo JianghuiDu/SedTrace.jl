@@ -2,9 +2,9 @@
 function generate_parameter_struct(tran_param,react_param,parameters)
 
     param_required = @chain begin
-        tran_param
+        copy(tran_param)
         append!(select(react_param,:parameter,:type))
-        unique!()
+        unique!
         @transform!(:jtype = "")
     end
 
