@@ -105,8 +105,7 @@ mutable struct Reactran{T}
     Omega_RFeS_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RCaCO3_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RBSi_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Omega_RNdnrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Omega_RNdrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Omega_RBasalt_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RO2POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RNO2POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RNO3POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -143,6 +142,9 @@ mutable struct Reactran{T}
     RFeOx_Ndr::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RNdnrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RNdrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    RIllite_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    RBasalt_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    RBasalt_dis_Nd::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_O2::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_TCO2::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -172,6 +174,8 @@ mutable struct Reactran{T}
     S_SurfFe_Ndr::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_NdnrPO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_NdrPO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    S_Illite::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    S_Basalt::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_TA::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_H::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_Age::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -282,9 +286,7 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     Omega_RFeS_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RCaCO3_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RBSi_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Omega_RNdnrPO4_pre =
-        PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Omega_RNdrPO4_pre =
+    Omega_RBasalt_dis =
         PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     RO2POC = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     RNO2POC = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -322,6 +324,9 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     RFeOx_Ndr = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     RNdnrPO4_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     RNdrPO4_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    RIllite_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    RBasalt_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    RBasalt_dis_Nd = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_POC = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_O2 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_TCO2 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -351,6 +356,8 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     S_SurfFe_Ndr = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_NdnrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_NdrPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    S_Illite = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    S_Basalt = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_TA = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_H = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_Age = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -460,8 +467,7 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         Omega_RFeS_pre,
         Omega_RCaCO3_dis,
         Omega_RBSi_dis,
-        Omega_RNdnrPO4_pre,
-        Omega_RNdrPO4_pre,
+        Omega_RBasalt_dis,
         RO2POC,
         RNO2POC,
         RNO3POC,
@@ -498,6 +504,9 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         RFeOx_Ndr,
         RNdnrPO4_pre,
         RNdrPO4_pre,
+        RIllite_pre,
+        RBasalt_dis,
+        RBasalt_dis_Nd,
         S_POC,
         S_O2,
         S_TCO2,
@@ -527,6 +536,8 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         S_SurfFe_Ndr,
         S_NdnrPO4,
         S_NdrPO4,
+        S_Illite,
+        S_Basalt,
         S_TA,
         S_H,
         S_Age,

@@ -9,19 +9,17 @@ include(
 # assemble parameter struct
 #---------------------------------------------------------------
 @with_kw mutable struct ParamStruct{T}
-    TFeID::StepRange{Int64,Int64} = TFeID
     POCID::StepRange{Int64,Int64} = POCID
     FeOOHID::StepRange{Int64,Int64} = FeOOHID
     FeSID::StepRange{Int64,Int64} = FeSID
-    O2ID::StepRange{Int64,Int64} = O2ID
     SO4ID::StepRange{Int64,Int64} = SO4ID
+    TFeID::StepRange{Int64,Int64} = TFeID
     HID::StepRange{Int64,Int64} = HID
     TCO2ID::StepRange{Int64,Int64} = TCO2ID
     TH2SID::StepRange{Int64,Int64} = TH2SID
     AmPOC::Tridiagonal{T,Vector{T}} = AmPOC
     AmFeOOH::Tridiagonal{T,Vector{T}} = AmFeOOH
     AmFeS::Tridiagonal{T,Vector{T}} = AmFeS
-    AmO2::Tridiagonal{T,Vector{T}} = AmO2
     AmSO4::Tridiagonal{T,Vector{T}} = AmSO4
     AmH::Tridiagonal{T,Vector{T}} = AmH
     AmOH::Tridiagonal{T,Vector{T}} = AmOH
@@ -38,8 +36,6 @@ include(
     BcCmFeOOH::Vector{T} = BcCmFeOOH
     BcAmFeS::Vector{T} = BcAmFeS
     BcCmFeS::Vector{T} = BcCmFeS
-    BcAmO2::Vector{T} = BcAmO2
-    BcCmO2::Vector{T} = BcCmO2
     BcAmSO4::Vector{T} = BcAmSO4
     BcCmSO4::Vector{T} = BcCmSO4
     Ngrid::Int64 = Ngrid
@@ -62,7 +58,6 @@ include(
     BcAmFe_ads::Vector{T} = BcAmFe_ads
     BcCmFe_ads::Vector{T} = BcCmFe_ads
     alpha::Vector{T} = alpha
-    O20::T = O20
     SO40::T = SO40
     H0::T = H0
     OH0::T = OH0
@@ -81,15 +76,10 @@ include(
     Cl::T = Cl
     KspFeS::T = KspFeS
     pwtods::Vector{T} = pwtods
-    KO2::T = KO2
-    k_POC::T = k_POC
     KFeOOH::T = KFeOOH
+    k_POC::T = k_POC
     KSO4::T = KSO4
-    kO2Fe::T = kO2Fe
-    kO2Fe_ads::T = kO2Fe_ads
-    kO2H2S::T = kO2H2S
     kFeOOHH2S::T = kFeOOHH2S
-    kFeSdis::T = kFeSdis
     kFeSpre::T = kFeSpre
 end
 end

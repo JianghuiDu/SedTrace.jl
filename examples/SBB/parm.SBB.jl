@@ -2,10 +2,10 @@
 #----------------------------------------------
 # Number of substances
 #----------------------------------------------
-nsolid = 11 #  # number of solid substances
-ndissolved = 10 #  # number of dissolved substances
+nsolid = 12 #  # number of solid substances
+ndissolved = 11 #  # number of dissolved substances
 nsummed = 7 #  # number of summed substances
-nspec = 28 #  # number of total substances
+nspec = 30 #  # number of total substances
 
 #----------------------------------------------
 # global parameters
@@ -23,7 +23,7 @@ sw_dens = 1.0287324258804407 # g cm^-3 # seawater density
 L = 50.0 # cm # model sediment section thickness
 Ngrid = 100 # integer # number of model grid
 pgrid = L / 5 # cm # constant in gridtran, attenuation scale
-Nmat = 2100 #  # Jacobian dimention
+Nmat = 2300 #  # Jacobian dimention
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
 xᵥ = broadcast(x -> L * (exp(x * pgrid / L) - 1) / (exp(pgrid) - 1), ξ) # cm # no grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
@@ -84,7 +84,8 @@ DNO3 = 3.4158080786693472E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment di
 DCH4 = 3.2443708884445152E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DNO2 = 3.5695791591339196E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCa = 1.3421378770645731E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DMo = 1.6349371584775281E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DMol = 1.6349371584775281E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DMoh = 1.6349371584775281E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH4SiO4 = 1.7771493723450564E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH3PO4 = 1.4353131461911693E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH2PO4 = 1.5332320353118095E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -116,7 +117,8 @@ betaNO3 = 6.8316161573386944E+03 # cm yr^-1 # solute mass transfer velocity acro
 betaCH4 = 6.4887417768890300E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO2 = 7.1391583182678387E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCa = 2.6842757541291462E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaMo = 3.2698743169550562E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaMol = 3.2698743169550562E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaMoh = 3.2698743169550562E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH4SiO4 = 3.5542987446901125E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH3PO4 = 2.8706262923823383E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH2PO4 = 3.0664640706236187E+03 # cm yr^-1 # solute mass transfer velocity across SWI
@@ -141,7 +143,7 @@ betaF = 4.7803398024035187E+03 # cm yr^-1 # solute mass transfer velocity across
 #----------------------------------------------
 FPOC0 = 0.31 # mmol cm^-2 yr^-1 # Flux of POC at the  TOP of sediment column
 FMnO20 = 0.005 # mmol cm^-2 yr^-1 # Flux of MnO2 at the  TOP of sediment column
-FFeOOH0 = 0.0227 # mmol cm^-2 yr^-1 # Flux of FeOOH at the  TOP of sediment column
+FFeOOH0 = 0.0235 # mmol cm^-2 yr^-1 # Flux of FeOOH at the  TOP of sediment column
 FFeS0 = 2.22044604925031e-16 # mmol cm^-2 yr^-1 # Flux of FeS at the  TOP of sediment column
 FFeS20 = 0.002 # mmol cm^-2 yr^-1 # Flux of FeS2 at the  TOP of sediment column
 FCaCO30 = 0.055 # mmol cm^-2 yr^-1 # Flux of CaCO3 at the  TOP of sediment column
@@ -149,7 +151,8 @@ FMnCO30 = 2.22044604925031e-16 # mmol cm^-2 yr^-1 # Flux of MnCO3 at the  TOP of
 FFeCO30 = 2.22044604925031e-16 # mmol cm^-2 yr^-1 # Flux of FeCO3 at the  TOP of sediment column
 FAge0 = 0.0 # mmol cm^-2 yr^-1 # Flux of Age at the  TOP of sediment column
 FBSi0 = 0.2 # mmol cm^-2 yr^-1 # Flux of BSi at the  TOP of sediment column
-FSMo0 = 365 / 1e6 / 95.94 # mmol cm^-2 yr^-1 # Flux of MoS4 at the  TOP of sediment column
+FSMol0 = 3.9471113493259475e-16 # mmol cm^-2 yr^-1 # Flux of MoS4 at the  TOP of sediment column
+FSMoh0 = 6.052888650674053e-16 # mmol cm^-2 yr^-1 # Flux of MoS4 at the  TOP of sediment column
 O2BW = 8.5e-6 # mmol cm^-3 # Bottom water concentration of O2
 NO3BW = 2.8e-5 # mmol cm^-3 # Bottom water concentration of NO3
 Mn0 = 6.0e-7 # mmol cm^-3 # Concentration of Mn at the TOP of sediment column
@@ -159,13 +162,14 @@ Fe_ads0 = Fe0 * KFe_ads # missing # missing
 CH4BW = 2.22044604925031e-16 # mmol cm^-3 # Bottom water concentration of CH4
 NO2BW = 2.0e-7 # mmol cm^-3 # Bottom water concentration of NO2
 CaBW = 0.01033 # mmol cm^-3 # Bottom water concentration of Ca
-MoBW = 1.2e-7 # mmol cm^-3 # Bottom water concentration of Mo
+MolBW = 4.736533619191137e-8 # mmol cm^-3 # missing
+MohBW = 7.263466380808862e-8 # mmol cm^-3 # missing
 NH40 = 1.0e-6 # mmol cm^-3 # Concentration of NH4 at the TOP of sediment column
 NH4_ads0 = NH40 * KNH4_ads # missing # missing
 TH3PO4BW = 2.0e-5 # mmol cm^-3 # Bottom water concentration of H3PO4
 THSO4BW = 0.028 # mmol cm^-3 # Bottom water concentration of SO4
 H4SiO4BW = 0.00022 # mmol cm^-3 # Bottom water concentration of H4SiO4
-pHBW = 7.59 # free pH scale # Bottom water pH
+pHBW = 7.6 # free pH scale # Bottom water pH
 TCO2BW = 0.002345 # mmol cm^-3 # Bottom water concentration of TCO2
 TH2SBW = 2.22044604925031e-16 # mmol cm^-3 # Bottom water concentration of TH2S
 TH3BO3BW = 8.7062e-5 # mmol cm^-3 # Bottom water concentration of TH3BO3
@@ -175,36 +179,38 @@ CaL = 0.008 # mmol cm^-3 # Concentration of Ca at the BOTTOM of sediment column
 NH4L = 0.0013 # mmol cm^-3 # Concentration of NH4 at the BOTTOM of sediment column
 THSO4L = 0.015 # mmol cm^-3 # Concentration of SO4 at the BOTTOM of sediment column
 H4SiO4L = 0.0005 # mmol cm^-3 # Concentration of H4SiO4 at the BOTTOM of sediment column
-pHL = 8.06 # free pH scale # pH at the BOTTOM of sediment column
-TCO2L = 0.015 # mmol cm^-3 # Concentration of TCO2 at the BOTTOM of sediment column
+pHL = 8.0 # free pH scale # pH at the BOTTOM of sediment column
+TCO2L = 0.014 # mmol cm^-3 # Concentration of TCO2 at the BOTTOM of sediment column
 TH2SL = 0.002 # mmol cm^-3 # Concentration of TH2S at the BOTTOM of sediment column
+THFL = 4.5e-5 # mmol cm^-3 # missing
+H4SiO4L = 0.0005 # mmol cm^-3 # missing
 NH4_adsL = NH4L * 1.6 * ds_rho # mmol cm^-3 # missing
-H3PO4BW = 8.9900624585157894E-13 # mmol cm^-3 # Bottom water concentration of H3PO4
-H2PO4BW = 7.5819350627520392E-07 # mmol cm^-3 # Bottom water concentration of H2PO4
-HPO4BW = 1.8885935685038669E-05 # mmol cm^-3 # Bottom water concentration of HPO4
-PO4BW = 3.5586990967988541E-07 # mmol cm^-3 # Bottom water concentration of PO4
-HSO4BW = 3.2386882559394723E-09 # mmol cm^-3 # Bottom water concentration of HSO4
-SO4BW = 2.7999996761311746E-02 # mmol cm^-3 # Bottom water concentration of SO4
-HSO4L = 5.8789857482430019E-10 # mmol cm^-3 # Concentration of HSO4 at the BOTTOM of sediment column
-SO4L = 1.4999999412101424E-02 # mmol cm^-3 # Concentration of SO4 at the BOTTOM of sediment column
-HBW = 2.5703957827688646E-08 # mmol cm^-3 # Bottom water concentration of H
-OHBW = 2.9596859476699120E-07 # mmol cm^-3 # Bottom water concentration of OH
-HL = 8.7096358995607965E-09 # mmol cm^-3 # Concentration of H at the BOTTOM of sediment column
-OHL = 8.7346524767983025E-07 # mmol cm^-3 # Concentration of OH at the BOTTOM of sediment column
-HCO3BW = 2.2343121173691470E-03 # mmol cm^-3 # Bottom water concentration of HCO3
-CO3BW = 3.8072240982730215E-05 # mmol cm^-3 # Bottom water concentration of CO3
-CO2BW = 7.2615641648122881E-05 # mmol cm^-3 # Bottom water concentration of CO2
-HCO3L = 1.4133602560252352E-02 # mmol cm^-3 # Concentration of HCO3 at the BOTTOM of sediment column
-CO3L = 7.1075099211287927E-04 # mmol cm^-3 # Concentration of CO3 at the BOTTOM of sediment column
-CO2L = 1.5564644763476832E-04 # mmol cm^-3 # Concentration of CO2 at the BOTTOM of sediment column
-H2SBW = 8.5701318657608387E-18 # mmol cm^-3 # Bottom water concentration of H2S
-HSBW = 2.1347447305927019E-16 # mmol cm^-3 # Bottom water concentration of HS
-H2SL = 2.6841301505782044E-05 # mmol cm^-3 # Concentration of H2S at the BOTTOM of sediment column
-HSL = 1.9731586984942178E-03 # mmol cm^-3 # Concentration of HS at the BOTTOM of sediment column
-H3BO3BW = 8.2917756658925951E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
-H4BO4BW = 4.1442433410740532E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
-HFBW = 5.7547054713086795E-10 # mmol cm^-3 # Bottom water concentration of HF
-FBW = 7.4999424529452870E-05 # mmol cm^-3 # Bottom water concentration of F
+H3PO4BW = 7.7125245616994541E-13 # mmol cm^-3 # Bottom water concentration of H3PO4
+H2PO4BW = 7.0274724396482137E-07 # mmol cm^-3 # Bottom water concentration of H2PO4
+HPO4BW = 1.8912234158734785E-05 # mmol cm^-3 # Bottom water concentration of HPO4
+PO4BW = 3.8501782604793750E-07 # mmol cm^-3 # Bottom water concentration of PO4
+HSO4BW = 2.9906410628676496E-09 # mmol cm^-3 # Bottom water concentration of HSO4
+SO4BW = 2.7999997009358939E-02 # mmol cm^-3 # Bottom water concentration of SO4
+HSO4L = 6.3781914011762712E-10 # mmol cm^-3 # Concentration of HSO4 at the BOTTOM of sediment column
+SO4L = 1.4999999362180860E-02 # mmol cm^-3 # Concentration of SO4 at the BOTTOM of sediment column
+HBW = 2.5118864315095821E-08 # mmol cm^-3 # Bottom water concentration of H
+OHBW = 3.1627973940830109E-07 # mmol cm^-3 # Bottom water concentration of OH
+HCO3BW = 2.2366048207248502E-03 # mmol cm^-3 # Bottom water concentration of HCO3
+CO3BW = 4.1272349938195189E-05 # mmol cm^-3 # Bottom water concentration of CO3
+CO2BW = 6.7122829336954890E-05 # mmol cm^-3 # Bottom water concentration of CO2
+HCO3L = 1.3228766048001694E-02 # mmol cm^-3 # Concentration of HCO3 at the BOTTOM of sediment column
+CO3L = 6.1318182899757824E-04 # mmol cm^-3 # Concentration of CO3 at the BOTTOM of sediment column
+CO2L = 1.5805212300072725E-04 # mmol cm^-3 # Concentration of CO2 at the BOTTOM of sediment column
+H2SBW = 3.6317801781327771E-17 # mmol cm^-3 # Bottom water concentration of H2S
+HSBW = 1.8572680314370327E-16 # mmol cm^-3 # Bottom water concentration of HS
+H2SL = 1.4445002647319876E-04 # mmol cm^-3 # Concentration of H2S at the BOTTOM of sediment column
+HSL = 1.8555499735268012E-03 # mmol cm^-3 # Concentration of HS at the BOTTOM of sediment column
+H3BO3BW = 8.2590466448602583E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
+H4BO4BW = 4.4715335513974064E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
+HFBW = 5.3139626566369514E-10 # mmol cm^-3 # Bottom water concentration of HF
+FBW = 7.4999468603734339E-05 # mmol cm^-3 # Bottom water concentration of F
+HFL = 1.2693213957207710E-10 # mmol cm^-3 # Concentration of HF at the BOTTOM of sediment column
+FL = 4.4999873067860433E-05 # mmol cm^-3 # Concentration of F at the BOTTOM of sediment column
 
 #----------------------------------------------
 # assemble boundary conditions
@@ -219,7 +225,8 @@ BcMnCO3 = ((phis[1]us[1], -phis[1]Ds[1], FMnCO30), (0.0, 1.0, 0.0)) #  # Boundar
 BcFeCO3 = ((phis[1]us[1], -phis[1]Ds[1], FFeCO30), (0.0, 1.0, 0.0)) #  # Boundary condition of FeCO3
 BcAge = ((phis[1]us[1], -phis[1]Ds[1], FAge0), (0.0, 1.0, 1.0 / us[Ngrid])) #  # Boundary condition of Age
 BcBSi = ((phis[1]us[1], -phis[1]Ds[1], FBSi0), (0.0, 1.0, 0.0)) #  # Boundary condition of BSi
-BcSMo = ((phis[1]us[1], -phis[1]Ds[1], FSMo0), (0.0, 1.0, 0.0)) #  # Boundary condition of SMo
+BcSMol = ((phis[1]us[1], -phis[1]Ds[1], FSMol0), (0.0, 1.0, 0.0)) #  # Boundary condition of SMol
+BcSMoh = ((phis[1]us[1], -phis[1]Ds[1], FSMoh0), (0.0, 1.0, 0.0)) #  # Boundary condition of SMoh
 BcO2 = ((betaO2 + phif[1]uf[1], -phif[1]DO2[1], betaO2 * O2BW), (0.0, 1.0, 0.0)) #  # Boundary condition of O2
 BcNO3 = (
     (betaNO3 + phif[1]uf[1], -phif[1]DNO3[1], betaNO3 * NO3BW),
@@ -234,7 +241,14 @@ BcNO2 = (
     (0.0, 1.0, 0.0),
 ) #  # Boundary condition of NO2
 BcCa = ((betaCa + phif[1]uf[1], -phif[1]DCa[1], betaCa * CaBW), (1.0, 0.0, CaL)) #  # Boundary condition of Ca
-BcMo = ((betaMo + phif[1]uf[1], -phif[1]DMo[1], betaMo * MoBW), (0.0, 1.0, 0.0)) #  # Boundary condition of Mo
+BcMol = (
+    (betaMol + phif[1]uf[1], -phif[1]DMol[1], betaMol * MolBW),
+    (0.0, 1.0, 0.0),
+) #  # Boundary condition of Mol
+BcMoh = (
+    (betaMoh + phif[1]uf[1], -phif[1]DMoh[1], betaMoh * MohBW),
+    (0.0, 1.0, 0.0),
+) #  # Boundary condition of Moh
 BcH4SiO4 = (
     (betaH4SiO4 + phif[1]uf[1], -phif[1]DH4SiO4[1], betaH4SiO4 * H4SiO4BW),
     (1.0, 0.0, H4SiO4L),
@@ -263,8 +277,8 @@ BcSO4 = (
     (betaSO4 + phif[1]uf[1], -phif[1]DSO4[1], betaSO4 * SO4BW),
     (1.0, 0.0, SO4L),
 ) #  # Boundary condition of THSO4
-BcH = ((betaH + phif[1]uf[1], -phif[1]DH[1], betaH * HBW), (1.0, 0.0, HL)) #  # Boundary condition of H
-BcOH = ((betaOH + phif[1]uf[1], -phif[1]DOH[1], betaOH * OHBW), (1.0, 0.0, OHL)) #  # Boundary condition of H
+BcH = ((betaH + phif[1]uf[1], -phif[1]DH[1], betaH * HBW), (0.0, 1.0, 0.0)) #  # Boundary condition of H
+BcOH = ((betaOH + phif[1]uf[1], -phif[1]DOH[1], betaOH * OHBW), (0.0, 1.0, 0.0)) #  # Boundary condition of H
 BcHCO3 = (
     (betaHCO3 + phif[1]uf[1], -phif[1]DHCO3[1], betaHCO3 * HCO3BW),
     (1.0, 0.0, HCO3L),
@@ -290,8 +304,8 @@ BcH4BO4 = (
     (betaH4BO4 + phif[1]uf[1], -phif[1]DH4BO4[1], betaH4BO4 * H4BO4BW),
     (0.0, 1.0, 0.0),
 ) #  # Boundary condition of TH3BO3
-BcHF = ((betaHF + phif[1]uf[1], -phif[1]DHF[1], betaHF * HFBW), (0.0, 1.0, 0.0)) #  # Boundary condition of THF
-BcF = ((betaF + phif[1]uf[1], -phif[1]DF[1], betaF * FBW), (0.0, 1.0, 0.0)) #  # Boundary condition of THF
+BcHF = ((betaHF + phif[1]uf[1], -phif[1]DHF[1], betaHF * HFBW), (1.0, 0.0, HFL)) #  # Boundary condition of THF
+BcF = ((betaF + phif[1]uf[1], -phif[1]DF[1], betaF * FBW), (1.0, 0.0, FL)) #  # Boundary condition of THF
 BcMn = ((1.0, 0.0, Mn0), (0.0, 1.0, 0.0)) #  # Boundary condition of TMn
 BcFe = ((1.0, 0.0, Fe0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe
 BcNH4 = ((1.0, 0.0, NH40), (1.0, 0.0, NH4L)) #  # Boundary condition of TNH4
@@ -312,13 +326,15 @@ BcAmMnCO3, BcBmMnCO3, BcCmMnCO3 = fvcf_bc(phis, Ds, us, dx, BcMnCO3, Ngrid) #  #
 BcAmFeCO3, BcBmFeCO3, BcCmFeCO3 = fvcf_bc(phis, Ds, us, dx, BcFeCO3, Ngrid) #  # Boundary transport matrix of FeCO3
 BcAmAge, BcBmAge, BcCmAge = fvcf_bc(phis, Ds, us, dx, BcAge, Ngrid) #  # Boundary transport matrix of Age
 BcAmBSi, BcBmBSi, BcCmBSi = fvcf_bc(phis, Ds, us, dx, BcBSi, Ngrid) #  # Boundary transport matrix of BSi
-BcAmSMo, BcBmSMo, BcCmSMo = fvcf_bc(phis, Ds, us, dx, BcSMo, Ngrid) #  # Boundary transport matrix of SMo
+BcAmSMol, BcBmSMol, BcCmSMol = fvcf_bc(phis, Ds, us, dx, BcSMol, Ngrid) #  # Boundary transport matrix of SMol
+BcAmSMoh, BcBmSMoh, BcCmSMoh = fvcf_bc(phis, Ds, us, dx, BcSMoh, Ngrid) #  # Boundary transport matrix of SMoh
 BcAmO2, BcBmO2, BcCmO2 = fvcf_bc(phif, DO2, uf, dx, BcO2, Ngrid) #  # Boundary transport matrix of O2
 BcAmNO3, BcBmNO3, BcCmNO3 = fvcf_bc(phif, DNO3, uf, dx, BcNO3, Ngrid) #  # Boundary transport matrix of NO3
 BcAmCH4, BcBmCH4, BcCmCH4 = fvcf_bc(phif, DCH4, uf, dx, BcCH4, Ngrid) #  # Boundary transport matrix of CH4
 BcAmNO2, BcBmNO2, BcCmNO2 = fvcf_bc(phif, DNO2, uf, dx, BcNO2, Ngrid) #  # Boundary transport matrix of NO2
 BcAmCa, BcBmCa, BcCmCa = fvcf_bc(phif, DCa, uf, dx, BcCa, Ngrid) #  # Boundary transport matrix of Ca
-BcAmMo, BcBmMo, BcCmMo = fvcf_bc(phif, DMo, uf, dx, BcMo, Ngrid) #  # Boundary transport matrix of Mo
+BcAmMol, BcBmMol, BcCmMol = fvcf_bc(phif, DMol, uf, dx, BcMol, Ngrid) #  # Boundary transport matrix of Mol
+BcAmMoh, BcBmMoh, BcCmMoh = fvcf_bc(phif, DMoh, uf, dx, BcMoh, Ngrid) #  # Boundary transport matrix of Moh
 BcAmH4SiO4, BcBmH4SiO4, BcCmH4SiO4 =
     fvcf_bc(phif, DH4SiO4, uf, dx, BcH4SiO4, Ngrid) #  # Boundary transport matrix of H4SiO4
 BcAmH3PO4, BcBmH3PO4, BcCmH3PO4 = fvcf_bc(phif, DH3PO4, uf, dx, BcH3PO4, Ngrid) #  # Boundary transport matrix of H3PO4
@@ -359,13 +375,15 @@ AmMnCO3, BmMnCO3 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix 
 AmFeCO3, BmFeCO3 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of FeCO3
 AmAge, BmAge = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of Age
 AmBSi, BmBSi = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of BSi
-AmSMo, BmSMo = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SMo
+AmSMol, BmSMol = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SMol
+AmSMoh, BmSMoh = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SMoh
 AmO2, BmO2 = fvcf(phif, DO2, uf, dx, Ngrid) #  # Interior transport matrix of O2
 AmNO3, BmNO3 = fvcf(phif, DNO3, uf, dx, Ngrid) #  # Interior transport matrix of NO3
 AmCH4, BmCH4 = fvcf(phif, DCH4, uf, dx, Ngrid) #  # Interior transport matrix of CH4
 AmNO2, BmNO2 = fvcf(phif, DNO2, uf, dx, Ngrid) #  # Interior transport matrix of NO2
 AmCa, BmCa = fvcf(phif, DCa, uf, dx, Ngrid) #  # Interior transport matrix of Ca
-AmMo, BmMo = fvcf(phif, DMo, uf, dx, Ngrid) #  # Interior transport matrix of Mo
+AmMol, BmMol = fvcf(phif, DMol, uf, dx, Ngrid) #  # Interior transport matrix of Mol
+AmMoh, BmMoh = fvcf(phif, DMoh, uf, dx, Ngrid) #  # Interior transport matrix of Moh
 AmH4SiO4, BmH4SiO4 = fvcf(phif, DH4SiO4, uf, dx, Ngrid) #  # Interior transport matrix of H4SiO4
 AmH3PO4, BmH3PO4 = fvcf(phif, DH3PO4, uf, dx, Ngrid) #  # Interior transport matrix of H3PO4
 AmH2PO4, BmH2PO4 = fvcf(phif, DH2PO4, uf, dx, Ngrid) #  # Interior transport matrix of H2PO4
@@ -394,16 +412,16 @@ AmNH4_ads, BmNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport mat
 #----------------------------------------------
 # Acid dissociation constants
 #----------------------------------------------
-KH3PO4 = 2.1677907134076451E-02 #  # TH3PO4 1th dissociation constant
-KH2PO4 = 6.4026305997992953E-07 #  # TH3PO4 2th dissociation constant
-KHPO4 = 4.8434270364489024E-10 #  # TH3PO4 3th dissociation constant
-KHSO4 = 2.2222291219548190E-01 #  # THSO4 1th dissociation constant
-KH2O = 7.6075642782110119E-15 #  # H 1th dissociation constant
-KCO2 = 7.9088558794322597E-07 #  # TCO2 1th dissociation constant
-KHCO3 = 4.3799040833112669E-10 #  # TCO2 2th dissociation constant
-KH2S = 6.4026305997992953E-07 #  # TH2S 1th dissociation constant
-KH3BO3 = 1.2846881097473576E-09 #  # TH3BO3 1th dissociation constant
-KHF = 3.3499230409225031E-03 #  # THF 1th dissociation constant
+KH3PO4 = 2.2887723115490765E-02 #  # TH3PO4 1th dissociation constant
+KH2PO4 = 6.7599531383200977E-07 #  # TH3PO4 2th dissociation constant
+KHPO4 = 5.1137324391283367E-10 #  # TH3PO4 3th dissociation constant
+KHSO4 = 2.3517637553828424E-01 #  # THSO4 1th dissociation constant
+KH2O = 7.9445878598109790E-15 #  # H 1th dissociation constant
+KCO2 = 8.3698755808176183E-07 #  # TCO2 1th dissociation constant
+KHCO3 = 4.6352156109843975E-10 #  # TCO2 2th dissociation constant
+KH2S = 1.2845618784784923E-07 #  # TH2S 1th dissociation constant
+KH3BO3 = 1.3599613779618074E-09 #  # TH3BO3 1th dissociation constant
+KHF = 3.5451914085406024E-03 #  # THF 1th dissociation constant
 
 #----------------------------------------------
 # Reaction parameters
@@ -416,7 +434,7 @@ rPC = 0.015 # mol mol^-2 # P/C ratio Sediment trap
 KNO2 = 1.0e-5 # mmol cm-3 pw yr-1 # Monod constant
 KNO3 = 1.0e-5 # mmol cm-3 pw yr-1 # Monod constant
 KMnO2 = 16.0 * ds_rho / 1e3 # mmol cm-3 ds # Monod constant
-KFeOOH = 500.0 * ds_rho / 1e3 # mmol cm-3 ds # Monod constant
+KFeOOH = 450.0 * ds_rho / 1e3 # mmol cm-3 ds # Monod constant
 KTHSO4 = 0.0001 # mmol cm-3 pw yr-1 # Monod constant
 kO2NO2 = 1.0e7 # (mmol cm-3 pw)-1 yr-1 #  
 kO2NH4 = 1.0e7 # (mmol cm-3 pw)-1 yr-1 #  
@@ -433,7 +451,7 @@ kNO3Fe = 150000.0 # (mmol cm-3 pw)-1 yr-1  #  
 kNO3H2S = 0.0 # (mmol cm-3 pw)-1 yr-1 #  
 kAOM = 0.04 # yr-1  #  
 KAOM = 0.001 # mmol cm-3 pw yr-1  #  
-kMnO2Fe = 1.0e7 # (mmol cm-3 pw)-1 yr-1  #  
+kMnO2Fe = 1.0e6 # (mmol cm-3 pw)-1 yr-1  #  
 kMnO2H2S = 100000.0 # (mmol cm-3 pw)-1 yr-1  #  
 kFeOOHH2S = 4000.0 # (mmol cm-3 pw)-0.5 yr-1  #  
 kFeSH2S = 300.0 # (mmol cm-3 pw)-1 yr-1  #  
@@ -462,10 +480,14 @@ H4SiO4_dis_sat =
     ) # mmol cm-3 pw # solubility of opal
 kASipre = 5e-6 * 365 * 24 # yr-1  # authigenic silicate precipitation rate
 H4SiO4_pre_sat = 0.0002 # mmol cm-3 pw # authigenic silicate precipitation threshold
-kMoS4_pre = 0.5e5 # (mmol cm-3)-1 yr-1 pw  # missing
+kMolS4_pre = 50.0 # (mmol cm-3)-1 yr-1 pw  # missing
+kMohS4_pre = 50.0 # (mmol cm-3)-1 yr-1 pw  # missing
 Cl = 0.565772678 # mmol cm-3 # seawater Cl
 KspCFA = 1.1541928959756795e-55 # missing # missing
 kCFA_pre = 1.5e-8 # mmol cm-3 yr-1 # missing
+k1 = 1.0 # missing # missing
+k2 = 0.05 # missing # missing
+k3 = 0.0005 # missing # missing
 
 #----------------------------------------------
 # Inital values
@@ -481,7 +503,8 @@ C_ini = [
     FFeCO30 / (phis[1] * us[1]),
     FAge0 / (phis[1] * us[1]),
     FBSi0 / (phis[1] * us[1]),
-    FSMo0 / (phis[1] * us[1]),
+    FSMol0 / (phis[1] * us[1]),
+    FSMoh0 / (phis[1] * us[1]),
     Mn0,
     Fe0,
     NH40,
@@ -490,7 +513,8 @@ C_ini = [
     CH4BW,
     NO2BW,
     CaBW,
-    MoBW,
+    MolBW,
+    MohBW,
     TH3PO4BW,
     THSO4BW,
     H4SiO4BW,
@@ -515,24 +539,26 @@ MnCO3ID = ((1:Ngrid) .- 1)nspec .+ 7 #  # MnCO3 index
 FeCO3ID = ((1:Ngrid) .- 1)nspec .+ 8 #  # FeCO3 index
 AgeID = ((1:Ngrid) .- 1)nspec .+ 9 #  # Age index
 BSiID = ((1:Ngrid) .- 1)nspec .+ 10 #  # BSi index
-SMoID = ((1:Ngrid) .- 1)nspec .+ 11 #  # SMo index
-TMnID = ((1:Ngrid) .- 1)nspec .+ 12 #  # TMn index
-TFeID = ((1:Ngrid) .- 1)nspec .+ 13 #  # TFe index
-TNH4ID = ((1:Ngrid) .- 1)nspec .+ 14 #  # TNH4 index
-O2ID = ((1:Ngrid) .- 1)nspec .+ 15 #  # O2 index
-NO3ID = ((1:Ngrid) .- 1)nspec .+ 16 #  # NO3 index
-CH4ID = ((1:Ngrid) .- 1)nspec .+ 17 #  # CH4 index
-NO2ID = ((1:Ngrid) .- 1)nspec .+ 18 #  # NO2 index
-CaID = ((1:Ngrid) .- 1)nspec .+ 19 #  # Ca index
-MoID = ((1:Ngrid) .- 1)nspec .+ 20 #  # Mo index
-TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 21 #  # TH3PO4 index
-THSO4ID = ((1:Ngrid) .- 1)nspec .+ 22 #  # THSO4 index
-H4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # H4SiO4 index
-HID = ((1:Ngrid) .- 1)nspec .+ 24 #  # H index
-TCO2ID = ((1:Ngrid) .- 1)nspec .+ 25 #  # TCO2 index
-TH2SID = ((1:Ngrid) .- 1)nspec .+ 26 #  # TH2S index
-TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TH3BO3 index
-THFID = ((1:Ngrid) .- 1)nspec .+ 28 #  # THF index
+SMolID = ((1:Ngrid) .- 1)nspec .+ 11 #  # SMol index
+SMohID = ((1:Ngrid) .- 1)nspec .+ 12 #  # SMoh index
+TMnID = ((1:Ngrid) .- 1)nspec .+ 13 #  # TMn index
+TFeID = ((1:Ngrid) .- 1)nspec .+ 14 #  # TFe index
+TNH4ID = ((1:Ngrid) .- 1)nspec .+ 15 #  # TNH4 index
+O2ID = ((1:Ngrid) .- 1)nspec .+ 16 #  # O2 index
+NO3ID = ((1:Ngrid) .- 1)nspec .+ 17 #  # NO3 index
+CH4ID = ((1:Ngrid) .- 1)nspec .+ 18 #  # CH4 index
+NO2ID = ((1:Ngrid) .- 1)nspec .+ 19 #  # NO2 index
+CaID = ((1:Ngrid) .- 1)nspec .+ 20 #  # Ca index
+MolID = ((1:Ngrid) .- 1)nspec .+ 21 #  # Mol index
+MohID = ((1:Ngrid) .- 1)nspec .+ 22 #  # Moh index
+TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # TH3PO4 index
+THSO4ID = ((1:Ngrid) .- 1)nspec .+ 24 #  # THSO4 index
+H4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 25 #  # H4SiO4 index
+HID = ((1:Ngrid) .- 1)nspec .+ 26 #  # H index
+TCO2ID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TCO2 index
+TH2SID = ((1:Ngrid) .- 1)nspec .+ 28 #  # TH2S index
+TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 29 #  # TH3BO3 index
+THFID = ((1:Ngrid) .- 1)nspec .+ 30 #  # THF index
 IDdict = Dict(
     :POCID => POCID,
     :MnO2ID => MnO2ID,
@@ -544,7 +570,8 @@ IDdict = Dict(
     :FeCO3ID => FeCO3ID,
     :AgeID => AgeID,
     :BSiID => BSiID,
-    :SMoID => SMoID,
+    :SMolID => SMolID,
+    :SMohID => SMohID,
     :TMnID => TMnID,
     :TFeID => TFeID,
     :TNH4ID => TNH4ID,
@@ -553,7 +580,8 @@ IDdict = Dict(
     :CH4ID => CH4ID,
     :NO2ID => NO2ID,
     :CaID => CaID,
-    :MoID => MoID,
+    :MolID => MolID,
+    :MohID => MohID,
     :TH3PO4ID => TH3PO4ID,
     :THSO4ID => THSO4ID,
     :H4SiO4ID => H4SiO4ID,

@@ -2,10 +2,10 @@
 #----------------------------------------------
 # Number of substances
 #----------------------------------------------
-nsolid = 14 #  # number of solid substances
+nsolid = 16 #  # number of solid substances
 ndissolved = 13 #  # number of dissolved substances
 nsummed = 5 #  # number of summed substances
-nspec = 32 #  # number of total substances
+nspec = 34 #  # number of total substances
 
 #----------------------------------------------
 # global parameters
@@ -23,7 +23,7 @@ sw_dens = 1.0290834608199197 # g cm^-3 # seawater density
 L = 50.0 # cm # model sediment section thickness
 Ngrid = 200 # integer # number of model grid
 pgrid = L / 10 # cm # constant in gridtran, attenuation scale
-Nmat = 5400 #  # Jacobian dimention
+Nmat = 5800 #  # Jacobian dimention
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
 xᵥ = broadcast(x -> L * (exp(x * pgrid / L) - 1) / (exp(pgrid) - 1), ξ) # cm # no grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
@@ -180,21 +180,25 @@ FSurfMn_Ndnr0 = FMnO20 * Ndnr0 / Mn0 * DNdMn # mmol cm^-2 yr^-1 # missing
 FSurfMn_Ndr0 = FMnO20 * Ndr0 / Mn0 * DNdMn # mmol cm^-2 yr^-1 # missing
 FSurfFe_Ndnr0 = FFeOOH0 * Ndnr0 / Fe0 * DNdFe # mmol cm^-2 yr^-1 # missing
 FSurfFe_Ndr0 = FFeOOH0 * Ndr0 / Fe0 * DNdFe # mmol cm^-2 yr^-1 # missing
-H4SiO4BW = 1.8821161451549316E-04 # mmol cm^-3 # Bottom water concentration of H4SiO4
-H3SiO4BW = 1.7883854845068651E-06 # mmol cm^-3 # Bottom water concentration of H3SiO4
-HCO3BW = 2.2792389384405274E-03 # mmol cm^-3 # Bottom water concentration of HCO3
-CO3BW = 5.4445170729534302E-05 # mmol cm^-3 # Bottom water concentration of CO3
-CO2BW = 4.6315890829938746E-05 # mmol cm^-3 # Bottom water concentration of CO2
+Illite0 = 2.0 # wt% # missing
+FIllite0 = Illite0 / 100 * Fsed / 392.609 * 1000 # mmol cm^-2 yr^-1 # missing
+Basalt0 = 2.0 # wt% # missing
+FBasalt0 = Basalt0 / 100 * Fsed / 88.16 * 1000 # mmol cm^-2 yr^-1 # Flux of Basalt at the  TOP of sediment column
+H4SiO4BW = 1.8810951339764959E-04 # mmol cm^-3 # Bottom water concentration of H4SiO4
+H3SiO4BW = 1.8904866023504390E-06 # mmol cm^-3 # Bottom water concentration of H3SiO4
+HCO3BW = 2.2786338081836337E-03 # mmol cm^-3 # Bottom water concentration of HCO3
+CO3BW = 5.7642869082059737E-05 # mmol cm^-3 # Bottom water concentration of CO3
+CO2BW = 4.3723322734306200E-05 # mmol cm^-3 # Bottom water concentration of CO2
 H2SBW = 0.0000000000000000E+00 # mmol cm^-3 # Bottom water concentration of H2S
 HSBW = 0.0000000000000000E+00 # mmol cm^-3 # Bottom water concentration of HS
-H3BO3BW = 8.0401874786495146E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
-H4BO4BW = 6.6601252135048620E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
-H3PO4BW = 5.2618094499704676E-14 # mmol cm^-3 # Bottom water concentration of H3PO4
-H2PO4BW = 6.8320353691652710E-08 # mmol cm^-3 # Bottom water concentration of H2PO4
-HPO4BW = 2.6579696478238114E-06 # mmol cm^-3 # Bottom water concentration of HPO4
-PO4BW = 7.3709945866440870E-08 # mmol cm^-3 # Bottom water concentration of PO4
+H3BO3BW = 8.0038768513133253E-05 # mmol cm^-3 # Bottom water concentration of H3BO3
+H4BO4BW = 7.0232314868667485E-06 # mmol cm^-3 # Bottom water concentration of H4BO4
+H3PO4BW = 4.7053892886333258E-14 # mmol cm^-3 # Bottom water concentration of H3PO4
+H2PO4BW = 6.4601091251846781E-08 # mmol cm^-3 # Bottom water concentration of H2PO4
+HPO4BW = 2.6574742851297766E-06 # mmol cm^-3 # Bottom water concentration of HPO4
+PO4BW = 7.7924576564483060E-08 # mmol cm^-3 # Bottom water concentration of PO4
 HBW = 1.9952623149688786E-08 # mmol cm^-3 # Bottom water concentration of H
-OHBW = 3.7078098494959277E-07 # mmol cm^-3 # Bottom water concentration of OH
+OHBW = 3.6550232722692140E-07 # mmol cm^-3 # Bottom water concentration of OH
 
 #----------------------------------------------
 # assemble boundary conditions
@@ -213,6 +217,8 @@ BcSurfMn_Ndnr = ((phis[1]us[1], -phis[1]Ds[1], FSurfMn_Ndnr0), (0.0, 1.0, 0.0)) 
 BcSurfMn_Ndr = ((phis[1]us[1], -phis[1]Ds[1], FSurfMn_Ndr0), (0.0, 1.0, 0.0)) #  # Boundary condition of SurfMn_Ndr
 BcSurfFe_Ndnr = ((phis[1]us[1], -phis[1]Ds[1], FSurfFe_Ndnr0), (0.0, 1.0, 0.0)) #  # Boundary condition of SurfFe_Ndnr
 BcSurfFe_Ndr = ((phis[1]us[1], -phis[1]Ds[1], FSurfFe_Ndr0), (0.0, 1.0, 0.0)) #  # Boundary condition of SurfFe_Ndr
+BcIllite = ((phis[1]us[1], -phis[1]Ds[1], FIllite0), (0.0, 1.0, 0.0)) #  # Boundary condition of Illite
+BcBasalt = ((phis[1]us[1], -phis[1]Ds[1], FBasalt0), (0.0, 1.0, 0.0)) #  # Boundary condition of Basalt
 BcO2 = ((betaO2 + phif[1]uf[1], -phif[1]DO2[1], betaO2 * O2BW), (0.0, 1.0, 0.0)) #  # Boundary condition of O2
 BcNO3 = (
     (betaNO3 + phif[1]uf[1], -phif[1]DNO3[1], betaNO3 * NO3BW),
@@ -316,6 +322,8 @@ BcAmSurfFe_Ndnr, BcBmSurfFe_Ndnr, BcCmSurfFe_Ndnr =
     fvcf_bc(phis, Ds, us, dx, BcSurfFe_Ndnr, Ngrid) #  # Boundary transport matrix of SurfFe_Ndnr
 BcAmSurfFe_Ndr, BcBmSurfFe_Ndr, BcCmSurfFe_Ndr =
     fvcf_bc(phis, Ds, us, dx, BcSurfFe_Ndr, Ngrid) #  # Boundary transport matrix of SurfFe_Ndr
+BcAmIllite, BcBmIllite, BcCmIllite = fvcf_bc(phis, Ds, us, dx, BcIllite, Ngrid) #  # Boundary transport matrix of Illite
+BcAmBasalt, BcBmBasalt, BcCmBasalt = fvcf_bc(phis, Ds, us, dx, BcBasalt, Ngrid) #  # Boundary transport matrix of Basalt
 BcAmO2, BcBmO2, BcCmO2 = fvcf_bc(phif, DO2, uf, dx, BcO2, Ngrid) #  # Boundary transport matrix of O2
 BcAmNO3, BcBmNO3, BcCmNO3 = fvcf_bc(phif, DNO3, uf, dx, BcNO3, Ngrid) #  # Boundary transport matrix of NO3
 BcAmCH4, BcBmCH4, BcCmCH4 = fvcf_bc(phif, DCH4, uf, dx, BcCH4, Ngrid) #  # Boundary transport matrix of CH4
@@ -379,6 +387,8 @@ AmSurfMn_Ndnr, BmSurfMn_Ndnr = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior trans
 AmSurfMn_Ndr, BmSurfMn_Ndr = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SurfMn_Ndr
 AmSurfFe_Ndnr, BmSurfFe_Ndnr = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SurfFe_Ndnr
 AmSurfFe_Ndr, BmSurfFe_Ndr = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of SurfFe_Ndr
+AmIllite, BmIllite = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of Illite
+AmBasalt, BmBasalt = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of Basalt
 AmO2, BmO2 = fvcf(phif, DO2, uf, dx, Ngrid) #  # Interior transport matrix of O2
 AmNO3, BmNO3 = fvcf(phif, DNO3, uf, dx, Ngrid) #  # Interior transport matrix of NO3
 AmCH4, BmCH4 = fvcf(phif, DCH4, uf, dx, Ngrid) #  # Interior transport matrix of CH4
@@ -418,15 +428,15 @@ AmNH4_ads, BmNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport mat
 #----------------------------------------------
 # Acid dissociation constants
 #----------------------------------------------
-KH4SiO4 = 1.8958968983182348E-10 #  # TH4SiO4 1th dissociation constant
-KCO2 = 9.8188321096491129E-07 #  # TCO2 1th dissociation constant
-KHCO3 = 4.7661697752063493E-10 #  # TCO2 2th dissociation constant
-KH2S = 7.7624695805430366E-07 #  # TH2S 1th dissociation constant
-KH3BO3 = 1.6527844514531606E-09 #  # TH3BO3 1th dissociation constant
-KH3PO4 = 2.5906872600083352E-02 #  # TH3PO4 1th dissociation constant
-KH2PO4 = 7.7624695805430366E-07 #  # TH3PO4 2th dissociation constant
-KHPO4 = 5.5331962630242337E-10 #  # TH3PO4 3th dissociation constant
-KH2O = 7.3980532637696545E-15 #  # H 1th dissociation constant
+KH4SiO4 = 2.0052237691188021E-10 #  # TH4SiO4 1th dissociation constant
+KCO2 = 1.0398276898373909E-06 #  # TCO2 1th dissociation constant
+KHCO3 = 5.0474386886148446E-10 #  # TCO2 2th dissociation constant
+KH2S = 1.3569010482570852E-07 #  # TH2S 1th dissociation constant
+KH3BO3 = 1.7508001903788287E-09 #  # TH3BO3 1th dissociation constant
+KH3PO4 = 2.7393296276685596E-02 #  # TH3PO4 1th dissociation constant
+KH2PO4 = 8.2078463248354569E-07 #  # TH3PO4 2th dissociation constant
+KHPO4 = 5.8506669998286465E-10 #  # TH3PO4 3th dissociation constant
+KH2O = 7.2927301954929983E-15 #  # H 1th dissociation constant
 
 #----------------------------------------------
 # Reaction parameters
@@ -471,6 +481,17 @@ kBSi_dis = broadcast(x -> 0.025, x) # yr-1  # depth dependent dissolution ra
 H4SiO4_dis_sat = 0.00062 # mmol cm-3 pw # solubility of opal
 KspNdPO4 = 1.167542472671615e-18 # (mmol cm^-3)^2 # missing
 kNdPO4_pre = 1.0e-7 # mmol cm^-3  ds yr^-1 # missing
+KspIllite = 4.334745915300865e18 # missing # missing
+MIllite = 392.609 # g/mol # missing
+kIllite = 6.8097245832e-8 # yr^-1 # missing
+rNdSi_lith = 1.9e-5 # dimentionless (mol/mol) # Nd:Si ratio in oceanic arc basalt
+eNd_lith = 6.2 # missing # missing
+rNdnrSi_lith = rNdSi_lith / ((eNd_lith / 1e4 + 1) * 0.512638 + 1) # missing # missing
+rNdrSi_lith = rNdSi_lith - rNdnrSi_lith # missing # missing
+a_lith0 = 10.0 # yr # missing
+KspBasalt = 4.323907704303024 # mmol cm^-2 yr^-2 # missing
+MBasalt = 88.16 # g/mol # missing
+kBasalt = 174.13246746987554 # yr^-1 # missing
 rAlSi = 0.0025 # missing # missing
 
 #----------------------------------------------
@@ -491,6 +512,8 @@ C_ini = [
     FSurfMn_Ndr0 / (phis[1] * us[1]),
     FSurfFe_Ndnr0 / (phis[1] * us[1]),
     FSurfFe_Ndr0 / (phis[1] * us[1]),
+    FIllite0 / (phis[1] * us[1]),
+    FBasalt0 / (phis[1] * us[1]),
     O2BW,
     NO3BW,
     Mn0,
@@ -529,24 +552,26 @@ SurfMn_NdnrID = ((1:Ngrid) .- 1)nspec .+ 11 #  # SurfMn_Ndnr index
 SurfMn_NdrID = ((1:Ngrid) .- 1)nspec .+ 12 #  # SurfMn_Ndr index
 SurfFe_NdnrID = ((1:Ngrid) .- 1)nspec .+ 13 #  # SurfFe_Ndnr index
 SurfFe_NdrID = ((1:Ngrid) .- 1)nspec .+ 14 #  # SurfFe_Ndr index
-O2ID = ((1:Ngrid) .- 1)nspec .+ 15 #  # O2 index
-NO3ID = ((1:Ngrid) .- 1)nspec .+ 16 #  # NO3 index
-TMnID = ((1:Ngrid) .- 1)nspec .+ 17 #  # TMn index
-TFeID = ((1:Ngrid) .- 1)nspec .+ 18 #  # TFe index
-CH4ID = ((1:Ngrid) .- 1)nspec .+ 19 #  # CH4 index
-NO2ID = ((1:Ngrid) .- 1)nspec .+ 20 #  # NO2 index
-CaID = ((1:Ngrid) .- 1)nspec .+ 21 #  # Ca index
-AlID = ((1:Ngrid) .- 1)nspec .+ 22 #  # Al index
-TNH4ID = ((1:Ngrid) .- 1)nspec .+ 23 #  # TNH4 index
-SO4ID = ((1:Ngrid) .- 1)nspec .+ 24 #  # SO4 index
-TNdnrID = ((1:Ngrid) .- 1)nspec .+ 25 #  # TNdnr index
-TNdrID = ((1:Ngrid) .- 1)nspec .+ 26 #  # TNdr index
-TH4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TH4SiO4 index
-TCO2ID = ((1:Ngrid) .- 1)nspec .+ 28 #  # TCO2 index
-TH2SID = ((1:Ngrid) .- 1)nspec .+ 29 #  # TH2S index
-TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 30 #  # TH3BO3 index
-TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 31 #  # TH3PO4 index
-HID = ((1:Ngrid) .- 1)nspec .+ 32 #  # H index
+IlliteID = ((1:Ngrid) .- 1)nspec .+ 15 #  # Illite index
+BasaltID = ((1:Ngrid) .- 1)nspec .+ 16 #  # Basalt index
+O2ID = ((1:Ngrid) .- 1)nspec .+ 17 #  # O2 index
+NO3ID = ((1:Ngrid) .- 1)nspec .+ 18 #  # NO3 index
+TMnID = ((1:Ngrid) .- 1)nspec .+ 19 #  # TMn index
+TFeID = ((1:Ngrid) .- 1)nspec .+ 20 #  # TFe index
+CH4ID = ((1:Ngrid) .- 1)nspec .+ 21 #  # CH4 index
+NO2ID = ((1:Ngrid) .- 1)nspec .+ 22 #  # NO2 index
+CaID = ((1:Ngrid) .- 1)nspec .+ 23 #  # Ca index
+AlID = ((1:Ngrid) .- 1)nspec .+ 24 #  # Al index
+TNH4ID = ((1:Ngrid) .- 1)nspec .+ 25 #  # TNH4 index
+SO4ID = ((1:Ngrid) .- 1)nspec .+ 26 #  # SO4 index
+TNdnrID = ((1:Ngrid) .- 1)nspec .+ 27 #  # TNdnr index
+TNdrID = ((1:Ngrid) .- 1)nspec .+ 28 #  # TNdr index
+TH4SiO4ID = ((1:Ngrid) .- 1)nspec .+ 29 #  # TH4SiO4 index
+TCO2ID = ((1:Ngrid) .- 1)nspec .+ 30 #  # TCO2 index
+TH2SID = ((1:Ngrid) .- 1)nspec .+ 31 #  # TH2S index
+TH3BO3ID = ((1:Ngrid) .- 1)nspec .+ 32 #  # TH3BO3 index
+TH3PO4ID = ((1:Ngrid) .- 1)nspec .+ 33 #  # TH3PO4 index
+HID = ((1:Ngrid) .- 1)nspec .+ 34 #  # H index
 IDdict = Dict(
     :MnO2ID => MnO2ID,
     :FeOOHID => FeOOHID,
@@ -562,6 +587,8 @@ IDdict = Dict(
     :SurfMn_NdrID => SurfMn_NdrID,
     :SurfFe_NdnrID => SurfFe_NdnrID,
     :SurfFe_NdrID => SurfFe_NdrID,
+    :IlliteID => IlliteID,
+    :BasaltID => BasaltID,
     :O2ID => O2ID,
     :NO3ID => NO3ID,
     :TMnID => TMnID,

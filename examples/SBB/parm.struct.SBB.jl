@@ -19,7 +19,8 @@ include(
     FeCO3ID::StepRange{Int64,Int64} = FeCO3ID
     AgeID::StepRange{Int64,Int64} = AgeID
     BSiID::StepRange{Int64,Int64} = BSiID
-    SMoID::StepRange{Int64,Int64} = SMoID
+    SMolID::StepRange{Int64,Int64} = SMolID
+    SMohID::StepRange{Int64,Int64} = SMohID
     TMnID::StepRange{Int64,Int64} = TMnID
     TFeID::StepRange{Int64,Int64} = TFeID
     TNH4ID::StepRange{Int64,Int64} = TNH4ID
@@ -28,7 +29,8 @@ include(
     CH4ID::StepRange{Int64,Int64} = CH4ID
     NO2ID::StepRange{Int64,Int64} = NO2ID
     CaID::StepRange{Int64,Int64} = CaID
-    MoID::StepRange{Int64,Int64} = MoID
+    MolID::StepRange{Int64,Int64} = MolID
+    MohID::StepRange{Int64,Int64} = MohID
     TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     THSO4ID::StepRange{Int64,Int64} = THSO4ID
     H4SiO4ID::StepRange{Int64,Int64} = H4SiO4ID
@@ -47,13 +49,15 @@ include(
     AmFeCO3::Tridiagonal{T,Vector{T}} = AmFeCO3
     AmAge::Tridiagonal{T,Vector{T}} = AmAge
     AmBSi::Tridiagonal{T,Vector{T}} = AmBSi
-    AmSMo::Tridiagonal{T,Vector{T}} = AmSMo
+    AmSMol::Tridiagonal{T,Vector{T}} = AmSMol
+    AmSMoh::Tridiagonal{T,Vector{T}} = AmSMoh
     AmO2::Tridiagonal{T,Vector{T}} = AmO2
     AmNO3::Tridiagonal{T,Vector{T}} = AmNO3
     AmCH4::Tridiagonal{T,Vector{T}} = AmCH4
     AmNO2::Tridiagonal{T,Vector{T}} = AmNO2
     AmCa::Tridiagonal{T,Vector{T}} = AmCa
-    AmMo::Tridiagonal{T,Vector{T}} = AmMo
+    AmMol::Tridiagonal{T,Vector{T}} = AmMol
+    AmMoh::Tridiagonal{T,Vector{T}} = AmMoh
     AmH4SiO4::Tridiagonal{T,Vector{T}} = AmH4SiO4
     AmH3PO4::Tridiagonal{T,Vector{T}} = AmH3PO4
     AmH2PO4::Tridiagonal{T,Vector{T}} = AmH2PO4
@@ -98,8 +102,10 @@ include(
     BcCmAge::Vector{T} = BcCmAge
     BcAmBSi::Vector{T} = BcAmBSi
     BcCmBSi::Vector{T} = BcCmBSi
-    BcAmSMo::Vector{T} = BcAmSMo
-    BcCmSMo::Vector{T} = BcCmSMo
+    BcAmSMol::Vector{T} = BcAmSMol
+    BcCmSMol::Vector{T} = BcCmSMol
+    BcAmSMoh::Vector{T} = BcAmSMoh
+    BcCmSMoh::Vector{T} = BcCmSMoh
     BcAmO2::Vector{T} = BcAmO2
     BcCmO2::Vector{T} = BcCmO2
     BcAmNO3::Vector{T} = BcAmNO3
@@ -110,8 +116,10 @@ include(
     BcCmNO2::Vector{T} = BcCmNO2
     BcAmCa::Vector{T} = BcAmCa
     BcCmCa::Vector{T} = BcCmCa
-    BcAmMo::Vector{T} = BcAmMo
-    BcCmMo::Vector{T} = BcCmMo
+    BcAmMol::Vector{T} = BcAmMol
+    BcCmMol::Vector{T} = BcCmMol
+    BcAmMoh::Vector{T} = BcAmMoh
+    BcCmMoh::Vector{T} = BcCmMoh
     BcAmH4SiO4::Vector{T} = BcAmH4SiO4
     BcCmH4SiO4::Vector{T} = BcCmH4SiO4
     Ngrid::Int64 = Ngrid
@@ -167,7 +175,8 @@ include(
     CH4BW::T = CH4BW
     NO2BW::T = NO2BW
     CaBW::T = CaBW
-    MoBW::T = MoBW
+    MolBW::T = MolBW
+    MohBW::T = MohBW
     H4SiO4BW::T = H4SiO4BW
     H3PO4BW::T = H3PO4BW
     H2PO4BW::T = H2PO4BW
@@ -252,7 +261,8 @@ include(
     kFeCO3pre::T = kFeCO3pre
     kBSidis::Vector{T} = kBSidis
     kASipre::T = kASipre
-    kMoS4_pre::T = kMoS4_pre
     kCFA_pre::T = kCFA_pre
+    kMolS4_pre::T = kMolS4_pre
+    kMohS4_pre::T = kMohS4_pre
 end
 end

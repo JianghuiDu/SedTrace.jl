@@ -9,7 +9,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     FeCO3ID,
     AgeID,
     BSiID,
-    SMoID,
+    SMolID,
+    SMohID,
     TMnID,
     TFeID,
     TNH4ID,
@@ -18,7 +19,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     CH4ID,
     NO2ID,
     CaID,
-    MoID,
+    MolID,
+    MohID,
     TH3PO4ID,
     THSO4ID,
     H4SiO4ID,
@@ -37,13 +39,15 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AmFeCO3,
     AmAge,
     AmBSi,
-    AmSMo,
+    AmSMol,
+    AmSMoh,
     AmO2,
     AmNO3,
     AmCH4,
     AmNO2,
     AmCa,
-    AmMo,
+    AmMol,
+    AmMoh,
     AmH4SiO4,
     AmH3PO4,
     AmH2PO4,
@@ -88,8 +92,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmAge,
     BcAmBSi,
     BcCmBSi,
-    BcAmSMo,
-    BcCmSMo,
+    BcAmSMol,
+    BcCmSMol,
+    BcAmSMoh,
+    BcCmSMoh,
     BcAmO2,
     BcCmO2,
     BcAmNO3,
@@ -100,8 +106,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmNO2,
     BcAmCa,
     BcCmCa,
-    BcAmMo,
-    BcCmMo,
+    BcAmMol,
+    BcCmMol,
+    BcAmMoh,
+    BcCmMoh,
     BcAmH4SiO4,
     BcCmH4SiO4,
     Ngrid,
@@ -157,7 +165,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     CH4BW,
     NO2BW,
     CaBW,
-    MoBW,
+    MolBW,
+    MohBW,
     H4SiO4BW,
     H3PO4BW,
     H2PO4BW,
@@ -242,8 +251,9 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     kFeCO3pre,
     kBSidis,
     kASipre,
-    kMoS4_pre,
-    kCFA_pre = parms
+    kCFA_pre,
+    kMolS4_pre,
+    kMohS4_pre = parms
 
     Mn = PreallocationTools.get_tmp(f.Mn, C)
     Mn_tran = PreallocationTools.get_tmp(f.Mn_tran, C)
@@ -305,11 +315,16 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Fe_CO3_OH_aq = PreallocationTools.get_tmp(f.Fe_CO3_OH_aq, C)
     FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
     FeS_aq = PreallocationTools.get_tmp(f.FeS_aq, C)
-    MoO4 = PreallocationTools.get_tmp(f.MoO4, C)
-    MoO3S_aq = PreallocationTools.get_tmp(f.MoO3S_aq, C)
-    MoO2S2_aq = PreallocationTools.get_tmp(f.MoO2S2_aq, C)
-    MoOS3_aq = PreallocationTools.get_tmp(f.MoOS3_aq, C)
-    MoS4_aq = PreallocationTools.get_tmp(f.MoS4_aq, C)
+    MolO4 = PreallocationTools.get_tmp(f.MolO4, C)
+    MolO3S_aq = PreallocationTools.get_tmp(f.MolO3S_aq, C)
+    MolO2S2_aq = PreallocationTools.get_tmp(f.MolO2S2_aq, C)
+    MolOS3_aq = PreallocationTools.get_tmp(f.MolOS3_aq, C)
+    MolS4_aq = PreallocationTools.get_tmp(f.MolS4_aq, C)
+    MohO4 = PreallocationTools.get_tmp(f.MohO4, C)
+    MohO3S_aq = PreallocationTools.get_tmp(f.MohO3S_aq, C)
+    MohO2S2_aq = PreallocationTools.get_tmp(f.MohO2S2_aq, C)
+    MohOS3_aq = PreallocationTools.get_tmp(f.MohOS3_aq, C)
+    MohS4_aq = PreallocationTools.get_tmp(f.MohS4_aq, C)
     Omega_RFeS_dis = PreallocationTools.get_tmp(f.Omega_RFeS_dis, C)
     Omega_RFeS_pre = PreallocationTools.get_tmp(f.Omega_RFeS_pre, C)
     Omega_RCaCO3_dis = PreallocationTools.get_tmp(f.Omega_RCaCO3_dis, C)
@@ -356,8 +371,9 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     RFeCO3_pre = PreallocationTools.get_tmp(f.RFeCO3_pre, C)
     RBSi_dis = PreallocationTools.get_tmp(f.RBSi_dis, C)
     RASi_pre = PreallocationTools.get_tmp(f.RASi_pre, C)
-    RMoS4_pre = PreallocationTools.get_tmp(f.RMoS4_pre, C)
     RCFA_pre = PreallocationTools.get_tmp(f.RCFA_pre, C)
+    RMolS4_pre = PreallocationTools.get_tmp(f.RMolS4_pre, C)
+    RMohS4_pre = PreallocationTools.get_tmp(f.RMohS4_pre, C)
     S_POC = PreallocationTools.get_tmp(f.S_POC, C)
     S_O2 = PreallocationTools.get_tmp(f.S_O2, C)
     S_TCO2 = PreallocationTools.get_tmp(f.S_TCO2, C)
@@ -380,9 +396,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     S_FeCO3 = PreallocationTools.get_tmp(f.S_FeCO3, C)
     S_BSi = PreallocationTools.get_tmp(f.S_BSi, C)
     S_H4SiO4 = PreallocationTools.get_tmp(f.S_H4SiO4, C)
-    S_Mo = PreallocationTools.get_tmp(f.S_Mo, C)
-    S_SMo = PreallocationTools.get_tmp(f.S_SMo, C)
     S_THF = PreallocationTools.get_tmp(f.S_THF, C)
+    S_Mol = PreallocationTools.get_tmp(f.S_Mol, C)
+    S_SMol = PreallocationTools.get_tmp(f.S_SMol, C)
+    S_Moh = PreallocationTools.get_tmp(f.S_Moh, C)
+    S_SMoh = PreallocationTools.get_tmp(f.S_SMoh, C)
     S_TA = PreallocationTools.get_tmp(f.S_TA, C)
     S_H = PreallocationTools.get_tmp(f.S_H, C)
     S_Age = PreallocationTools.get_tmp(f.S_Age, C)
@@ -397,7 +415,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     FeCO3 = @view C[FeCO3ID]
     Age = @view C[AgeID]
     BSi = @view C[BSiID]
-    SMo = @view C[SMoID]
+    SMol = @view C[SMolID]
+    SMoh = @view C[SMohID]
     TMn = @view C[TMnID]
     TFe = @view C[TFeID]
     TNH4 = @view C[TNH4ID]
@@ -406,7 +425,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     CH4 = @view C[CH4ID]
     NO2 = @view C[NO2ID]
     Ca = @view C[CaID]
-    Mo = @view C[MoID]
+    Mol = @view C[MolID]
+    Moh = @view C[MohID]
     TH3PO4 = @view C[TH3PO4ID]
     THSO4 = @view C[THSO4ID]
     H4SiO4 = @view C[H4SiO4ID]
@@ -426,7 +446,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dFeCO3 = @view dC[FeCO3ID]
     dAge = @view dC[AgeID]
     dBSi = @view dC[BSiID]
-    dSMo = @view dC[SMoID]
+    dSMol = @view dC[SMolID]
+    dSMoh = @view dC[SMohID]
     dTMn = @view dC[TMnID]
     dTFe = @view dC[TFeID]
     dTNH4 = @view dC[TNH4ID]
@@ -435,7 +456,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dCH4 = @view dC[CH4ID]
     dNO2 = @view dC[NO2ID]
     dCa = @view dC[CaID]
-    dMo = @view dC[MoID]
+    dMol = @view dC[MolID]
+    dMoh = @view dC[MohID]
     dTH3PO4 = @view dC[TH3PO4ID]
     dTHSO4 = @view dC[THSO4ID]
     dH4SiO4 = @view dC[H4SiO4ID]
@@ -455,13 +477,15 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(dFeCO3, AmFeCO3, FeCO3)
     mul!(dAge, AmAge, Age)
     mul!(dBSi, AmBSi, BSi)
-    mul!(dSMo, AmSMo, SMo)
+    mul!(dSMol, AmSMol, SMol)
+    mul!(dSMoh, AmSMoh, SMoh)
     mul!(dO2, AmO2, O2)
     mul!(dNO3, AmNO3, NO3)
     mul!(dCH4, AmCH4, CH4)
     mul!(dNO2, AmNO2, NO2)
     mul!(dCa, AmCa, Ca)
-    mul!(dMo, AmMo, Mo)
+    mul!(dMol, AmMol, Mol)
+    mul!(dMoh, AmMoh, Moh)
     mul!(dH4SiO4, AmH4SiO4, H4SiO4)
 
     dPOC[1] += BcAmPOC[1] ⊗ POC[1] ⊕ BcCmPOC[1]
@@ -474,13 +498,15 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dFeCO3[1] += BcAmFeCO3[1] ⊗ FeCO3[1] ⊕ BcCmFeCO3[1]
     dAge[1] += BcAmAge[1] ⊗ Age[1] ⊕ BcCmAge[1]
     dBSi[1] += BcAmBSi[1] ⊗ BSi[1] ⊕ BcCmBSi[1]
-    dSMo[1] += BcAmSMo[1] ⊗ SMo[1] ⊕ BcCmSMo[1]
+    dSMol[1] += BcAmSMol[1] ⊗ SMol[1] ⊕ BcCmSMol[1]
+    dSMoh[1] += BcAmSMoh[1] ⊗ SMoh[1] ⊕ BcCmSMoh[1]
     dO2[1] += BcAmO2[1] ⊗ O2[1] ⊕ BcCmO2[1]
     dNO3[1] += BcAmNO3[1] ⊗ NO3[1] ⊕ BcCmNO3[1]
     dCH4[1] += BcAmCH4[1] ⊗ CH4[1] ⊕ BcCmCH4[1]
     dNO2[1] += BcAmNO2[1] ⊗ NO2[1] ⊕ BcCmNO2[1]
     dCa[1] += BcAmCa[1] ⊗ Ca[1] ⊕ BcCmCa[1]
-    dMo[1] += BcAmMo[1] ⊗ Mo[1] ⊕ BcCmMo[1]
+    dMol[1] += BcAmMol[1] ⊗ Mol[1] ⊕ BcCmMol[1]
+    dMoh[1] += BcAmMoh[1] ⊗ Moh[1] ⊕ BcCmMoh[1]
     dH4SiO4[1] += BcAmH4SiO4[1] ⊗ H4SiO4[1] ⊕ BcCmH4SiO4[1]
     dPOC[Ngrid] += BcAmPOC[2] ⊗ POC[Ngrid] ⊕ BcCmPOC[2]
     dMnO2[Ngrid] += BcAmMnO2[2] ⊗ MnO2[Ngrid] ⊕ BcCmMnO2[2]
@@ -492,13 +518,15 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dFeCO3[Ngrid] += BcAmFeCO3[2] ⊗ FeCO3[Ngrid] ⊕ BcCmFeCO3[2]
     dAge[Ngrid] += BcAmAge[2] ⊗ Age[Ngrid] ⊕ BcCmAge[2]
     dBSi[Ngrid] += BcAmBSi[2] ⊗ BSi[Ngrid] ⊕ BcCmBSi[2]
-    dSMo[Ngrid] += BcAmSMo[2] ⊗ SMo[Ngrid] ⊕ BcCmSMo[2]
+    dSMol[Ngrid] += BcAmSMol[2] ⊗ SMol[Ngrid] ⊕ BcCmSMol[2]
+    dSMoh[Ngrid] += BcAmSMoh[2] ⊗ SMoh[Ngrid] ⊕ BcCmSMoh[2]
     dO2[Ngrid] += BcAmO2[2] ⊗ O2[Ngrid] ⊕ BcCmO2[2]
     dNO3[Ngrid] += BcAmNO3[2] ⊗ NO3[Ngrid] ⊕ BcCmNO3[2]
     dCH4[Ngrid] += BcAmCH4[2] ⊗ CH4[Ngrid] ⊕ BcCmCH4[2]
     dNO2[Ngrid] += BcAmNO2[2] ⊗ NO2[Ngrid] ⊕ BcCmNO2[2]
     dCa[Ngrid] += BcAmCa[2] ⊗ Ca[Ngrid] ⊕ BcCmCa[2]
-    dMo[Ngrid] += BcAmMo[2] ⊗ Mo[Ngrid] ⊕ BcCmMo[2]
+    dMol[Ngrid] += BcAmMol[2] ⊗ Mol[Ngrid] ⊕ BcCmMol[2]
+    dMoh[Ngrid] += BcAmMoh[2] ⊗ Moh[Ngrid] ⊕ BcCmMoh[2]
     dH4SiO4[Ngrid] += BcAmH4SiO4[2] ⊗ H4SiO4[Ngrid] ⊕ BcCmH4SiO4[2]
 
     @.. dO2 += alpha ⊗ (O2BW - O2)
@@ -506,7 +534,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dCH4 += alpha ⊗ (CH4BW - CH4)
     @.. dNO2 += alpha ⊗ (NO2BW - NO2)
     @.. dCa += alpha ⊗ (CaBW - Ca)
-    @.. dMo += alpha ⊗ (MoBW - Mo)
+    @.. dMol += alpha ⊗ (MolBW - Mol)
+    @.. dMoh += alpha ⊗ (MohBW - Moh)
     @.. dH4SiO4 += alpha ⊗ (H4SiO4BW - H4SiO4)
 
     @.. Mn = TMn / (KMn_ads ⊗ dstopw ⊕ 1)
@@ -760,32 +789,62 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
             1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
             7.943282347242806e-12 ⊗ HS
         )
-    @.. MoO4 =
-        1.3489628825916504e-20 ⊗ Mo / (
+    @.. MolO4 =
+        1.3405176215757213e-20 ⊗ Mol / (
+            1.0 ⊗ H2S^4 ⊕ 1.3159642320548862e-5 ⊗ H2S^3 ⊕
+            1.3136717255533756e-10 ⊗ H2S^2 ⊕ 2.07912267259985e-15 ⊗ H2S ⊕
+            1.3405176215757213e-20
+        )
+    @.. MolO3S_aq =
+        2.07912267259985e-15 ⊗ H2S ⊗ Mol / (
+            1.0 ⊗ H2S^4 ⊕ 1.3159642320548862e-5 ⊗ H2S^3 ⊕
+            1.3136717255533756e-10 ⊗ H2S^2 ⊕ 2.07912267259985e-15 ⊗ H2S ⊕
+            1.3405176215757213e-20
+        )
+    @.. MolO2S2_aq =
+        1.3136717255533756e-10 ⊗ H2S^2 ⊗ Mol / (
+            1.0 ⊗ H2S^4 ⊕ 1.3159642320548862e-5 ⊗ H2S^3 ⊕
+            1.3136717255533756e-10 ⊗ H2S^2 ⊕ 2.07912267259985e-15 ⊗ H2S ⊕
+            1.3405176215757213e-20
+        )
+    @.. MolOS3_aq =
+        1.3159642320548862e-5 ⊗ H2S^3 ⊗ Mol / (
+            1.0 ⊗ H2S^4 ⊕ 1.3159642320548862e-5 ⊗ H2S^3 ⊕
+            1.3136717255533756e-10 ⊗ H2S^2 ⊕ 2.07912267259985e-15 ⊗ H2S ⊕
+            1.3405176215757213e-20
+        )
+    @.. MolS4_aq =
+        1.0 ⊗ H2S^4 ⊗ Mol / (
+            1.0 ⊗ H2S^4 ⊕ 1.3159642320548862e-5 ⊗ H2S^3 ⊕
+            1.3136717255533756e-10 ⊗ H2S^2 ⊕ 2.07912267259985e-15 ⊗ H2S ⊕
+            1.3405176215757213e-20
+        )
+    @.. MohO4 =
+        1.3489628825916504e-20 ⊗ Moh / (
             1.0 ⊗ H2S^4 ⊕ 1.3182567385564045e-5 ⊗ H2S^3 ⊕
             1.3182567385564045e-10 ⊗ H2S^2 ⊕ 2.0892961308540364e-15 ⊗ H2S ⊕
             1.3489628825916504e-20
         )
-    @.. MoO3S_aq =
-        2.0892961308540364e-15 ⊗ H2S ⊗ Mo / (
+    @.. MohO3S_aq =
+        2.0892961308540364e-15 ⊗ H2S ⊗ Moh / (
             1.0 ⊗ H2S^4 ⊕ 1.3182567385564045e-5 ⊗ H2S^3 ⊕
             1.3182567385564045e-10 ⊗ H2S^2 ⊕ 2.0892961308540364e-15 ⊗ H2S ⊕
             1.3489628825916504e-20
         )
-    @.. MoO2S2_aq =
-        1.3182567385564045e-10 ⊗ H2S^2 ⊗ Mo / (
+    @.. MohO2S2_aq =
+        1.3182567385564045e-10 ⊗ H2S^2 ⊗ Moh / (
             1.0 ⊗ H2S^4 ⊕ 1.3182567385564045e-5 ⊗ H2S^3 ⊕
             1.3182567385564045e-10 ⊗ H2S^2 ⊕ 2.0892961308540364e-15 ⊗ H2S ⊕
             1.3489628825916504e-20
         )
-    @.. MoOS3_aq =
-        1.3182567385564045e-5 ⊗ H2S^3 ⊗ Mo / (
+    @.. MohOS3_aq =
+        1.3182567385564045e-5 ⊗ H2S^3 ⊗ Moh / (
             1.0 ⊗ H2S^4 ⊕ 1.3182567385564045e-5 ⊗ H2S^3 ⊕
             1.3182567385564045e-10 ⊗ H2S^2 ⊕ 2.0892961308540364e-15 ⊗ H2S ⊕
             1.3489628825916504e-20
         )
-    @.. MoS4_aq =
-        1.0 ⊗ H2S^4 ⊗ Mo / (
+    @.. MohS4_aq =
+        1.0 ⊗ H2S^4 ⊗ Moh / (
             1.0 ⊗ H2S^4 ⊕ 1.3182567385564045e-5 ⊗ H2S^3 ⊕
             1.3182567385564045e-10 ⊗ H2S^2 ⊕ 2.0892961308540364e-15 ⊗ H2S ⊕
             1.3489628825916504e-20
@@ -871,10 +930,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. RASi_pre =
         (tanh(1e3 ⊗ (Omega_RASi_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kASipre ⊗ H4SiO4_pre_sat ⊗ (Omega_RASi_pre - 1))
-    @.. RMoS4_pre = kMoS4_pre ⊗ MoS4_aq
     @.. RCFA_pre =
         (tanh(1e3 ⊗ (Omega_RCFA_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kCFA_pre ⊗ (Omega_RCFA_pre - 1))
+    @.. RMolS4_pre = kMolS4_pre ⊗ MolS4_aq
+    @.. RMohS4_pre = kMohS4_pre ⊗ MohS4_aq
 
     # species rates
     @.. S_POC =
@@ -940,9 +1000,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. S_FeCO3 = -1 ⊗ RFeCO3_dis ⊕ 1 ⊗ RFeCO3_pre ⊗ pwtods
     @.. S_BSi = -1 ⊗ RBSi_dis
     @.. S_H4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw ⊕ -1 ⊗ RASi_pre
-    @.. S_Mo = -1 ⊗ RMoS4_pre
-    @.. S_SMo = 1 ⊗ RMoS4_pre ⊗ pwtods
     @.. S_THF = -2.48 ⊗ RCFA_pre
+    @.. S_Mol = -1 ⊗ RMolS4_pre
+    @.. S_SMol = 1 ⊗ RMolS4_pre ⊗ pwtods
+    @.. S_Moh = -1 ⊗ RMohS4_pre
+    @.. S_SMoh = 1 ⊗ RMohS4_pre ⊗ pwtods
     @.. S_TA =
         (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
         (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
@@ -978,7 +1040,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dFeCO3 += S_FeCO3
     @.. dAge += S_Age
     @.. dBSi += S_BSi
-    @.. dSMo += S_SMo
+    @.. dSMol += S_SMol
+    @.. dSMoh += S_SMoh
     @.. dTMn += S_TMn
     @.. dTFe += S_TFe
     @.. dTNH4 += S_TNH4
@@ -987,7 +1050,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
-    @.. dMo += S_Mo
+    @.. dMol += S_Mol
+    @.. dMoh += S_Moh
     @.. dTH3PO4 += S_TH3PO4
     @.. dTHSO4 += S_THSO4
     @.. dH4SiO4 += S_H4SiO4

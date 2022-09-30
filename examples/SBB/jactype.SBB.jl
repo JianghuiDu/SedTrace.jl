@@ -12,7 +12,8 @@ function JacType(
     MnCO3ID,
     FeCO3ID,
     BSiID,
-    SMoID,
+    SMolID,
+    SMohID,
     TMnID,
     TFeID,
     TNH4ID,
@@ -21,7 +22,8 @@ function JacType(
     CH4ID,
     NO2ID,
     CaID,
-    MoID,
+    MolID,
+    MohID,
     TH3PO4ID,
     THSO4ID,
     H4SiO4ID,
@@ -148,14 +150,22 @@ function JacType(
     append!(colID, getindex(H4SiO4ID, 1:Ngrid))
     append!(rowID, getindex(BSiID, 1:Ngrid))
     append!(colID, getindex(BSiID, 1:Ngrid))
-    append!(rowID, getindex(SMoID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
-    append!(colID, getindex(SMoID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
-    append!(rowID, getindex(SMoID, 1:Ngrid))
+    append!(rowID, getindex(SMolID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(SMolID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(SMolID, 1:Ngrid))
     append!(colID, getindex(TH2SID, 1:Ngrid))
-    append!(rowID, getindex(SMoID, 1:Ngrid))
+    append!(rowID, getindex(SMolID, 1:Ngrid))
     append!(colID, getindex(HID, 1:Ngrid))
-    append!(rowID, getindex(SMoID, 1:Ngrid))
-    append!(colID, getindex(MoID, 1:Ngrid))
+    append!(rowID, getindex(SMolID, 1:Ngrid))
+    append!(colID, getindex(MolID, 1:Ngrid))
+    append!(rowID, getindex(SMohID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(SMohID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(SMohID, 1:Ngrid))
+    append!(colID, getindex(TH2SID, 1:Ngrid))
+    append!(rowID, getindex(SMohID, 1:Ngrid))
+    append!(colID, getindex(HID, 1:Ngrid))
+    append!(rowID, getindex(SMohID, 1:Ngrid))
+    append!(colID, getindex(MohID, 1:Ngrid))
     append!(rowID, getindex(TMnID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(TMnID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TMnID, 1:Ngrid))
@@ -320,14 +330,22 @@ function JacType(
     append!(colID, getindex(TH3PO4ID, 1:Ngrid))
     append!(rowID, getindex(CaID, 1:Ngrid))
     append!(colID, getindex(THFID, 1:Ngrid))
-    append!(rowID, getindex(MoID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
-    append!(colID, getindex(MoID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
-    append!(rowID, getindex(MoID, 1:Ngrid))
+    append!(rowID, getindex(MolID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(MolID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(MolID, 1:Ngrid))
     append!(colID, getindex(TH2SID, 1:Ngrid))
-    append!(rowID, getindex(MoID, 1:Ngrid))
+    append!(rowID, getindex(MolID, 1:Ngrid))
     append!(colID, getindex(HID, 1:Ngrid))
-    append!(rowID, getindex(MoID, 1:Ngrid))
-    append!(colID, getindex(MoID, 1:Ngrid))
+    append!(rowID, getindex(MolID, 1:Ngrid))
+    append!(colID, getindex(MolID, 1:Ngrid))
+    append!(rowID, getindex(MohID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(MohID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(MohID, 1:Ngrid))
+    append!(colID, getindex(TH2SID, 1:Ngrid))
+    append!(rowID, getindex(MohID, 1:Ngrid))
+    append!(colID, getindex(HID, 1:Ngrid))
+    append!(rowID, getindex(MohID, 1:Ngrid))
+    append!(colID, getindex(MohID, 1:Ngrid))
     append!(rowID, getindex(TH3PO4ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(TH3PO4ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TH3PO4ID, 1:Ngrid))

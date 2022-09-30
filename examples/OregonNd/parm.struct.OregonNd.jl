@@ -23,6 +23,8 @@ include(
     SurfMn_NdrID::StepRange{Int64,Int64} = SurfMn_NdrID
     SurfFe_NdnrID::StepRange{Int64,Int64} = SurfFe_NdnrID
     SurfFe_NdrID::StepRange{Int64,Int64} = SurfFe_NdrID
+    IlliteID::StepRange{Int64,Int64} = IlliteID
+    BasaltID::StepRange{Int64,Int64} = BasaltID
     O2ID::StepRange{Int64,Int64} = O2ID
     NO3ID::StepRange{Int64,Int64} = NO3ID
     TMnID::StepRange{Int64,Int64} = TMnID
@@ -55,6 +57,8 @@ include(
     AmSurfMn_Ndr::Tridiagonal{T,Vector{T}} = AmSurfMn_Ndr
     AmSurfFe_Ndnr::Tridiagonal{T,Vector{T}} = AmSurfFe_Ndnr
     AmSurfFe_Ndr::Tridiagonal{T,Vector{T}} = AmSurfFe_Ndr
+    AmIllite::Tridiagonal{T,Vector{T}} = AmIllite
+    AmBasalt::Tridiagonal{T,Vector{T}} = AmBasalt
     AmO2::Tridiagonal{T,Vector{T}} = AmO2
     AmNO3::Tridiagonal{T,Vector{T}} = AmNO3
     AmCH4::Tridiagonal{T,Vector{T}} = AmCH4
@@ -118,6 +122,10 @@ include(
     BcCmSurfFe_Ndnr::Vector{T} = BcCmSurfFe_Ndnr
     BcAmSurfFe_Ndr::Vector{T} = BcAmSurfFe_Ndr
     BcCmSurfFe_Ndr::Vector{T} = BcCmSurfFe_Ndr
+    BcAmIllite::Vector{T} = BcAmIllite
+    BcCmIllite::Vector{T} = BcCmIllite
+    BcAmBasalt::Vector{T} = BcAmBasalt
+    BcCmBasalt::Vector{T} = BcCmBasalt
     BcAmO2::Vector{T} = BcAmO2
     BcCmO2::Vector{T} = BcCmO2
     BcAmNO3::Vector{T} = BcAmNO3
@@ -237,11 +245,13 @@ include(
     KspFeS::T = KspFeS
     KspCaCO3_dis::T = KspCaCO3_dis
     H4SiO4_dis_sat::T = H4SiO4_dis_sat
-    KspNdPO4::T = KspNdPO4
+    KspBasalt::T = KspBasalt
     rNC::T = rNC
     rPC::T = rPC
     pwtods::Vector{T} = pwtods
     rAlSi::T = rAlSi
+    rNdnrSi_lith::T = rNdnrSi_lith
+    rNdrSi_lith::T = rNdrSi_lith
     KO2::T = KO2
     nu::T = nu
     a::T = a
@@ -275,5 +285,10 @@ include(
     DNdMn::T = DNdMn
     DNdFe::T = DNdFe
     kNdPO4_pre::T = kNdPO4_pre
+    KspNdPO4::T = KspNdPO4
+    kIllite::T = kIllite
+    KspIllite::T = KspIllite
+    kBasalt::T = kBasalt
+    a_lith0::T = a_lith0
 end
 end

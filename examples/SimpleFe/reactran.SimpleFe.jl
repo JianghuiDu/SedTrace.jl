@@ -1,17 +1,15 @@
 function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
-    @unpack TFeID,
-    POCID,
+    @unpack POCID,
     FeOOHID,
     FeSID,
-    O2ID,
     SO4ID,
+    TFeID,
     HID,
     TCO2ID,
     TH2SID,
     AmPOC,
     AmFeOOH,
     AmFeS,
-    AmO2,
     AmSO4,
     AmH,
     AmOH,
@@ -28,8 +26,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmFeOOH,
     BcAmFeS,
     BcCmFeS,
-    BcAmO2,
-    BcCmO2,
     BcAmSO4,
     BcCmSO4,
     Ngrid,
@@ -52,7 +48,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcAmFe_ads,
     BcCmFe_ads,
     alpha,
-    O20,
     SO40,
     H0,
     OH0,
@@ -71,15 +66,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Cl,
     KspFeS,
     pwtods,
-    KO2,
-    k_POC,
     KFeOOH,
+    k_POC,
     KSO4,
-    kO2Fe,
-    kO2Fe_ads,
-    kO2H2S,
     kFeOOHH2S,
-    kFeSdis,
     kFeSpre = parms
 
     Fe = PreallocationTools.get_tmp(f.Fe, C)
@@ -108,21 +98,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
     FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
     FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
-    Omega_RFeS_dis = PreallocationTools.get_tmp(f.Omega_RFeS_dis, C)
     Omega_RFeS_pre = PreallocationTools.get_tmp(f.Omega_RFeS_pre, C)
-    RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
     RFeOOHPOC = PreallocationTools.get_tmp(f.RFeOOHPOC, C)
     RSO4POC = PreallocationTools.get_tmp(f.RSO4POC, C)
-    RO2Fe = PreallocationTools.get_tmp(f.RO2Fe, C)
-    RO2Fe_ads = PreallocationTools.get_tmp(f.RO2Fe_ads, C)
-    RO2H2S = PreallocationTools.get_tmp(f.RO2H2S, C)
     RFeOOHH2S = PreallocationTools.get_tmp(f.RFeOOHH2S, C)
-    RFeS_dis = PreallocationTools.get_tmp(f.RFeS_dis, C)
     RFeS_pre = PreallocationTools.get_tmp(f.RFeS_pre, C)
     S_POC = PreallocationTools.get_tmp(f.S_POC, C)
-    S_O2 = PreallocationTools.get_tmp(f.S_O2, C)
-    S_TCO2 = PreallocationTools.get_tmp(f.S_TCO2, C)
     S_FeOOH = PreallocationTools.get_tmp(f.S_FeOOH, C)
+    S_TCO2 = PreallocationTools.get_tmp(f.S_TCO2, C)
     S_TFe = PreallocationTools.get_tmp(f.S_TFe, C)
     S_SO4 = PreallocationTools.get_tmp(f.S_SO4, C)
     S_TH2S = PreallocationTools.get_tmp(f.S_TH2S, C)
@@ -130,22 +113,20 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     S_TA = PreallocationTools.get_tmp(f.S_TA, C)
     S_H = PreallocationTools.get_tmp(f.S_H, C)
 
-    TFe = @view C[TFeID]
     POC = @view C[POCID]
     FeOOH = @view C[FeOOHID]
     FeS = @view C[FeSID]
-    O2 = @view C[O2ID]
     SO4 = @view C[SO4ID]
+    TFe = @view C[TFeID]
     H = @view C[HID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
 
-    dTFe = @view dC[TFeID]
     dPOC = @view dC[POCID]
     dFeOOH = @view dC[FeOOHID]
     dFeS = @view dC[FeSID]
-    dO2 = @view dC[O2ID]
     dSO4 = @view dC[SO4ID]
+    dTFe = @view dC[TFeID]
     dH = @view dC[HID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
@@ -153,28 +134,24 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(dPOC, AmPOC, POC)
     mul!(dFeOOH, AmFeOOH, FeOOH)
     mul!(dFeS, AmFeS, FeS)
-    mul!(dO2, AmO2, O2)
     mul!(dSO4, AmSO4, SO4)
 
     dPOC[1] += BcAmPOC[1] ⊗ POC[1] ⊕ BcCmPOC[1]
     dFeOOH[1] += BcAmFeOOH[1] ⊗ FeOOH[1] ⊕ BcCmFeOOH[1]
     dFeS[1] += BcAmFeS[1] ⊗ FeS[1] ⊕ BcCmFeS[1]
-    dO2[1] += BcAmO2[1] ⊗ O2[1] ⊕ BcCmO2[1]
     dSO4[1] += BcAmSO4[1] ⊗ SO4[1] ⊕ BcCmSO4[1]
     dPOC[Ngrid] += BcAmPOC[2] ⊗ POC[Ngrid] ⊕ BcCmPOC[2]
     dFeOOH[Ngrid] += BcAmFeOOH[2] ⊗ FeOOH[Ngrid] ⊕ BcCmFeOOH[2]
     dFeS[Ngrid] += BcAmFeS[2] ⊗ FeS[Ngrid] ⊕ BcCmFeS[2]
-    dO2[Ngrid] += BcAmO2[2] ⊗ O2[Ngrid] ⊕ BcCmO2[2]
     dSO4[Ngrid] += BcAmSO4[2] ⊗ SO4[Ngrid] ⊕ BcCmSO4[2]
 
-    @.. dO2 += alpha ⊗ (O20 - O2)
     @.. dSO4 += alpha ⊗ (SO40 - SO4)
 
-    @.. Fe = TFe / (KFe_ads ⊗ POC ⊗ dstopw ⊕ 1)
+    @.. Fe = -Fe_free ⊗ KFe_ads ⊗ POC ⊗ dstopw ⊕ TFe
     mul!(Fe_tran, AmFe, Fe)
     Fe_tran[1] += BcAmFe[1] ⊗ Fe[1] ⊕ BcCmFe[1]
     Fe_tran[Ngrid] += BcAmFe[2] ⊗ Fe[Ngrid] ⊕ BcCmFe[2]
-    @.. Fe_ads = KFe_ads ⊗ POC ⊗ Fe
+    @.. Fe_ads = KFe_ads ⊗ POC ⊗ Fe_free
     mul!(Fe_ads_tran, AmFe_ads, Fe_ads)
     Fe_ads_tran[1] += BcAmFe_ads[1] ⊗ Fe_ads[1] ⊕ BcCmFe_ads[1]
     Fe_ads_tran[Ngrid] += BcAmFe_ads[2] ⊗ Fe_ads[Ngrid] ⊕ BcCmFe_ads[2]
@@ -274,57 +251,37 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         )
 
     # reaction rates
-    @.. Omega_RFeS_dis = Fe_free ⊗ HS / (H ⊗ KspFeS)
     @.. Omega_RFeS_pre = Fe_free ⊗ HS / (H ⊗ KspFeS)
-    @.. RO2POC = O2 / (KO2 ⊕ O2) ⊗ k_POC ⊗ POC
-    @.. RFeOOHPOC = FeOOH / (KFeOOH ⊕ FeOOH) ⊗ KO2 / (KO2 ⊕ O2) ⊗ k_POC ⊗ POC
-    @.. RSO4POC =
-        SO4 / (KSO4 ⊕ SO4) ⊗ KFeOOH / (KFeOOH ⊕ FeOOH) ⊗ KO2 / (KO2 ⊕ O2) ⊗
-        k_POC ⊗ POC
-    @.. RO2Fe = kO2Fe ⊗ O2 ⊗ Fe
-    @.. RO2Fe_ads = kO2Fe_ads ⊗ O2 ⊗ Fe_ads
-    @.. RO2H2S = kO2H2S ⊗ O2 ⊗ TH2S
+    @.. RFeOOHPOC = FeOOH / (KFeOOH ⊕ FeOOH) ⊗ k_POC ⊗ POC
+    @.. RSO4POC = SO4 / (KSO4 ⊕ SO4) ⊗ KFeOOH / (KFeOOH ⊕ FeOOH) ⊗ k_POC ⊗ POC
     @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S
-    @.. RFeS_dis =
-        (-tanh(1e3 ⊗ (Omega_RFeS_dis - 1.0)) / 2 ⊕ 0.5) ⊗
-        (kFeSdis ⊗ FeS ⊗ (1 - Omega_RFeS_dis))
     @.. RFeS_pre =
         (tanh(1e3 ⊗ (Omega_RFeS_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kFeSpre ⊗ (Omega_RFeS_pre - 1))
 
     # species rates
-    @.. S_POC = -1 ⊗ RO2POC ⊕ -1 ⊗ RFeOOHPOC ⊕ -1 ⊗ RSO4POC
-    @.. S_O2 =
-        -1 ⊗ RO2POC ⊗ dstopw ⊕ -1 / 4 ⊗ RO2Fe ⊕ -1 / 4 ⊗ RO2Fe_ads ⊗ dstopw ⊕
-        -2 ⊗ RO2H2S
-    @.. S_TCO2 =
-        1 ⊗ RO2POC ⊗ dstopw ⊕ 1 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 1 ⊗ RSO4POC ⊗ dstopw
-    @.. S_FeOOH =
-        -4 ⊗ RFeOOHPOC ⊕ 1 ⊗ RO2Fe ⊗ pwtods ⊕ 1 ⊗ RO2Fe_ads ⊕ -2 ⊗ RFeOOHH2S
-    @.. S_TFe =
-        4 ⊗ RFeOOHPOC ⊗ dstopw ⊕ -1 ⊗ RO2Fe ⊕ -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕
-        2 ⊗ RFeOOHH2S ⊗ dstopw ⊕ 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_SO4 = -1 / 2 ⊗ RSO4POC ⊗ dstopw ⊕ 1 ⊗ RO2H2S
+    @.. S_POC = -1 ⊗ RFeOOHPOC ⊕ -1 ⊗ RSO4POC
+    @.. S_FeOOH = -4 ⊗ RFeOOHPOC ⊕ -2 ⊗ RFeOOHH2S
+    @.. S_TCO2 = 1 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 1 ⊗ RSO4POC ⊗ dstopw
+    @.. S_TFe = 4 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 2 ⊗ RFeOOHH2S ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
+    @.. S_SO4 = -1 / 2 ⊗ RSO4POC ⊗ dstopw
     @.. S_TH2S =
-        1 / 2 ⊗ RSO4POC ⊗ dstopw ⊕ -1 ⊗ RO2H2S ⊕ -1 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
-    @.. S_FeS = -1 ⊗ RFeS_dis ⊕ 1 ⊗ RFeS_pre ⊗ pwtods
+        1 / 2 ⊗ RSO4POC ⊗ dstopw ⊕ -1 ⊗ RFeOOHH2S ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
+    @.. S_FeS = 1 ⊗ RFeS_pre ⊗ pwtods
     @.. S_TA =
-        8 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 1 ⊗ RSO4POC ⊗ dstopw ⊕ -2 ⊗ RO2Fe ⊕
-        -2 ⊗ RO2H2S ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕ 1 ⊗ RFeS_dis ⊗ dstopw ⊕
+        8 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 1 ⊗ RSO4POC ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
         -1 ⊗ RFeS_pre
-    @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
+    @.. S_TA += -1 ⊗ RFeS_pre
     @.. S_H = S_TA
     @.. S_H -= S_TCO2 ⊗ dTA_dTCO2
     @.. S_H -= S_TH2S ⊗ dTA_dTH2S
     @.. S_H = S_H / dTA_dH
 
-    @.. dTFe += S_TFe
     @.. dPOC += S_POC
     @.. dFeOOH += S_FeOOH
     @.. dFeS += S_FeS
-    @.. dO2 += S_O2
     @.. dSO4 += S_SO4
+    @.. dTFe += S_TFe
     @.. dH += S_H
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S

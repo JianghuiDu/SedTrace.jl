@@ -13,6 +13,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     SurfMn_NdrID,
     SurfFe_NdnrID,
     SurfFe_NdrID,
+    IlliteID,
+    BasaltID,
     O2ID,
     NO3ID,
     TMnID,
@@ -45,6 +47,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AmSurfMn_Ndr,
     AmSurfFe_Ndnr,
     AmSurfFe_Ndr,
+    AmIllite,
+    AmBasalt,
     AmO2,
     AmNO3,
     AmCH4,
@@ -108,6 +112,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmSurfFe_Ndnr,
     BcAmSurfFe_Ndr,
     BcCmSurfFe_Ndr,
+    BcAmIllite,
+    BcCmIllite,
+    BcAmBasalt,
+    BcCmBasalt,
     BcAmO2,
     BcCmO2,
     BcAmNO3,
@@ -227,11 +235,13 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     KspFeS,
     KspCaCO3_dis,
     H4SiO4_dis_sat,
-    KspNdPO4,
+    KspBasalt,
     rNC,
     rPC,
     pwtods,
     rAlSi,
+    rNdnrSi_lith,
+    rNdrSi_lith,
     KO2,
     nu,
     a,
@@ -264,7 +274,12 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     kBSi_dis,
     DNdMn,
     DNdFe,
-    kNdPO4_pre = parms
+    kNdPO4_pre,
+    KspNdPO4,
+    kIllite,
+    KspIllite,
+    kBasalt,
+    a_lith0 = parms
 
     Mn = PreallocationTools.get_tmp(f.Mn, C)
     Mn_tran = PreallocationTools.get_tmp(f.Mn_tran, C)
@@ -370,8 +385,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Omega_RFeS_pre = PreallocationTools.get_tmp(f.Omega_RFeS_pre, C)
     Omega_RCaCO3_dis = PreallocationTools.get_tmp(f.Omega_RCaCO3_dis, C)
     Omega_RBSi_dis = PreallocationTools.get_tmp(f.Omega_RBSi_dis, C)
-    Omega_RNdnrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdnrPO4_pre, C)
-    Omega_RNdrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdrPO4_pre, C)
+    Omega_RBasalt_dis = PreallocationTools.get_tmp(f.Omega_RBasalt_dis, C)
     RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
     RNO2POC = PreallocationTools.get_tmp(f.RNO2POC, C)
     RNO3POC = PreallocationTools.get_tmp(f.RNO3POC, C)
@@ -408,6 +422,9 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     RFeOx_Ndr = PreallocationTools.get_tmp(f.RFeOx_Ndr, C)
     RNdnrPO4_pre = PreallocationTools.get_tmp(f.RNdnrPO4_pre, C)
     RNdrPO4_pre = PreallocationTools.get_tmp(f.RNdrPO4_pre, C)
+    RIllite_pre = PreallocationTools.get_tmp(f.RIllite_pre, C)
+    RBasalt_dis = PreallocationTools.get_tmp(f.RBasalt_dis, C)
+    RBasalt_dis_Nd = PreallocationTools.get_tmp(f.RBasalt_dis_Nd, C)
     S_POC = PreallocationTools.get_tmp(f.S_POC, C)
     S_O2 = PreallocationTools.get_tmp(f.S_O2, C)
     S_TCO2 = PreallocationTools.get_tmp(f.S_TCO2, C)
@@ -437,6 +454,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     S_SurfFe_Ndr = PreallocationTools.get_tmp(f.S_SurfFe_Ndr, C)
     S_NdnrPO4 = PreallocationTools.get_tmp(f.S_NdnrPO4, C)
     S_NdrPO4 = PreallocationTools.get_tmp(f.S_NdrPO4, C)
+    S_Illite = PreallocationTools.get_tmp(f.S_Illite, C)
+    S_Basalt = PreallocationTools.get_tmp(f.S_Basalt, C)
     S_TA = PreallocationTools.get_tmp(f.S_TA, C)
     S_H = PreallocationTools.get_tmp(f.S_H, C)
     S_Age = PreallocationTools.get_tmp(f.S_Age, C)
@@ -455,6 +474,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     SurfMn_Ndr = @view C[SurfMn_NdrID]
     SurfFe_Ndnr = @view C[SurfFe_NdnrID]
     SurfFe_Ndr = @view C[SurfFe_NdrID]
+    Illite = @view C[IlliteID]
+    Basalt = @view C[BasaltID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
     TMn = @view C[TMnID]
@@ -488,6 +509,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dSurfMn_Ndr = @view dC[SurfMn_NdrID]
     dSurfFe_Ndnr = @view dC[SurfFe_NdnrID]
     dSurfFe_Ndr = @view dC[SurfFe_NdrID]
+    dIllite = @view dC[IlliteID]
+    dBasalt = @view dC[BasaltID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
     dTMn = @view dC[TMnID]
@@ -521,6 +544,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(dSurfMn_Ndr, AmSurfMn_Ndr, SurfMn_Ndr)
     mul!(dSurfFe_Ndnr, AmSurfFe_Ndnr, SurfFe_Ndnr)
     mul!(dSurfFe_Ndr, AmSurfFe_Ndr, SurfFe_Ndr)
+    mul!(dIllite, AmIllite, Illite)
+    mul!(dBasalt, AmBasalt, Basalt)
     mul!(dO2, AmO2, O2)
     mul!(dNO3, AmNO3, NO3)
     mul!(dCH4, AmCH4, CH4)
@@ -544,6 +569,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dSurfMn_Ndr[1] += BcAmSurfMn_Ndr[1] ⊗ SurfMn_Ndr[1] ⊕ BcCmSurfMn_Ndr[1]
     dSurfFe_Ndnr[1] += BcAmSurfFe_Ndnr[1] ⊗ SurfFe_Ndnr[1] ⊕ BcCmSurfFe_Ndnr[1]
     dSurfFe_Ndr[1] += BcAmSurfFe_Ndr[1] ⊗ SurfFe_Ndr[1] ⊕ BcCmSurfFe_Ndr[1]
+    dIllite[1] += BcAmIllite[1] ⊗ Illite[1] ⊕ BcCmIllite[1]
+    dBasalt[1] += BcAmBasalt[1] ⊗ Basalt[1] ⊕ BcCmBasalt[1]
     dO2[1] += BcAmO2[1] ⊗ O2[1] ⊕ BcCmO2[1]
     dNO3[1] += BcAmNO3[1] ⊗ NO3[1] ⊕ BcCmNO3[1]
     dCH4[1] += BcAmCH4[1] ⊗ CH4[1] ⊕ BcCmCH4[1]
@@ -570,6 +597,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         BcAmSurfFe_Ndnr[2] ⊗ SurfFe_Ndnr[Ngrid] ⊕ BcCmSurfFe_Ndnr[2]
     dSurfFe_Ndr[Ngrid] +=
         BcAmSurfFe_Ndr[2] ⊗ SurfFe_Ndr[Ngrid] ⊕ BcCmSurfFe_Ndr[2]
+    dIllite[Ngrid] += BcAmIllite[2] ⊗ Illite[Ngrid] ⊕ BcCmIllite[2]
+    dBasalt[Ngrid] += BcAmBasalt[2] ⊗ Basalt[Ngrid] ⊕ BcCmBasalt[2]
     dO2[Ngrid] += BcAmO2[2] ⊗ O2[Ngrid] ⊕ BcCmO2[2]
     dNO3[Ngrid] += BcAmNO3[2] ⊗ NO3[Ngrid] ⊕ BcCmNO3[2]
     dCH4[Ngrid] += BcAmCH4[2] ⊗ CH4[Ngrid] ⊕ BcCmCH4[2]
@@ -1131,10 +1160,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. Omega_RFeS_pre = Fe_free ⊗ HS / (H ⊗ KspFeS)
     @.. Omega_RCaCO3_dis = Ca ⊗ CO3 / KspCaCO3_dis
     @.. Omega_RBSi_dis = TH4SiO4 / H4SiO4_dis_sat
-    @.. Omega_RNdnrPO4_pre =
-        Ndnr_free ⊗ PO4 / KspNdPO4 / (NdnrPO4 / (NdnrPO4 ⊕ NdrPO4))
-    @.. Omega_RNdrPO4_pre =
-        Ndr_free ⊗ PO4 / KspNdPO4 / (NdrPO4 / (NdnrPO4 ⊕ NdrPO4))
+    @.. Omega_RBasalt_dis =
+        10^(
+            log10(H4SiO4) ⊕ log10(Al_free) ⊗ 0.36 - log10(H) ⊗ 1.08 -
+            log10(KspBasalt)
+        )
     @.. RO2POC = O2 / (KO2 ⊕ O2) ⊗ nu / (a ⊕ Age) ⊗ POC
     @.. RNO2POC = NO2 / (KNO2 ⊕ NO2) ⊗ KO2 / (KO2 ⊕ O2) ⊗ nu / (a ⊕ Age) ⊗ POC
     @.. RNO3POC =
@@ -1194,11 +1224,24 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. RFeOx_Ndnr = (RO2Fe ⊕ RO2Fe_ads ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndnr / Fe ⊗ DNdFe
     @.. RFeOx_Ndr = (RO2Fe ⊕ RO2Fe_ads ⊕ RMnO2Fe ⊗ dstopw) ⊗ Ndr / Fe ⊗ DNdFe
     @.. RNdnrPO4_pre =
-        (tanh(1e3 ⊗ (Omega_RNdnrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
-        (kNdPO4_pre ⊗ NdnrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdnrPO4_pre - 1))
+        kNdPO4_pre ⊗
+        (Ndnr_free ⊗ PO4 / KspNdPO4 - NdnrPO4 / (NdnrPO4 ⊕ NdrPO4 ⊕ 1e-15))
     @.. RNdrPO4_pre =
-        (tanh(1e3 ⊗ (Omega_RNdrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
-        (kNdPO4_pre ⊗ NdrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdrPO4_pre - 1))
+        kNdPO4_pre ⊗
+        (Ndr_free ⊗ PO4 / KspNdPO4 - NdrPO4 / (NdnrPO4 ⊕ NdrPO4 ⊕ 1e-15))
+    @.. RIllite_pre =
+        kIllite ⊗ Illite ⊗ (
+            10^(
+                log10(0.0106) ⊗ 0.85 ⊕ log10(Al_free) ⊗ 2.85 ⊕
+                log10(H4SiO4) ⊗ 3.15 - log10(H) ⊗ 9.4 - log10(KspIllite)
+            ) - 1
+        ) ⊗ dstopw
+    @.. RBasalt_dis =
+        (-tanh(1e3 ⊗ (Omega_RBasalt_dis - 1.0)) / 2 ⊕ 0.5) ⊗ (
+            kBasalt ⊗ Basalt ⊗ H ⊗ 0.6701 / (Al_free ⊗ 0.0781)^(1 / 3) ⊗
+            (1 - Omega_RBasalt_dis) / a_lith0
+        )
+    @.. RBasalt_dis_Nd = RBasalt_dis ⊗ dstopw
 
     # species rates
     @.. S_POC =
@@ -1255,20 +1298,25 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. S_CaCO3 = -1 ⊗ RCaCO3_dis
     @.. S_Ca = 1 ⊗ RCaCO3_dis ⊗ dstopw
     @.. S_BSi = -1 ⊗ RBSi_dis
-    @.. S_TH4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw
-    @.. S_Al = rAlSi ⊗ RBSi_dis ⊗ dstopw
+    @.. S_TH4SiO4 =
+        1 ⊗ RBSi_dis ⊗ dstopw ⊕ -3.15 ⊗ RIllite_pre ⊕ 1 ⊗ RBasalt_dis ⊗ dstopw
+    @.. S_Al =
+        rAlSi ⊗ RBSi_dis ⊗ dstopw ⊕ -2.85 ⊗ RIllite_pre ⊕
+        0.36 ⊗ RBasalt_dis ⊗ dstopw
     @.. S_SurfMn_Ndnr = -1 ⊗ RMnRe_Ndnr ⊕ 1 ⊗ RMnOx_Ndnr ⊗ pwtods
     @.. S_TNdnr =
         1 ⊗ RMnRe_Ndnr ⊗ dstopw ⊕ -1 ⊗ RMnOx_Ndnr ⊕ 1 ⊗ RFeRe_Ndnr ⊗ dstopw ⊕
-        -1 ⊗ RFeOx_Ndnr ⊕ -1 ⊗ RNdnrPO4_pre
+        -1 ⊗ RFeOx_Ndnr ⊕ -1 ⊗ RNdnrPO4_pre ⊕ rNdnrSi_lith ⊗ RBasalt_dis_Nd
     @.. S_SurfMn_Ndr = -1 ⊗ RMnRe_Ndr ⊕ 1 ⊗ RMnOx_Ndr ⊗ pwtods
     @.. S_TNdr =
         1 ⊗ RMnRe_Ndr ⊗ dstopw ⊕ -1 ⊗ RMnOx_Ndr ⊕ 1 ⊗ RFeRe_Ndr ⊗ dstopw ⊕
-        -1 ⊗ RFeOx_Ndr ⊕ -1 ⊗ RNdrPO4_pre
+        -1 ⊗ RFeOx_Ndr ⊕ -1 ⊗ RNdrPO4_pre ⊕ rNdrSi_lith ⊗ RBasalt_dis_Nd
     @.. S_SurfFe_Ndnr = -1 ⊗ RFeRe_Ndnr ⊕ 1 ⊗ RFeOx_Ndnr ⊗ pwtods
     @.. S_SurfFe_Ndr = -1 ⊗ RFeRe_Ndr ⊕ 1 ⊗ RFeOx_Ndr ⊗ pwtods
     @.. S_NdnrPO4 = 1 ⊗ RNdnrPO4_pre ⊗ pwtods
     @.. S_NdrPO4 = 1 ⊗ RNdrPO4_pre ⊗ pwtods
+    @.. S_Illite = 1 ⊗ RIllite_pre ⊗ pwtods
+    @.. S_Basalt = -1 ⊗ RBasalt_dis
     @.. S_TA =
         (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
         (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
@@ -1277,7 +1325,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         -2 ⊗ RO2NH4 ⊕ -2 ⊗ RO2Mn ⊕ -2 ⊗ RO2Mn_ads ⊕ -2 ⊗ RO2Fe ⊕
         -2 ⊗ RO2Fe_ads ⊕ -2 ⊗ RO2H2S ⊕ -2 ⊗ RO2FeS ⊗ dstopw ⊕ 2 ⊗ RSO4CH4 ⊕
         -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RMnO2H2S ⊗ dstopw ⊕ 4 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
+        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre ⊕ -47 / 5 ⊗ RIllite_pre ⊕
+        27 / 25 ⊗ RBasalt_dis ⊗ dstopw
     @.. S_TA += 2 ⊗ RCaCO3_dis ⊗ dstopw
     @.. S_TA += -2 ⊗ RNdnrPO4_pre ⊕ -2 ⊗ RNdrPO4_pre
     @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
@@ -1302,6 +1351,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dSurfMn_Ndr += S_SurfMn_Ndr
     @.. dSurfFe_Ndnr += S_SurfFe_Ndnr
     @.. dSurfFe_Ndr += S_SurfFe_Ndr
+    @.. dIllite += S_Illite
+    @.. dBasalt += S_Basalt
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
     @.. dTMn += S_TMn
