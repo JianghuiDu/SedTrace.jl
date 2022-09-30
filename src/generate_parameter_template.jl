@@ -80,7 +80,7 @@ function generate_template(modelconfig::ModelConfig)
                 "gridtran",
                 "",
                 "cm",
-                "return a non-uniform grid by transforming a uniform one, if the functions requires external constants, enter in the row underneath",
+                "grid transformation function",
             ],
         )
         @transform!(:class = "grid")
@@ -95,7 +95,7 @@ function generate_template(modelconfig::ModelConfig)
                 "phi",
                 "",
                 "dimensionless",
-                "return a depth-dependent porosity profile, if the functions requires external constants, enter in the row underneath",
+                "porosity as a function of depth",
             ],
         )
         push!(
@@ -105,7 +105,7 @@ function generate_template(modelconfig::ModelConfig)
                 "phi_Inf",
                 "",
                 "dimensionless",
-                "porosity at infinite sediment depth (normally where porosity stops changing). Needed to calculate burial velocities. If constant_porosity_profile = no, then phi_Inf should be consistent with the depth dependent porosity function",
+                "porosity at burial depth",
             ],
         )
         @transform!(:class = "porosity")
@@ -127,7 +127,7 @@ function generate_template(modelconfig::ModelConfig)
                 "Dbt",
                 "",
                 "cm^2/yr",
-                "return a depth-dependent bioturbation profile, if the functions requires external constants, enter in the row underneath",
+                "bioburbation coefficient as a function of depth",
             ],
         )
         @transform!(:class = "bioturbation")
@@ -144,7 +144,7 @@ function generate_template(modelconfig::ModelConfig)
                 "Dbir",
                 "",
                 "yr^-1",
-                "return a depth-dependent bioirrigation profile, if the functions requires external constants, enter in the row underneath",
+                "bioirrigation coefficient as a function of depth",
             ],
         )
         @transform!(:class = "bioirrigation")
