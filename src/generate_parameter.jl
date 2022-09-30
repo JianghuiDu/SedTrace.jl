@@ -54,7 +54,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
     # setval!(gridParam,:parameter,"Ngrid",:parameter,"const Ngrid")
     push!(
         gridParam,
-        ["const", "Nmat", Ngrid * (nsolid + ndissolved), "", "Jacobian dimention"],
+        ["const", "Nmat", Ngrid * (nsolid + ndissolved), "integer", "Jacobian dimension"],
     )
     push!(
         gridParam,
@@ -70,7 +70,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
     gridtran = getval!(gridParam, :parameter, "gridtran", :value)
     push!(
         gridParam,
-        ["const", "xᵥ", "broadcast(x->$gridtran,ξ)", "cm", "no grid transformation"],
+        ["const", "xᵥ", "broadcast(x->$gridtran,ξ)", "cm", "non-uniform grid transformation"],
     )
     push!(
         gridParam,
@@ -91,14 +91,14 @@ function parameter_code(param_model, substances, adsorption, assemble)
             "const",
             "phif",
             "broadcast(x->$phi_fun,x)",
-            "dimentionless",
+            "dimensionless",
             "fluid volume fraction",
         ],
         promote = true,
     )
     push!(
         porosityParam,
-        ["const", "phis", "1.0 .- phif", "dimentionless", "solid volume fraction"],
+        ["const", "phis", "1.0 .- phif", "dimensionless", "solid volume fraction"],
     )
     push!(
         porosityParam,
@@ -106,7 +106,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
             "const",
             "pwtods",
             "phif./phis",
-            "dimentionless",
+            "dimensionless",
             "conversion from pore water to solid sediment volume unit",
         ],
     )
@@ -116,7 +116,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
             "const",
             "dstopw",
             "phis./phif",
-            "dimentionless",
+            "dimensionless",
             "conversion from solid sediment to pore water volume unit",
         ],
     )
