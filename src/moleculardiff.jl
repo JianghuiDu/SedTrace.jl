@@ -45,6 +45,8 @@ species_default = [
     "Nd143",
     "Ndnr",
     "Ndr",
+    "Mol",
+    "Moh"
 ]
 
 # return molecular diffusion in cm2/yr
@@ -154,6 +156,20 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species_all)
         SS = 0.0
         mu_S = viscosity(SS, tS, Patm)
         mdif["MoO4"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
+    end
+    if haskey(mdif, "Mol")
+        D_MoO4 = 9.91e-6
+        tS = 25.0
+        SS = 0.0
+        mu_S = viscosity(SS, tS, Patm)
+        mdif["Mol"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
+    end
+    if haskey(mdif, "Moh")
+        D_MoO4 = 9.91e-6
+        tS = 25.0
+        SS = 0.0
+        mu_S = viscosity(SS, tS, Patm)
+        mdif["Moh"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
     end
 
     # Boudreau 1997 p115 table4.7
