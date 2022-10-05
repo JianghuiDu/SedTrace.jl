@@ -54,7 +54,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
     # setval!(gridParam,:parameter,"Ngrid",:parameter,"const Ngrid")
     push!(
         gridParam,
-        ["const", "Nmat", Ngrid * (nsolid + ndissolved), "integer", "Jacobian dimension"],
+        ["const", "Nmat", Ngrid * (nsolid + ndissolved+nsummed), "integer", "Jacobian dimension"],
     )
     push!(
         gridParam,
@@ -208,19 +208,19 @@ function parameter_code(param_model, substances, adsorption, assemble)
     model_name1 = ["TH3PO4", "TNH4", "TH4SiO4", "TH2S", "THF", "TH3BO3", "THSO4", "TCO2"]
     species_name1 = ["HPO4", "NH4", "H4SiO4", "HS", "F", "H3BO3", "SO4", "HCO3"]
 
-    model_name2 = ["Al", "Mo"]
-    species_name2 = ["Al(OH)[4]", "MoO4"]
+    model_name2 = ["Al", "Mo","TFe_dis","TNH4_dis","TH3PO4_dis","TMn_dis","Al_dis","TNdnr_dis","TNdr_dis"]
+    species_name2 = ["Al(OH)[4]", "MoO4","Fe","NH4","HPO4","Mn","Al(OH)[4]","Ndnr","Ndr"]
 
     model_name = [model_name1; model_name2]
     species_name = [species_name1; species_name2]
 
     dict = Dict(model_name[i] => species_name[i] for i in eachindex(model_name))
 
-
     dissolved = subset(
         substances,
-        :type => x -> x .∈ Ref(["dissolved", "dissolved_adsorbed", "dissolved_summed"]),
+        :type => x -> x .∈ Ref(["dissolved", "dissolved_adsorbed", "dissolved_summed","dissolved_adsorbed_summed"]),
     )
+    @transform!(dissolved,:substance = ifelse.(:type .== "dissolved_adsorbed_summed",:substance.*"_dis",:substance))
     @transform!(
         dissolved,
         :species =
@@ -234,7 +234,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
 
     if any(substances.type .== "dissolved_summed_pH")
         dissolved_summed = @subset(substances, :type .== "dissolved_summed_pH")
-        @transform!(dissolved_summed, :species = split.(:species_modelled, ","))
+        @transform!(dissolved_summed, :species = split.(:formula, ","))
         dissolved_summed = DataFrames.flatten(dissolved_summed, :species)
         @transform!(dissolved_summed, :species = mymatch.(r"[\w\[\]\(\)]+", :species))
         @transform!(dissolved_summed, :species_name = :species)
@@ -255,34 +255,37 @@ function parameter_code(param_model, substances, adsorption, assemble)
 
 
 
-    if any(substances.type .== "dissolved_adsorbed_summed")
-        dissolved_adsorbed_summed =
-            @subset(substances, :type .== "dissolved_adsorbed_summed")
-        @transform!(dissolved_adsorbed_summed, :species = split.(:species_modelled, ","))
-        dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
-        # @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
-        @transform!(
-            dissolved_adsorbed_summed,
-            :species = myeachmatch.(r"(?<!\{)[\w\[\]\(\)]+(?!=\[\+-])", :species)
-        )
-        dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
-        @transform!(dissolved_adsorbed_summed, :species_name = :species)
+    # if any(substances.type .== "dissolved_adsorbed_summed")
+    #     dissolved_adsorbed_summed =
+    #         @subset(substances, :type .== "dissolved_adsorbed_summed")
+    #     # @transform!(dissolved_adsorbed_summed, :species = split.(:formula, ","))
+    #     # dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
+    #     # # @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
+    #     # @transform!(
+    #     #     dissolved_adsorbed_summed,
+    #     #     :species = myeachmatch.(r"(?<!\{)[\w\[\]\(\)]+(?!=\[\+-])", :species)
+    #     # )
+    #     # dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
+    #     # @transform!(dissolved_adsorbed_summed, :species_name = :species)
 
-        ads_dissolved = unique(select(adsorption, :substance, :dissolved))
-        @transform!(ads_dissolved, :dissolved_sp = true)
+    #     # ads_dissolved = unique(select(adsorption, :substance, :dissolved))
+    #     # @transform!(ads_dissolved, :dissolved_sp = true)
 
-        leftjoin!(
-            dissolved_adsorbed_summed,
-            ads_dissolved,
-            on = [:substance, :species => :dissolved],
-            makeunique = true,
-        )
-        @subset!(dissolved_adsorbed_summed, .!ismissing.(:dissolved_sp))
-        unique!(dissolved_adsorbed_summed)
-        select!(dissolved_adsorbed_summed, names(dissolved))
+    #     # leftjoin!(
+    #     #     dissolved_adsorbed_summed,
+    #     #     ads_dissolved,
+    #     #     on = [:substance, :species => :dissolved],
+    #     #     makeunique = true,
+    #     # )
+    #     # @subset!(dissolved_adsorbed_summed, .!ismissing.(:dissolved_sp))
+    #     # unique!(dissolved_adsorbed_summed)
+    #     # select!(dissolved_adsorbed_summed, names(dissolved))
 
-        append!(dissolved_all, dissolved_adsorbed_summed)
-    end
+    #     @transform!(dissolved_adsorbed_summed, :species = :substance .* "_dis")
+    #     @transform!(dissolved_adsorbed_summed, :species_name = :substance .* "_dis")
+
+    #     append!(dissolved_all, dissolved_adsorbed_summed)
+    # end
 
 
 
@@ -412,10 +415,7 @@ function parameter_code(param_model, substances, adsorption, assemble)
             "KHPO4" => itp_KHPO4(salinity,temperature,pressure),
             "KH4SiO4" => itp_KH4SiO4(salinity,temperature,pressure),
         )
-
-
         KpHParam = newdf()
-
     end
 
 
@@ -557,11 +557,23 @@ function parameter_code(param_model, substances, adsorption, assemble)
         return BC_str
     end
 
+    
+    adsorbed_species = select(adsorption,:substance,:surface,:top_bc_type,:bot_bc_type)
+    unique!(adsorbed_species)
+    @transform!(adsorbed_species,:substance=ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
+    @transform!(adsorbed_species,
+                :type ="solid",
+                :formula="",
+                :species_name=:substance)
+
+    
+
     substances_bc = @subset(substances, :type .== "solid")
-    @transform!(substances_bc, :species = :substance)
-    @transform!(substances_bc, :species_name = :substance)
-    append!(substances_bc, dissolved_all)
-    append!(substances_bc, dissolved_adsorbed)
+    @transform!(substances_bc,:species_name=:substance)
+    select!(substances_bc,:substance,:species_name,:type,:top_bc_type,:bot_bc_type)
+    append!(substances_bc, select!(dissolved_all,names(substances_bc)))
+    append!(substances_bc, select!(dissolved_adsorbed,names(substances_bc)))
+    append!(substances_bc, select!(adsorbed_species,names(substances_bc)))
     unique!(substances_bc)
 
 
@@ -632,43 +644,43 @@ function parameter_code(param_model, substances, adsorption, assemble)
     end
 
 
-    if any(substances.type .== "dissolved_adsorbed_summed")
-        for i in eachrow(adsorption)
-            BC_str_Top = setTopBC(i.adsorbed, "solid", i.top_bc_type)
-            BC_str_Bot = setBotBC(i.adsorbed, "solid", i.bot_bc_type)
-            push!(
-                bdParam,
-                [
-                    "const",
-                    "Bc" * i.adsorbed,
-                    "($BC_str_Top, $BC_str_Bot)",
-                    "",
-                    "Boundary condition of $(i.adsorbed)",
-                ],
-            )
-            push!(
-                tranBCParam,
-                [
-                    "const",
-                    "BcAm$(i.adsorbed), BcBm$(i.adsorbed), BcCm$(i.adsorbed)",
-                    "fvcf_bc(phis,Ds,us,dx,Bc$(i.adsorbed),Ngrid)",
-                    "",
-                    "Boundary transport matrix of $(i.adsorbed)",
-                ],
-            )
-            push!(
-                tranIntParam,
-                [
-                    "const",
-                    "Am$(i.adsorbed), Bm$(i.adsorbed)",
-                    "fvcf(phis,Ds,us,dx,Ngrid)",
-                    "",
-                    "Interior transport matrix of $(i.adsorbed)",
-                ],
-            )
+    # if any(substances.type .== "dissolved_adsorbed_summed")
+    #     for i in eachrow(adsorption)
+    #         BC_str_Top = setTopBC(i.adsorbed, "solid", i.top_bc_type)
+    #         BC_str_Bot = setBotBC(i.adsorbed, "solid", i.bot_bc_type)
+    #         push!(
+    #             bdParam,
+    #             [
+    #                 "const",
+    #                 "Bc" * i.adsorbed,
+    #                 "($BC_str_Top, $BC_str_Bot)",
+    #                 "",
+    #                 "Boundary condition of $(i.adsorbed)",
+    #             ],
+    #         )
+    #         push!(
+    #             tranBCParam,
+    #             [
+    #                 "const",
+    #                 "BcAm$(i.adsorbed), BcBm$(i.adsorbed), BcCm$(i.adsorbed)",
+    #                 "fvcf_bc(phis,Ds,us,dx,Bc$(i.adsorbed),Ngrid)",
+    #                 "",
+    #                 "Boundary transport matrix of $(i.adsorbed)",
+    #             ],
+    #         )
+    #         push!(
+    #             tranIntParam,
+    #             [
+    #                 "const",
+    #                 "Am$(i.adsorbed), Bm$(i.adsorbed)",
+    #                 "fvcf(phis,Ds,us,dx,Ngrid)",
+    #                 "",
+    #                 "Interior transport matrix of $(i.adsorbed)",
+    #             ],
+    #         )
 
-        end
-    end
+    #     end
+    # end
 
     reactionParam = @subset(param_model, :class .== "Reaction")
     RmCol!(reactionParam)
@@ -719,9 +731,9 @@ function parameter_code(param_model, substances, adsorption, assemble)
                 ini = "$(i.substance)0"
             end
         elseif i.type == "dissolved_adsorbed_summed"
-            dissolved_sp =
-                getval!(dissolved_adsorbed_summed, :substance, i.substance, :species)
-            ini = "$(dissolved_sp)0"
+            # dissolved_sp =
+            #     getval!(dissolved_adsorbed_summed, :substance, i.substance, :species)
+            ini = "$(i.substance)_dis0"
         end
 
         push!(initialvec, ini)
