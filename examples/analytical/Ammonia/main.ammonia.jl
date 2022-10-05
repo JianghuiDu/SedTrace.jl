@@ -1,5 +1,5 @@
 
-# using SedTrace
+using SedTrace
 using JLD2
 
 modeldirectory = (@__DIR__)*"\\"
@@ -12,7 +12,7 @@ modelconfig = ModelConfig(
     modelname,
 )
 
-@time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig)
 
 @time generate_code(modelconfig)
 
@@ -24,7 +24,7 @@ C0 = SedTrace.Param.C0;
 parm = SedTrace.Param.ParamStruct();
 RHSFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
 JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
-solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,1)
+solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,1);
 solver = generate_ODESolver(RHSFun, JacPrototype, solverconfig,parm);
 OdeFunction = generate_ODEFun(RHSFun, JacPrototype, solverconfig);
 outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
@@ -32,11 +32,11 @@ outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.N
 
 
 
-TestOdeFun(RHSFun,C0,parm)
-TestJacobian(JacPrototype,RHSFun,chunk_size,parm)
-BenchmarkReactran(RHSFun,C0,parm)
-BenchmarkJacobian(JacPrototype,RHSFun,chunk_size,parm)
-BenchmarkPreconditioner(JacPrototype,RHSFun,chunk_size,parm)
+# TestOdeFun(RHSFun,C0,parm)
+# TestJacobian(JacPrototype,RHSFun,chunk_size,parm)
+# BenchmarkReactran(RHSFun,C0,parm)
+# BenchmarkJacobian(JacPrototype,RHSFun,chunk_size,parm)
+# BenchmarkPreconditioner(JacPrototype,RHSFun,chunk_size,parm)
 
 
 

@@ -9,22 +9,22 @@ include(
 # assemble parameter struct
 #---------------------------------------------------------------
 @with_kw mutable struct ParamStruct{T}
-    TNH4ID::StepRange{Int64,Int64} = TNH4ID
     N_orgID::StepRange{Int64,Int64} = N_orgID
+    TNH4ID::StepRange{Int64,Int64} = TNH4ID
     AmN_org::Tridiagonal{T,Vector{T}} = AmN_org
-    AmNH4::Tridiagonal{T,Vector{T}} = AmNH4
-    AmNH4_ads::Tridiagonal{T,Vector{T}} = AmNH4_ads
+    AmTNH4_dis::Tridiagonal{T,Vector{T}} = AmTNH4_dis
+    AmTNH4_ads::Tridiagonal{T,Vector{T}} = AmTNH4_ads
     BcAmN_org::Vector{T} = BcAmN_org
     BcCmN_org::Vector{T} = BcCmN_org
     Ngrid::Int64 = Ngrid
-    BcAmNH4::Vector{T} = BcAmNH4
-    BcCmNH4::Vector{T} = BcCmNH4
-    BcAmNH4_ads::Vector{T} = BcAmNH4_ads
-    BcCmNH4_ads::Vector{T} = BcCmNH4_ads
+    BcAmTNH4_dis::Vector{T} = BcAmTNH4_dis
+    BcCmTNH4_dis::Vector{T} = BcCmTNH4_dis
+    BcAmTNH4_ads::Vector{T} = BcAmTNH4_ads
+    BcCmTNH4_ads::Vector{T} = BcCmTNH4_ads
     alpha::Vector{T} = alpha
-    NH40::T = NH40
-    KNH4_ads::T = KNH4_ads
+    TNH4_dis0::T = TNH4_dis0
     dstopw::Vector{T} = dstopw
+    KNH4_ads::T = KNH4_ads
     k::T = k
 end
 end

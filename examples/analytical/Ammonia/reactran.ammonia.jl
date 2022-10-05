@@ -1,64 +1,83 @@
 function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
-    @unpack TNH4ID,
-    N_orgID,
+    #---------------------------------------------------------------------
+    #  Parameters
+    #---------------------------------------------------------------------
+    @unpack N_orgID,
+    TNH4ID,
     AmN_org,
-    AmNH4,
-    AmNH4_ads,
+    AmTNH4_dis,
+    AmTNH4_ads,
     BcAmN_org,
     BcCmN_org,
     Ngrid,
-    BcAmNH4,
-    BcCmNH4,
-    BcAmNH4_ads,
-    BcCmNH4_ads,
+    BcAmTNH4_dis,
+    BcCmTNH4_dis,
+    BcAmTNH4_ads,
+    BcCmTNH4_ads,
     alpha,
-    NH40,
-    KNH4_ads,
+    TNH4_dis0,
     dstopw,
+    KNH4_ads,
     k = parms
-
-    NH4 = PreallocationTools.get_tmp(f.NH4, C)
-    NH4_tran = PreallocationTools.get_tmp(f.NH4_tran, C)
+    #---------------------------------------------------------------------
+    #  Cache
+    #---------------------------------------------------------------------
     NH4_ads = PreallocationTools.get_tmp(f.NH4_ads, C)
-    NH4_ads_tran = PreallocationTools.get_tmp(f.NH4_ads_tran, C)
+    TNH4_ads_nsf = PreallocationTools.get_tmp(f.TNH4_ads_nsf, C)
+    TNH4_ads = PreallocationTools.get_tmp(f.TNH4_ads, C)
+    TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
+    TNH4_dis_tran = PreallocationTools.get_tmp(f.TNH4_dis_tran, C)
+    TNH4_ads_tran = PreallocationTools.get_tmp(f.TNH4_ads_tran, C)
     Rremin = PreallocationTools.get_tmp(f.Rremin, C)
-    S_TNH4 = PreallocationTools.get_tmp(f.S_TNH4, C)
     S_N_org = PreallocationTools.get_tmp(f.S_N_org, C)
+    S_TNH4 = PreallocationTools.get_tmp(f.S_TNH4, C)
 
-    TNH4 = @view C[TNH4ID]
+    #---------------------------------------------------------------------
+    #  Model state
+    #---------------------------------------------------------------------
     N_org = @view C[N_orgID]
-
-    dTNH4 = @view dC[TNH4ID]
+    TNH4 = @view C[TNH4ID]
     dN_org = @view dC[N_orgID]
-
+    dTNH4 = @view dC[TNH4ID]
+    #---------------------------------------------------------------------
+    #  Transport of solid and dissolved substances
+    #---------------------------------------------------------------------
     mul!(dN_org, AmN_org, N_org)
-
     dN_org[1] += BcAmN_org[1] ⊗ N_org[1] ⊕ BcCmN_org[1]
     dN_org[Ngrid] += BcAmN_org[2] ⊗ N_org[Ngrid] ⊕ BcCmN_org[2]
+    #---------------------------------------------------------------------
+    #  pH code
+    #---------------------------------------------------------------------
+    #---------------------------------------------------------------------
+    #  Speciation code
+    #---------------------------------------------------------------------
+    #  Concentrations of adsorbed/dissolved species
+    @.. TNH4_dis = TNH4 / (KNH4_ads ⊗ dstopw ⊕ 1)
+    @.. NH4_ads = KNH4_ads ⊗ TNH4_dis
+    @.. TNH4_ads_nsf = NH4_ads
+    @.. TNH4_ads = NH4_ads
+    #  Transport of adsorbed/dissolved species
+    mul!(TNH4_dis_tran, AmTNH4_dis, TNH4_dis)
+    TNH4_dis_tran[1] += BcAmTNH4_dis[1] ⊗ TNH4_dis[1] ⊕ BcCmTNH4_dis[1]
+    TNH4_dis_tran[Ngrid] += BcAmTNH4_dis[2] ⊗ TNH4_dis[Ngrid] ⊕ BcCmTNH4_dis[2]
+    mul!(TNH4_ads_tran, AmTNH4_ads, TNH4_ads)
+    TNH4_ads_tran[1] += BcAmTNH4_ads[1] ⊗ TNH4_ads[1] ⊕ BcCmTNH4_ads[1]
+    TNH4_ads_tran[Ngrid] += BcAmTNH4_ads[2] ⊗ TNH4_ads[Ngrid] ⊕ BcCmTNH4_ads[2]
+    @.. dTNH4 = TNH4_dis_tran ⊗ 1 ⊕ TNH4_ads_tran ⊗ dstopw
+    @.. dTNH4 += alpha ⊗ (TNH4_dis0 - TNH4_dis)
 
-
-    @.. NH4 = TNH4 / (KNH4_ads ⊗ dstopw ⊕ 1)
-    mul!(NH4_tran, AmNH4, NH4)
-    NH4_tran[1] += BcAmNH4[1] ⊗ NH4[1] ⊕ BcCmNH4[1]
-    NH4_tran[Ngrid] += BcAmNH4[2] ⊗ NH4[Ngrid] ⊕ BcCmNH4[2]
-    @.. NH4_ads = KNH4_ads ⊗ NH4
-    mul!(NH4_ads_tran, AmNH4_ads, NH4_ads)
-    NH4_ads_tran[1] += BcAmNH4_ads[1] ⊗ NH4_ads[1] ⊕ BcCmNH4_ads[1]
-    NH4_ads_tran[Ngrid] += BcAmNH4_ads[2] ⊗ NH4_ads[Ngrid] ⊕ BcCmNH4_ads[2]
-    @.. dTNH4 = NH4_ads_tran ⊗ dstopw ⊕ NH4_tran ⊗ 1
-    @.. dTNH4 += alpha ⊗ (NH40 - NH4)
-
-
-
-    # reaction rates
+    #---------------------------------------------------------------------
+    #  Reaction code
+    #---------------------------------------------------------------------
+    # Individual reaction rates
     @.. Rremin = k ⊗ N_org
 
-    # species rates
-    @.. S_TNH4 = 1 ⊗ Rremin ⊗ dstopw
+    # Summed rates for model substances
     @.. S_N_org = -1 ⊗ Rremin
+    @.. S_TNH4 = 1 ⊗ Rremin ⊗ dstopw
 
-    @.. dTNH4 += S_TNH4
     @.. dN_org += S_N_org
+    @.. dTNH4 += S_TNH4
 
     return nothing
 end

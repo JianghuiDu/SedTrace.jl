@@ -21,7 +21,7 @@ sw_dens = 1.0287324258804407 # g cm^-3 # seawater density
 #----------------------------------------------
 L = 50.0 # cm # model sediment section thickness
 Ngrid = 200 # integer # number of model grid
-Nmat = 1000 # integer # Jacobian dimension
+Nmat = 1600 # integer # Jacobian dimension
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
 xᵥ = broadcast(x -> L * (exp(x / 5) - 1) / (exp(L / 5) - 1), ξ) # cm # non-uniform grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
@@ -31,7 +31,7 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 # porosity parameters
 #----------------------------------------------
 phi_Inf = 0.7884 # dimensionless # porosity at burial depth
-phif = broadcast(x -> 0.8 + (0.9 - 0.8) * exp(-x / 2), x) # dimensionless # porosity profile
+phif = broadcast(x -> 0.8 + (0.9 - 0.8) * exp(-x / 2), x) # dimensionless # fluid volume fraction
 phis = 1.0 .- phif # dimensionless # solid volume fraction
 pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit
 dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore water volume unit
@@ -63,6 +63,7 @@ KFe_ads = 1.0 # cm^3(porewater) cm^-3(dry sediment) # Adsorption constant
 # solute diffusivity
 #----------------------------------------------
 DSO4 = 1.8034511184582917E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DTFe_dis = 1.2122535663809046E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH = 1.8564498889096735E+03 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DOH = 9.3665996003371845E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHCO3 = 1.9213920442515075E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -70,7 +71,6 @@ DCO3 = 1.5899631135414575E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment di
 DCO2 = 3.3679572156139625E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH2S = 3.0488407320129431E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHS = 3.5128480809042725E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DFe = 1.2122535663809046E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 
 #----------------------------------------------
 # boundary fluxes and concentrations
@@ -78,9 +78,9 @@ DFe = 1.2122535663809046E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment dif
 FPOC0 = 0.31 # mmol cm^-2 yr^-1 # Flux of POC at the  TOP of sediment column
 FFeOOH0 = 0.023 # mmol cm^-2 yr^-1 # Flux of FeOOH at the  TOP of sediment column
 FFeS0 = 2.22044604925031e-16 # mmol cm^-2 yr^-1 # Flux of FeS at the  TOP of sediment column
-FFe_ads0 = 0.0 # mmol cm^-2 yr^-1 # Flux of Fe_ads at the  TOP of sediment column
+FTFe_ads_POC0 = 0.0 # mmol cm^-2 yr^-1 # Flux of Fe_ads at the  TOP of sediment column
 SO40 = 0.028 # mmol cm^-3 # Concentration of SO4 at the TOP of sediment column
-Fe0 = 2.95e-8 # mmol cm^-3 # Concentration of Fe at the TOP of sediment column
+TFe_dis0 = 2.95e-8 # mmol cm^-3 # Concentration of Fe at the TOP of sediment column
 pH0 = 7.59 # free pH scale # pH at the TOP of sediment column
 TCO20 = 0.002345 # mmol cm^-3 # Concentration of TCO2 at the TOP of sediment column
 TH2S0 = 2.22044604925031e-16 # mmol cm^-3 # Concentration of TH2S at the TOP of sediment column
@@ -99,6 +99,7 @@ BcPOC = ((phis[1]us[1], -phis[1]Ds[1], FPOC0), (0.0, 1.0, 0.0)) #  # Boundary co
 BcFeOOH = ((phis[1]us[1], -phis[1]Ds[1], FFeOOH0), (0.0, 1.0, 0.0)) #  # Boundary condition of FeOOH
 BcFeS = ((phis[1]us[1], -phis[1]Ds[1], FFeS0), (0.0, 1.0, 0.0)) #  # Boundary condition of FeS
 BcSO4 = ((1.0, 0.0, SO40), (0.0, 1.0, 0.0)) #  # Boundary condition of SO4
+BcTFe_dis = ((1.0, 0.0, TFe_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe_dis
 BcH = ((1.0, 0.0, H0), (0.0, 1.0, 0.0)) #  # Boundary condition of H
 BcOH = ((1.0, 0.0, OH0), (0.0, 1.0, 0.0)) #  # Boundary condition of H
 BcHCO3 = ((1.0, 0.0, HCO30), (0.0, 1.0, 0.0)) #  # Boundary condition of TCO2
@@ -106,8 +107,7 @@ BcCO3 = ((1.0, 0.0, CO30), (0.0, 1.0, 0.0)) #  # Boundary condition of TCO2
 BcCO2 = ((1.0, 0.0, CO20), (0.0, 1.0, 0.0)) #  # Boundary condition of TCO2
 BcH2S = ((1.0, 0.0, H2S0), (0.0, 1.0, 0.0)) #  # Boundary condition of TH2S
 BcHS = ((1.0, 0.0, HS0), (0.0, 1.0, 0.0)) #  # Boundary condition of TH2S
-BcFe = ((1.0, 0.0, Fe0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe
-BcFe_ads = ((phis[1]us[1], -phis[1]Ds[1], FFe_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of Fe_ads
+BcTFe_ads_POC = ((phis[1]us[1], -phis[1]Ds[1], FTFe_ads_POC0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe_ads_POC
 
 #----------------------------------------------
 # Boundary transport matrix
@@ -116,6 +116,8 @@ BcAmPOC, BcBmPOC, BcCmPOC = fvcf_bc(phis, Ds, us, dx, BcPOC, Ngrid) #  # Boundar
 BcAmFeOOH, BcBmFeOOH, BcCmFeOOH = fvcf_bc(phis, Ds, us, dx, BcFeOOH, Ngrid) #  # Boundary transport matrix of FeOOH
 BcAmFeS, BcBmFeS, BcCmFeS = fvcf_bc(phis, Ds, us, dx, BcFeS, Ngrid) #  # Boundary transport matrix of FeS
 BcAmSO4, BcBmSO4, BcCmSO4 = fvcf_bc(phif, DSO4, uf, dx, BcSO4, Ngrid) #  # Boundary transport matrix of SO4
+BcAmTFe_dis, BcBmTFe_dis, BcCmTFe_dis =
+    fvcf_bc(phif, DTFe_dis, uf, dx, BcTFe_dis, Ngrid) #  # Boundary transport matrix of TFe_dis
 BcAmH, BcBmH, BcCmH = fvcf_bc(phif, DH, uf, dx, BcH, Ngrid) #  # Boundary transport matrix of H
 BcAmOH, BcBmOH, BcCmOH = fvcf_bc(phif, DOH, uf, dx, BcOH, Ngrid) #  # Boundary transport matrix of OH
 BcAmHCO3, BcBmHCO3, BcCmHCO3 = fvcf_bc(phif, DHCO3, uf, dx, BcHCO3, Ngrid) #  # Boundary transport matrix of HCO3
@@ -123,8 +125,8 @@ BcAmCO3, BcBmCO3, BcCmCO3 = fvcf_bc(phif, DCO3, uf, dx, BcCO3, Ngrid) #  # Bound
 BcAmCO2, BcBmCO2, BcCmCO2 = fvcf_bc(phif, DCO2, uf, dx, BcCO2, Ngrid) #  # Boundary transport matrix of CO2
 BcAmH2S, BcBmH2S, BcCmH2S = fvcf_bc(phif, DH2S, uf, dx, BcH2S, Ngrid) #  # Boundary transport matrix of H2S
 BcAmHS, BcBmHS, BcCmHS = fvcf_bc(phif, DHS, uf, dx, BcHS, Ngrid) #  # Boundary transport matrix of HS
-BcAmFe, BcBmFe, BcCmFe = fvcf_bc(phif, DFe, uf, dx, BcFe, Ngrid) #  # Boundary transport matrix of Fe
-BcAmFe_ads, BcBmFe_ads, BcCmFe_ads = fvcf_bc(phis, Ds, us, dx, BcFe_ads, Ngrid) #  # Boundary transport matrix of Fe_ads
+BcAmTFe_ads_POC, BcBmTFe_ads_POC, BcCmTFe_ads_POC =
+    fvcf_bc(phis, Ds, us, dx, BcTFe_ads_POC, Ngrid) #  # Boundary transport matrix of TFe_ads_POC
 
 #----------------------------------------------
 # Interior transport matrix
@@ -133,6 +135,7 @@ AmPOC, BmPOC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of P
 AmFeOOH, BmFeOOH = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of FeOOH
 AmFeS, BmFeS = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of FeS
 AmSO4, BmSO4 = fvcf(phif, DSO4, uf, dx, Ngrid) #  # Interior transport matrix of SO4
+AmTFe_dis, BmTFe_dis = fvcf(phif, DTFe_dis, uf, dx, Ngrid) #  # Interior transport matrix of TFe_dis
 AmH, BmH = fvcf(phif, DH, uf, dx, Ngrid) #  # Interior transport matrix of H
 AmOH, BmOH = fvcf(phif, DOH, uf, dx, Ngrid) #  # Interior transport matrix of OH
 AmHCO3, BmHCO3 = fvcf(phif, DHCO3, uf, dx, Ngrid) #  # Interior transport matrix of HCO3
@@ -140,8 +143,7 @@ AmCO3, BmCO3 = fvcf(phif, DCO3, uf, dx, Ngrid) #  # Interior transport matrix of
 AmCO2, BmCO2 = fvcf(phif, DCO2, uf, dx, Ngrid) #  # Interior transport matrix of CO2
 AmH2S, BmH2S = fvcf(phif, DH2S, uf, dx, Ngrid) #  # Interior transport matrix of H2S
 AmHS, BmHS = fvcf(phif, DHS, uf, dx, Ngrid) #  # Interior transport matrix of HS
-AmFe, BmFe = fvcf(phif, DFe, uf, dx, Ngrid) #  # Interior transport matrix of Fe
-AmFe_ads, BmFe_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of Fe_ads
+AmTFe_ads_POC, BmTFe_ads_POC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TFe_ads_POC
 
 #----------------------------------------------
 # Acid dissociation constants
@@ -170,7 +172,7 @@ C_ini = [
     FFeOOH0 / (phis[1] * us[1]),
     FFeS0 / (phis[1] * us[1]),
     SO40,
-    Fe0,
+    TFe_dis0,
     H0,
     TCO20,
     TH2S0,

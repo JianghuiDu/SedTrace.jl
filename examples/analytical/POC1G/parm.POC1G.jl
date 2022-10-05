@@ -21,9 +21,9 @@ sw_dens = 1.0287324258804407 # g cm^-3 # seawater density
 #----------------------------------------------
 L = 500.0 # cm # model sediment section thickness
 Ngrid = 500 # integer # number of model grid
-Nmat = 500 #  # Jacobian dimention
+Nmat = 500 # integer # Jacobian dimension
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
-xᵥ = broadcast(x -> x, ξ) # cm # no grid transformation
+xᵥ = broadcast(x -> x, ξ) # cm # non-uniform grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
 dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 
@@ -31,10 +31,10 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 # porosity parameters
 #----------------------------------------------
 phi_Inf = 0.8 # dimensionless # porosity at infinite sediment depth (normally where porosity stops changing). Needed to calculate burial velocities. If constant_porosity_profile = no, then phi_Inf should be consistent with the depth dependent porosity function
-phif = broadcast(x -> 0.8, x) # dimentionless # fluid volume fraction
-phis = 1.0 .- phif # dimentionless # solid volume fraction
-pwtods = phif ./ phis # dimentionless # conversion from pore water to solid sediment volume unit
-dstopw = phis ./ phif # dimentionless # conversion from solid sediment to pore water volume unit
+phif = broadcast(x -> 0.8, x) # dimensionless # fluid volume fraction
+phis = 1.0 .- phif # dimensionless # solid volume fraction
+pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit
+dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore water volume unit
 
 #----------------------------------------------
 # burial parameters

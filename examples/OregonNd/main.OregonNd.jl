@@ -58,7 +58,7 @@ ParamDict = Dict(
 )
 
 
-@time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig)
 
 
 @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
@@ -66,14 +66,15 @@ ParamDict = Dict(
 
 IncludeFiles(modelconfig)
 
-# ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
-chunk_size = 10;
 
 C0 = SedTrace.Param.C0;
 parm = SedTrace.Param.ParamStruct();
+JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec);
+ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
+chunk_size = 10;
+
 OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
-solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,2)
+solverconfig = SolverConfig(chunk_size, :GMRES)
 solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
 OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
 outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);

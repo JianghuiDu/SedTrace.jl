@@ -10,7 +10,6 @@ function JacType(
     FeS2ID,
     CaCO3ID,
     MnCO3ID,
-    FeCO3ID,
     BSiID,
     SMolID,
     SMohID,
@@ -31,6 +30,7 @@ function JacType(
     TCO2ID,
     TH2SID,
     THFID,
+    FeCO3ID,
     AgeID,
     TH3BO3ID = IDdict
 
@@ -134,16 +134,6 @@ function JacType(
     append!(colID, getindex(TMnID, 1:Ngrid))
     append!(rowID, getindex(MnCO3ID, 1:Ngrid))
     append!(colID, getindex(MnCO3ID, 1:Ngrid))
-    append!(rowID, getindex(FeCO3ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
-    append!(colID, getindex(FeCO3ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
-    append!(rowID, getindex(FeCO3ID, 1:Ngrid))
-    append!(colID, getindex(TCO2ID, 1:Ngrid))
-    append!(rowID, getindex(FeCO3ID, 1:Ngrid))
-    append!(colID, getindex(HID, 1:Ngrid))
-    append!(rowID, getindex(FeCO3ID, 1:Ngrid))
-    append!(colID, getindex(TFeID, 1:Ngrid))
-    append!(rowID, getindex(FeCO3ID, 1:Ngrid))
-    append!(colID, getindex(FeCO3ID, 1:Ngrid))
     append!(rowID, getindex(BSiID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(BSiID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(BSiID, 1:Ngrid))
@@ -540,6 +530,8 @@ function JacType(
     append!(colID, getindex(CaID, 1:Ngrid))
     append!(rowID, getindex(THFID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(HID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(FeCO3ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(FeCO3ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(AgeID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(AgeID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TH3BO3ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))

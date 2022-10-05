@@ -12,7 +12,7 @@ modelconfig = ModelConfig(
     modelname,
 )
 
-@time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig)
 
 @time generate_code(modelconfig)
 
@@ -21,15 +21,15 @@ IncludeFiles(modelconfig)
 
 chunk_size = 10;
 
+
 C0 = SedTrace.Param.C0;
 parm = SedTrace.Param.ParamStruct();
 OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
-solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,1)
+JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec);
+solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,2)
 solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
 OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
 outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
-
 
 
 TestOdeFun(OdeFun,C0,parm)
@@ -177,3 +177,9 @@ init2(zeros(5),9,10)
 
 x = PreallocationTools.adapt(ArrayInterfaceCore.parameterless_type(zeros(10)),
 zeros(Float64, prod(10 .+ 1) * prod(9)))
+
+
+
+a = ["# ooo","aa"]
+
+filter!(x-> !occursin(r"^#",x),a)

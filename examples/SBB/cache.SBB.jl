@@ -1,18 +1,45 @@
 module Cache
 using PreallocationTools, ForwardDiff
 mutable struct Reactran{T}
-    Mn::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Mn_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Mn_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Mn_ads_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Fe::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Fe_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TMn_ads_nsf::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TMn_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Fe_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TFe_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeCl_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeSO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeCO3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Fe_CO3_OH_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeHS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    FeS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Fe_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Fe_ads_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    NH4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    NH4_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TFe_ads_nsf::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TFe_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     NH4_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    NH4_ads_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TNH4_ads_nsf::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TNH4_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MolO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Mol_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MolO3S_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MolO2S2_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MolOS3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MolS4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MohO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Moh_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MohO3S_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MohO2S2_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MohOS3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    MohS4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TMn_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TMn_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TMn_ads_nsf_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TFe_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TFe_ads_nsf_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TNH4_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TNH4_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    TNH4_ads_nsf_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Mol_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Moh_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     H3PO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     H2PO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     HPO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -54,23 +81,6 @@ mutable struct Reactran{T}
     dTA_dTH2S::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     dTA_dTH3BO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     dTA_dTHF::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Fe_free::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeCl_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeSO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeCO3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Fe_CO3_OH_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeHS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MolO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MolO3S_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MolO2S2_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MolOS3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MolS4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MohO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MohO3S_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MohO2S2_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MohOS3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    MohS4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RFeS_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RFeS_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RCaCO3_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -139,7 +149,6 @@ mutable struct Reactran{T}
     S_CaCO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_Ca::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_MnCO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    S_FeCO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_BSi::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_H4SiO4::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     S_THF::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -153,18 +162,46 @@ mutable struct Reactran{T}
 end
 
 function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
-    Mn = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Mn_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Mn_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Mn_ads_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Fe = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Fe_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TMn_ads_nsf = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TMn_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Fe_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TFe_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeCl_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeSO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeCO3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Fe_CO3_OH_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeHS_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    FeS_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Fe_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Fe_ads_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    NH4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    NH4_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TFe_ads_nsf = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TFe_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     NH4_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    NH4_ads_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TNH4_ads_nsf = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TNH4_ads = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MolO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Mol_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MolO3S_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MolO2S2_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MolOS3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MolS4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MohO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Moh_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MohO3S_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MohO2S2_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MohOS3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    MohS4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TMn_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TMn_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TMn_ads_nsf_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TFe_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TFe_ads_nsf_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TNH4_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TNH4_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    TNH4_ads_nsf_tran =
+        PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Mol_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
+    Moh_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     H3PO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     H2PO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     HPO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -206,23 +243,6 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     dTA_dTH2S = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     dTA_dTH3BO3 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     dTA_dTHF = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Fe_free = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    FeCl_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    FeSO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    FeCO3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    Fe_CO3_OH_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    FeHS_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    FeS_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MolO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MolO3S_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MolO2S2_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MolOS3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MolS4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MohO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MohO3S_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MohO2S2_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MohOS3_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    MohS4_aq = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RFeS_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RFeS_pre = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     Omega_RCaCO3_dis = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -291,7 +311,6 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     S_CaCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_Ca = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_MnCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
-    S_FeCO3 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_BSi = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_H4SiO4 = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
     S_THF = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
@@ -304,18 +323,45 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
     S_Age = PreallocationTools.dualcache(zeros(T, Ngrid), chunk_size)
 
     cache = Reactran(
-        Mn,
-        Mn_tran,
         Mn_ads,
-        Mn_ads_tran,
-        Fe,
-        Fe_tran,
+        TMn_ads_nsf,
+        TMn_ads,
+        Fe_aq,
+        TFe_dis,
+        FeCl_aq,
+        FeSO4_aq,
+        FeCO3_aq,
+        Fe_CO3_OH_aq,
+        FeHS_aq,
+        FeS_aq,
         Fe_ads,
-        Fe_ads_tran,
-        NH4,
-        NH4_tran,
+        TFe_ads_nsf,
+        TFe_ads,
         NH4_ads,
-        NH4_ads_tran,
+        TNH4_ads_nsf,
+        TNH4_ads,
+        MolO4_aq,
+        Mol_dis,
+        MolO3S_aq,
+        MolO2S2_aq,
+        MolOS3_aq,
+        MolS4_aq,
+        MohO4_aq,
+        Moh_dis,
+        MohO3S_aq,
+        MohO2S2_aq,
+        MohOS3_aq,
+        MohS4_aq,
+        TMn_dis,
+        TMn_dis_tran,
+        TMn_ads_nsf_tran,
+        TFe_dis_tran,
+        TFe_ads_nsf_tran,
+        TNH4_dis,
+        TNH4_dis_tran,
+        TNH4_ads_nsf_tran,
+        Mol_dis_tran,
+        Moh_dis_tran,
         H3PO4,
         H2PO4,
         HPO4,
@@ -357,23 +403,6 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         dTA_dTH2S,
         dTA_dTH3BO3,
         dTA_dTHF,
-        Fe_free,
-        FeCl_aq,
-        FeSO4_aq,
-        FeCO3_aq,
-        Fe_CO3_OH_aq,
-        FeHS_aq,
-        FeS_aq,
-        MolO4,
-        MolO3S_aq,
-        MolO2S2_aq,
-        MolOS3_aq,
-        MolS4_aq,
-        MohO4,
-        MohO3S_aq,
-        MohO2S2_aq,
-        MohOS3_aq,
-        MohS4_aq,
         Omega_RFeS_dis,
         Omega_RFeS_pre,
         Omega_RCaCO3_dis,
@@ -442,7 +471,6 @@ function init(u0::Array{T,1}, Ngrid::Int, chunk_size::Int) where {T}
         S_CaCO3,
         S_Ca,
         S_MnCO3,
-        S_FeCO3,
         S_BSi,
         S_H4SiO4,
         S_THF,

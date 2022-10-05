@@ -9,22 +9,22 @@ include(
 # assemble parameter struct
 #---------------------------------------------------------------
 @with_kw mutable struct ParamStruct{T}
-    TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     PorgID::StepRange{Int64,Int64} = PorgID
+    TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     AmPorg::Tridiagonal{T,Vector{T}} = AmPorg
-    AmH3PO4::Tridiagonal{T,Vector{T}} = AmH3PO4
-    AmP_ads::Tridiagonal{T,Vector{T}} = AmP_ads
+    AmTH3PO4_dis::Tridiagonal{T,Vector{T}} = AmTH3PO4_dis
+    AmTH3PO4_ads::Tridiagonal{T,Vector{T}} = AmTH3PO4_ads
     BcAmPorg::Vector{T} = BcAmPorg
     BcCmPorg::Vector{T} = BcCmPorg
     Ngrid::Int64 = Ngrid
-    BcAmH3PO4::Vector{T} = BcAmH3PO4
-    BcCmH3PO4::Vector{T} = BcCmH3PO4
-    BcAmP_ads::Vector{T} = BcAmP_ads
-    BcCmP_ads::Vector{T} = BcCmP_ads
+    BcAmTH3PO4_dis::Vector{T} = BcAmTH3PO4_dis
+    BcCmTH3PO4_dis::Vector{T} = BcCmTH3PO4_dis
+    BcAmTH3PO4_ads::Vector{T} = BcAmTH3PO4_ads
+    BcCmTH3PO4_ads::Vector{T} = BcCmTH3PO4_ads
     alpha::Vector{T} = alpha
-    H3PO40::T = H3PO40
-    K_ads::T = K_ads
+    TH3PO4_dis0::T = TH3PO4_dis0
     dstopw::Vector{T} = dstopw
+    K_ads::T = K_ads
     k_P::T = k_P
     k_pre::T = k_pre
     Csat::T = Csat
