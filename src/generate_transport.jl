@@ -19,7 +19,7 @@ function transport_code(substances, adsorption)
     bc_strN = String[]
     alpha_str = String[]
     ads_str = String[]
-    ads_summed_expr_str = String[]
+    # ads_summed_expr_str = String[]
 
     bc_type(x, y) =
         x == "robin" ? "BW" :
@@ -89,58 +89,39 @@ function transport_code(substances, adsorption)
         end
         if i.type == "dissolved_adsorbed_summed"
             ads_df = @subset(adsorption, :substance .== i.substance)
-            @transform!(ads_df, :conv = "dstopw")
+            @select!(ads_df,:substance,:surface)
+            unique!(ads_df)
+            @transform!(ads_df,:species = ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
+            @select!(ads_df,:substance,:species)
+            @transform!(ads_df,:type="solid",:convfac ="dstopw")
 
-            substance_name = ads_df.substance[1]
+            dis_sp = i.substance*"_dis"
+            dis_df = DataFrame(substance=i.substance,species=dis_sp,type="dissolved",convfac="1")
+            append!(dis_df,ads_df)
 
-            dis_sp = ads_df.dissolved[1]
-
-            sum_eq =
-                join(ads_df.expression .* "*" .* "dstopw", "+") *
-                "+" *
-                dis_sp *
-                "-" *
-                i.substance
-
-            dis_sp_expr = SymPy.solveset(SymPy.sympify(sum_eq), SymPy.symbols.(dis_sp))
-            push!(
-                ads_df,
-                [
-                    i.substance,
-                    dis_sp,
-                    dis_sp,
-                    "",
-                    string(SymPy.elements(dis_sp_expr)[1]),
-                    "",
-                    "",
-                    "1",
-                ],
-                promote = true
-            )
-
-            for j in reverse(eachrow(ads_df))
-                push!(ads_summed_expr_str, "$(j.adsorbed) = $(j.expression)")
-                push!(tran_cache, "$(j.adsorbed)")
-                push!(tran_cache, "$(j.adsorbed)_tran")
-                push!(ads_str, "@. $(j.adsorbed) = $(j.expression)")
-                push!(ads_str, "mul!($(j.adsorbed)_tran, Am$(j.adsorbed), $(j.adsorbed))")
+            for j in eachrow(dis_df)
+                # push!(ads_summed_expr_str, "$(j.adsorbed) = $(j.expression)")
+                push!(tran_cache, "$(j.species)")
+                push!(tran_cache, "$(j.species)_tran")
+                # push!(ads_str, "@. $(j.adsorbed) = $(j.expression)")
+                push!(ads_str, "mul!($(j.species)_tran, Am$(j.species), $(j.species))")
                 push!(
                     ads_str,
-                    "$((j.adsorbed))_tran[1] += BcAm$((j.adsorbed))[1]*$((j.adsorbed))[1] + BcCm$((j.adsorbed))[1]",
+                    "$((j.species))_tran[1] += BcAm$((j.species))[1]*$((j.species))[1] + BcCm$((j.species))[1]",
                 )
                 push!(
                     ads_str,
-                    "$((j.adsorbed))_tran[Ngrid] += BcAm$((j.adsorbed))[2]*$((j.adsorbed))[Ngrid] + BcCm$((j.adsorbed))[2]",
+                    "$((j.species))_tran[Ngrid] += BcAm$((j.species))[2]*$((j.species))[Ngrid] + BcCm$((j.species))[2]",
                 )
             end
             push!(
                 ads_str,
-                "@. d$(substance_name) = " *
-                join(ads_df.adsorbed .* "_tran*" .* ads_df.conv, "+"),
+                "@. d$(i.substance) = "  *
+                join(dis_df.species .* "_tran*" .* dis_df.convfac, "+"),
             )
             push!(
                 ads_str,
-                "@. d$(substance_name) += $(i.bioirrigation_scale)alpha*($(dis_sp)0-$(dis_sp))",
+                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha*($(dis_sp)0-$(dis_sp))",
             )
             push!(ads_str, " ")
         end
@@ -234,16 +215,21 @@ function transport_code(substances, adsorption)
         append!(dH_str, ["dH = dH/dTA_dH"])
 
         pH_code = vcat(
+            "#  Concentrations of pH related species",
             "@. " .* species_conc_str,
-            "  ",
+            "#  dTA/dEIs",
             "@. " .* dTA_dTsum_str,
-            "  ",
-            "@. " .* dTA_dH_str,
-            "   ",
-            "@. " .* species_conc_str_non_pH,
-        )
+            "#  dTA/dH",
+            "@. " .* dTA_dH_str)
+            if !isempty(species_conc_str_non_pH)
+                pH_code = vcat(
+                    pH_code,
+                    "#  Speciation of non-EIs",
+                    "@. " .* species_conc_str_non_pH,
+                )
+            end
 
-        append!(pH_code, [" "])
+        append!(pH_code, ["#  Transport of individual species"])
 
         for i in eachindex(subspecies)
             push!(
@@ -262,14 +248,14 @@ function transport_code(substances, adsorption)
                 pH_code,
                 "@. $(subspecies[i])_tran += alpha * ($(subspecies[i])$(subspecies_scrpt[i]) - $(subspecies[i]))",
             )
-            push!(pH_code, " ")
+            # push!(pH_code, " ")
         end
 
-        append!(pH_code, [" "])
+        append!(pH_code, ["#  Transport of EIs"])
         append!(pH_code, "@. " .* Tsum_str)
-        append!(pH_code, [" "])
+        append!(pH_code, ["# Transport of TA"])
         append!(pH_code, "@. " .* TA_tran_str)
-        append!(pH_code, [" "])
+        append!(pH_code, ["# Transport of proton"])
         append!(pH_code, "@. " .* dH_str)
 
         if !(j == n_summed) || !(length(species_conc_str) == n_subspecies)
@@ -279,21 +265,18 @@ function transport_code(substances, adsorption)
         pH_code = String[]
     end
 
-    code = vcat(
+    view_code =  vcat(
         C_views,
-        "",
+        # "",
         dC_views,
-        "",
-        A_str,
-        "  ",
+    )
+    code = (
+        vcat(A_str,
         bc_str1,
         bc_strN,
-        "  ",
-        alpha_str,
-        "  ",
-        ads_str,
-        " ",
+        alpha_str),
         pH_code,
+        ads_str,
     )
 
     if nsummed != 0
@@ -360,6 +343,7 @@ function transport_code(substances, adsorption)
 
     function tran_format(expr)
         filter!(x -> x != " ", expr)
+        filter!(x-> !occursin(r"^#",x),expr)
         expr = replace.(expr, r"@view C" => "")
         expr = replace.(expr, r"@view dC" => "")
         expr = replace.(expr, r"mul\!" => "")
@@ -376,7 +360,8 @@ function transport_code(substances, adsorption)
     )
 
 
-    return code, tran_expr, tran_cache, ads_summed_expr_str
+    # return code, tran_expr, tran_cache, ads_summed_expr_str
+    return view_code,code, tran_expr, tran_cache
 
 end
 
