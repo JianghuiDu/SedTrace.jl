@@ -117,14 +117,14 @@
 function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,parm)
 
 
-    # if solverconfig.linsolve in [:Band, :LapackBand]
-    #     Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-    #     return CVODE_BDF(
-    #             linear_solver = solverconfig.linsolve,
-    #             jac_upper = Upbdwth,
-    #             jac_lower = Lwbdwth,
-    #         )
-    # end
+    if solverconfig.linsolve in [:Band, :LapackBand]
+        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+        return CVODE_BDF(
+                linear_solver = solverconfig.linsolve,
+                jac_upper = Upbdwth,
+                jac_lower = Lwbdwth,
+            )
+    end
 
     if solverconfig.linsolve == :KLU
         return CVODE_BDF(linear_solver = solverconfig.linsolve)
