@@ -21,7 +21,7 @@ include("identify_parameters.jl")
 include("preprocessing.jl")
 include("parsing_jacobian.jl")
 include("generate_parameter_struct.jl")
-
+include("speciation_code.jl")
 
 function generate_code(
     modelconfig::ModelConfig;
@@ -61,15 +61,15 @@ function generate_code(
         parameter_code(parameters, substances, adsorption, modelconfig.AssembleParam)
 
 
-    tran_code, tran_expr, tran_cache, ads_str = transport_code(substances, adsorption)
+    view_code,tran_code, tran_expr, tran_cache = transport_code(substances, adsorption)
 
+    spec_code,spec_expr,spec_cache,speciation_df = speciation_code(substances,speciation,adsorption)
 
     react_code, parsing_df, species_modelled, react_expr, react_cache, pHspecies =
         reaction_code(
             reactions,
             substances,
-            speciation,
-            adsorption,
+            speciation_df,
             modelconfig.CompleteFlux,
             modelconfig.AllowDiscontinuity,
         )
@@ -78,7 +78,7 @@ function generate_code(
     # generate jacobian pattern
     #---------------------------------------------------------------------------
 
-    cache_str = unique(vcat(react_cache, tran_cache))
+    cache_str = unique(vcat(spec_cache,react_cache, tran_cache))
     @unpack species_model_df, species_extra_df, elements_df = parsing_df
 
     tran_param = identify_tran_param(species_modelled, tran_expr, cache_str)
@@ -86,10 +86,10 @@ function generate_code(
     react_jp, react_param = jac_react_dependence(
         species_model_df,
         species_modelled,
+        spec_expr,
         react_expr,
         cache_str,
-        ads_str,
-        adsorption,
+        speciation_df,
         pHspecies,
     )
 
@@ -139,7 +139,7 @@ function generate_code(
     # cache code 
     #---------------------------------------------------------------------------
 
-    cache = unique(vcat(tran_cache, react_cache))
+    cache = unique(vcat(spec_cache,tran_cache, react_cache))
     cache_code = vcat(
         "module Cache",
         "using PreallocationTools,ForwardDiff",
@@ -153,18 +153,47 @@ function generate_code(
     if modelconfig.AssembleParam
         reactran_header = [
             "function (f::Cache.Reactran)(dC,C,parms::Param.ParamStruct,t)",
+            "#---------------------------------------------------------------------",
+            "#  Parameters",
+            "#---------------------------------------------------------------------",    
             unpack_str,
-            ""
         ]
     else
         reactran_header = ["function (f::Cache.Reactran)(dC,C,parms,t)"]
     end
 
+    push!(reactran_header, "#---------------------------------------------------------------------")
+    push!(reactran_header, "#  Cache")
+    push!(reactran_header, "#---------------------------------------------------------------------")
+
     for i in cache
         push!(reactran_header, "$i = PreallocationTools.get_tmp(f.$i, C)")
     end
 
-    code = vcat(tran_code, react_code)
+    code = vcat(
+        "#---------------------------------------------------------------------",
+        "#  Model state",
+        "#---------------------------------------------------------------------",
+        view_code,
+        "#---------------------------------------------------------------------",
+        "#  Transport of solid and dissolved substances",
+        "#---------------------------------------------------------------------",
+        tran_code[1],
+        "#---------------------------------------------------------------------",
+        "#  pH code",
+        "#---------------------------------------------------------------------",
+        tran_code[2],
+        "#---------------------------------------------------------------------",
+        "#  Speciation code",
+        "#---------------------------------------------------------------------",
+        "#  Concentrations of adsorbed/dissolved species",
+        spec_code,
+        "#  Transport of adsorbed/dissolved species",
+        tran_code[3],
+        "#---------------------------------------------------------------------",
+        "#  Reaction code",
+        "#---------------------------------------------------------------------",
+        react_code)
 
     if modelconfig.FastBroadcast
         code = replace.(code, r"@\." => "@..")
