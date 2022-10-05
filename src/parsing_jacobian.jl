@@ -2,13 +2,13 @@
 function jac_react_dependence(
     species_join,
     species_modelled,
+    spec_expr,
     react_expr,
     cache_str,
-    ads_expr,
-    adsorption,
+    speciation_df,
     pHspecies
 )
-    UnPack.@unpack  spec_expr, rate_expr, omega_expr ,species_rate = react_expr
+    UnPack.@unpack rate_expr, omega_expr ,species_rate = react_expr
 
 
     p_spec = find_param_in_expr(species_modelled, spec_expr, cache_str, "react")
@@ -17,10 +17,20 @@ function jac_react_dependence(
     @subset!(p_spec,.!:isparam)
     @select!(p_spec,:label, :variable)
 
-    p_ads = find_param_in_expr_ads(species_modelled, ads_expr, cache_str, adsorption)
-    append!(p_par,@transform!(@subset(p_ads,:isparam),:type = "adsorption"))
-    @subset!(p_ads,.!:isparam)
-    @select!(p_ads,:label, :variable)
+    p_spec_ = leftjoin(p_spec, p_spec, on = [:variable => :label], renamecols = "" => "_tmp")
+    @transform!(p_spec_,:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
+    @select!(p_spec_,:label, :variable)
+
+    p_spec__ = leftjoin(p_spec_, p_spec_, on = [:variable => :label], renamecols = "" => "_tmp")
+    @transform!(p_spec__,:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
+    @select!(p_spec__,:label, :variable)
+    unique!(p_spec__)
+    # sort!(p_spec__,:label)
+
+    # p_ads = find_param_in_expr_ads(species_modelled, ads_expr, cache_str, adsorption)
+    # append!(p_par,@transform!(@subset(p_ads,:isparam),:type = "adsorption"))
+    # @subset!(p_ads,.!:isparam)
+    # @select!(p_ads,:label, :variable)
 
 
     p_omega = find_param_in_expr(species_modelled, omega_expr, cache_str, "react")
@@ -45,15 +55,17 @@ function jac_react_dependence(
     @transform!(p_all,:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
     @select!(p_all,:label, :variable)
 
-    p_all = leftjoin(p_all,p_spec, on = [:variable => :label], renamecols = "" => "_tmp")
-    @transform!(p_all,:variable = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
-    @select!(p_all,:label, :variable)
-
-    p_all = leftjoin(p_all,p_ads, on = [:variable => :label], renamecols = "" => "_tmp")
-    @transform!(p_all,
-            :dependence = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp)
-    )
+    p_all = leftjoin(p_all,p_spec__, on = [:variable => :label], renamecols = "" => "_tmp")
+    @transform!(p_all,:dependence = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp))
     @select!(p_all,:label, :dependence)
+
+
+
+    # p_all = leftjoin(p_all,p_ads, on = [:variable => :label], renamecols = "" => "_tmp")
+    # @transform!(p_all,
+    #         :dependence = ifelse.(ismissing.(:variable_tmp), :variable, :variable_tmp)
+    # )
+    # @select!(p_all,:label, :dependence)
     
     
     for i in eachrow(pHspecies)
@@ -93,3 +105,15 @@ function jac_react_dependence(
     return react_dependence,react_param
 end
 
+
+# species_list = @chain begin
+#     select(species_join,:substance,:species_modelled)
+#     @transform!(:species_modelled = split.(:species_modelled,","))
+#     # select!(Not(:species_modelled))
+#     flatten(:species_modelled)
+#     @transform!(:species_modelled = split.(:species_modelled,"/"))
+#     @transform!(:species = getindex.(:species_modelled,1))
+#     @transform!(:species_name = last.(:species_modelled))
+#     # @transform!(:species_name = getindex.(split.(:species,"{"),1))
+#     unique
+# end

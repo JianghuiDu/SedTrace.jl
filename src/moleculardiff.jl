@@ -45,8 +45,10 @@ species_default = [
     "Nd143",
     "Ndnr",
     "Ndr",
-    "Mol",
-    "Moh"
+    "Mol_dis",
+    "Moh_dis",
+    "TFe_dis",
+    "TMn_dis"
 ]
 
 # return molecular diffusion in cm2/yr
@@ -157,19 +159,19 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species_all)
         mu_S = viscosity(SS, tS, Patm)
         mdif["MoO4"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
     end
-    if haskey(mdif, "Mol")
+    if haskey(mdif, "Mol_dis")
         D_MoO4 = 9.91e-6
         tS = 25.0
         SS = 0.0
         mu_S = viscosity(SS, tS, Patm)
-        mdif["Mol"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
+        mdif["Mol_dis"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
     end
-    if haskey(mdif, "Moh")
+    if haskey(mdif, "Moh_dis")
         D_MoO4 = 9.91e-6
         tS = 25.0
         SS = 0.0
         mu_S = viscosity(SS, tS, Patm)
-        mdif["Moh"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
+        mdif["Moh_dis"] = D_MoO4 * (mu_S / mu_0) * (TK / (tS + 273.15))
     end
 
     # Boudreau 1997 p115 table4.7
@@ -319,6 +321,18 @@ function molecdiff(salinity::Float64, temp::Float64, pres::Float64, species_all)
         if haskey(mdif, ion[i])
             mdif[ion[i]] = (m0[i] + m1[i] * temp) * 1e-6
         end
+    end
+
+    if haskey(mdif, "TFe_dis")
+        mdif["TFe_dis"] = mdif["Fe"]
+    end
+
+    if haskey(mdif, "TMn_dis")
+        mdif["TMn_dis"] = mdif["Mn"]
+    end
+
+    if haskey(mdif, "TNH4_dis")
+        mdif["TNH4_dis"] = mdif["NH4"]
     end
 
     #   if haskey(mdif, "TH3PO4")

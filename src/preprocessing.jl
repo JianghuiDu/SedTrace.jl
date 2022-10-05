@@ -125,7 +125,7 @@ function checkerrorSubstance!(substances::DataFrame)
                     error("A substance with dissolved_summed or dissolved_summed_pH type must be from this list: $(join(list_summed_species,",")). $(i.substance) is not from this list.")
                 )
             else
-                i.species_modelled = join(EquilibriumInvariant(i.substance).species,",")
+                i.formula = join(EquilibriumInvariant(i.substance).species,",")
             end
         end
     end
@@ -169,7 +169,7 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     for i in [
         "substance",
         "type",
-        "species_modelled",
+        "formula",
         "top_bc_type",
         "bot_bc_type",
         "bioirrigation_scale",
@@ -224,7 +224,7 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     # orderdict = Dict(x => i for (i, x) in enumerate(ord))
     # sort!(substances, :type, by = x -> orderdict[x])
     insertcols!(substances, :order => 1:length(substances.substance))
-    select!(substances,:substance,:type,:species_modelled,:top_bc_type,:bot_bc_type,:bioirrigation_scale,:order)
+    select!(substances,:substance,:type,:formula,:top_bc_type,:bot_bc_type,:bioirrigation_scale,:order)
 end
 
 
@@ -264,7 +264,7 @@ end
 
 
 function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
-    for i in ["substance", "label", "equation", "logK", "include"]
+    for i in ["substance", "dissolved","formula", "equation", "logK", "include"]
         if !(i in names(speciation))
             throw(error("Column $i is not found in Sheet speciation."))
         end
@@ -274,7 +274,7 @@ function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
             if !in(i, speciation.label)
                 throw(error("$i is not an aqueous species"))
             else
-                setval!(speciation, :label, i, :include, 1)
+                setval!(speciation, :dissolved, i, :include, 1)
             end
         end
     end
@@ -284,12 +284,14 @@ function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
     df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     check_illegal_char(speciation)
-    checkismissing!(speciation,[:substance,:label,:equation,:logK],:label,"speciation")
+    checkismissing!(speciation,[:substance,:dissolved,:formula,:equation,:logK],:dissolved,"speciation")
 
+    @transform!(speciation,:formula_ = split.(:formula,"{"))
+    @transform!(speciation,:formula_ = getindex.(:formula_,1))
     insertcols!(speciation, :K => 10.0 .^ parse.(Float64, speciation.logK))
     select!(speciation, Not(:logK))
     insertcols!(speciation, :check .=> 1)
-    select!(speciation,:check,:substance,:label,:equation,:K)
+    select!(speciation,:check,:substance,:dissolved,:formula,:formula_,:equation,:K)
 end
 
 
@@ -413,3 +415,28 @@ end
 
 
 
+
+function preprocessOutput!(output::DataFrame, EnableList::Dict = Dict())
+    for i in ["name", "expression", "conversion_profile", "unit_profile", "include","flux_top","conversion_flux","unit_flux","flux_top_measured"]
+        if !(i in names(output))
+            throw(error("Column $i is not found in Sheet output."))
+        end
+    end
+    if haskey(EnableList, "output")
+        for i in EnableList["output"]
+            if !in(i,output.name)
+                throw(error("$i is not in the output!"))
+            else
+                setval!(output, :name, i, :include, 1)
+            end
+        end
+    end
+
+    subset!(output, :include => ByRow(!ismissing))
+    select!(output, Not(:include))
+    df_str_replace!(output, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    check_illegal_char(select(output,:name,:expression,:conversion_profile))
+    checkismissing!(output,[:name,:conversion_profile],:name,"output")
+
+end

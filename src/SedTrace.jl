@@ -68,7 +68,7 @@ include("generate_plot.jl")
 include("parsing_jacobian.jl")
 include("generate_parameter_struct.jl")
 include("preprocessing.jl")
-
+include("speciation_code.jl")
 include("benchmark.jl")
 
 using .CodeGeneration: generate_code
