@@ -5,7 +5,7 @@
 # 2. The "substances" spreadsheet contains information of modelled
 #    substances, including their names, their species in the model
 #    and the types, corresponding to three columns: "substance",
-#    "species_modelled", and "type".
+#    "formula", and "type".
 # 3. The "reactions" spreadsheet contains information of modelled
 #    reactions, including their names, chemical equations,
 #    kinetic rate expression and definition of saturation index (if
@@ -26,21 +26,21 @@
 #    in the final code. It can only contain alphanumericals (readable by computers).
 # 2. On the species level, the individual species of a substance may have
 #    a chemical name and a code name:
-#    The chemical name appears in columns "species_modelled" and is used "equation",
+#    The chemical name appears in columns "formula" and is used "equation",
 #    which must match exactly. The reason to have a code name is becuase
 #    chemical names are often not readable by computers, such as Fe{2+}.
 #    Yet the chemical name is needed in the chemical equation.
 #    The code name will appear in the final code, and it can only constain
 #    alphanumericals, written in the format of "chemical name/code name" in the
-#    column "species_modelled", multiple species need to be separated by ",".
+#    column "formula", multiple species need to be separated by ",".
 #    When the chemical name is alphanumericals, then code name is not needed.
-#    The general format of column "species_modelled" thus should be like
+#    The general format of column "formula" thus should be like
 #    chemical name 1, chemical name2/code name 2, chemical name 3/code name 3.
-#    If the substance only has one species, such as O2, then the "species_modelled"
+#    If the substance only has one species, such as O2, then the "formula"
 #    column should be left empty, and by default the substance name will be used
 #    as the code name for this substance/species.
 
-#    The column "species_modelled" enables the computer to automatically
+#    The column "formula" enables the computer to automatically
 #    generate computer codes of the species by replacing the chemical names in the
 #    chemical equations by the code names.
 
@@ -345,21 +345,30 @@ end
 #-------------------------------------------------------------------------------------------
 # Functions to match the species information extracted from
 # the reaction equations from column "equation" with the modelled
-# substance/species in the columns "substance" and "species_modelled".
+# substance/species in the columns "substance" and "formula".
 #-------------------------------------------------------------------------------------------
-function join_eq_to_model(species_eq, species_modelled, adsorption)
+function join_eq_to_model(species_eq, species_modelled, speciation_df)
 
     transform!(
         species_modelled,
-        [:species_modelled, :substance] =>
-            ((a, b) -> ifelse.(ismissing.(a), b, b .* "," .* a)) => :species_modelled,
+        [:formula, :substance] =>
+            ((a, b) -> ifelse.(ismissing.(a), b, b .* "," .* a)) => :formula,
     )
 
+    function joinspec(subs)
+        df = @subset(speciation_df,:substance.==subs)
+        @transform!(df,:spec = ifelse.(:formula.=="",:name,:formula.*"/".*:name))
+        return(join(df.spec,","))
+    end
+    @transform!(
+        species_modelled,
+        :formula = ifelse.(:type.=="dissolved_adsorbed_summed",:formula.* ",".*joinspec.(:substance),:formula)
+    )
     # get the unique species read from the chemical equations
     # to join to the species_modelled list
     species_eq_unique = DataFrame()
     species_eq_unique[!, :species_eq] = unique(species_eq[!, :species_eq])
-    species_eq_unique[!, :species_modelled] = missings(String, size(species_eq_unique, 1))
+    species_eq_unique[!, :formula] = missings(String, size(species_eq_unique, 1))
     species_eq_unique[!, :codename] = missings(String, size(species_eq_unique, 1))
 
     # loop though the species from equations and in the modelled list
@@ -377,14 +386,14 @@ function join_eq_to_model(species_eq, species_modelled, adsorption)
             ")(\\{[\\+\\-\\d*]?\\})?\\/\\K\\w+",
         ) # codename is after chemical name/
         for j in eachrow(species_modelled)
-            if occursin(reg1, j[:species_modelled])
-                i[:species_modelled] = j[:species_modelled]
-                i[:codename] = mymatch(reg2, j[:species_modelled], missing)
+            if occursin(reg1, j[:formula])
+                i[:formula] = j[:formula]
+                i[:codename] = mymatch(reg2, j[:formula], missing)
             end
         end
     end
     # species that are in the equation but not modelled
-    species_eq_not_modelled = @subset(species_eq_unique, ismissing.(:species_modelled))
+    species_eq_not_modelled = @subset(species_eq_unique, ismissing.(:formula))
     rename!(species_eq_not_modelled, :species_eq => :species)
     select!(species_eq_not_modelled, :species)
     insertcols!(
@@ -394,14 +403,14 @@ function join_eq_to_model(species_eq, species_modelled, adsorption)
 
 
     # join the species in equations to modelled
-    @subset!(species_eq_unique, .!ismissing.(:species_modelled))
+    @subset!(species_eq_unique, .!ismissing.(:formula))
     species_join = leftjoin(species_eq, species_eq_unique; on = :species_eq)
-    @subset!(species_join, .!ismissing.(:species_modelled))
-    species_join = outerjoin(species_join, species_modelled; on = :species_modelled)
+    @subset!(species_join, .!ismissing.(:formula))
+    species_join = outerjoin(species_join, species_modelled; on = :formula)
 
     # species not modelled but in the equations
     species_modelled_not_eq = @subset(species_join, ismissing.(:species_eq))
-    rename!(species_modelled_not_eq, :species_modelled => :species)
+    rename!(species_modelled_not_eq, :formula => :species)
     select!(species_modelled_not_eq, :species)
     insertcols!(
         species_modelled_not_eq,
@@ -422,15 +431,13 @@ function join_eq_to_model(species_eq, species_modelled, adsorption)
 
 
     # make type changes to the adsorbed species
-    species_join_ads = @subset(species_join, .!ismissing.(:codename))
+    # species_join_ads = @subset(species_join, .!ismissing.(:codename))
 
-    ads_df = leftjoin(
-        adsorption,
-        select!(species_join_ads, :species_eq, :codename),
-        on = :adsorbed => :codename,
-    )
+    ads_df = @subset(speciation_df,:type.=="adsorbed")
 
-    ads_spec = skipmissing(vcat(ads_df.adsorbed, ads_df.species_eq))
+    # ads_spec = skipmissing(vcat(ads_df.adsorbed, ads_df.species_eq))
+
+    ads_spec = ads_df.name
 
     transform!(
         species_join,
@@ -783,177 +790,11 @@ end
 
 
 
-
-function speciation_code(speciation_df)
-
-    # if length(unique(speciation_df.substance)) != 1
-    #     throw(error("multiple substances " * join(unique(speciation_df.substance), " & ")))
-    # end
-    substance_model = speciation_df.substance[1]
-    speciation_df = @chain begin
-        speciation_df
-        #     # @subset(.!ismissing.(:include))
-        #     # transform!(
-        #     #     :equation =>
-        #     #         (
-        #     #             x ->
-        #     #                 mymatch.(
-        #     #                     Regex(
-        #     #                         "(?<=\\=).*?\\K" * substance_model * "[\\w\\(\\)\\[\\]]*",
-        #     #                     ),
-        #     #                     x,
-        #     #                 )
-        #     #         ) => :label,
-        #     # )
-        transform(:label => (x -> replace.(x, r"[\(\)\[\]]+" => "_")), renamecols = false)
-        transform(:label => (x -> replace.(x, r"\_$" => "")), renamecols = false)
-    end
-
-    speciation_logK = @chain begin
-        speciation_df
-        # @transform(:K = 10.0 .^ parse.(Float64, :logK))
-        select(:substance, :label, :K)
-    end
-
-    speciation_Eq = @chain begin
-        speciation_df
-        # @transform(:check = 1)
-        species_from_equation()
-        _[1]
-        @transform(:substance = substance_model)
-        # transform!(
-        #     :species_eq => (a -> ifelse.(a .== substance_model, a .* "_free", a)),
-        #     renamecols = false,
-        # )
-        transform!(
-            :species_eq => (x -> replace.(x, r"[\(\)\[\]]+" => "_")),
-            renamecols = false,
-        )
-        transform!(:species_eq => (x -> replace.(x, r"\_$" => "")), renamecols = false)
-        @subset(:species_eq .!= "H2O")
-        groupby([:substance, :label, :role])
-        combine(
-            [:species_eq, :stoichiometry] =>
-                ((a, b) -> join(a .* ifelse.(b .== "1", "", "^(" .* b .* ")"), "*")) =>
-                    :oneside,
-        )
-        groupby([:substance, :label])
-        combine(:oneside => (x -> join(x, "*")) => :Eq)
-        leftjoin(speciation_logK, on = [:substance, :label])
-        dropmissing!()
-        select!(:substance, :label, [:Eq, :K] => ((a, b) -> a .* "-" .* string.(b)) => :Eq)
-        transform!(:Eq => (x -> SymPy.sympify.(x)), renamecols = false)
-    end
-
-    # var1 = SymPy.solve.(speciation_Eq.Eq, SymPy.symbols.(speciation_Eq.label))
-    # var2 = sum(var1) / (SymPy.symbols(substance_model * "_free"))
-    # var3 = SymPy.symbols(substance_model) / (var2[1] + 1)
-    # substance_free = SymPy.simplify(var3)
-    base_species = speciation_Eq.label[speciation_Eq.Eq.==0][1]
-
-
-    speciation_Eq_sys = @chain begin
-        speciation_Eq
-        @subset(:label .!= base_species)
-        # @select!(:label,:Eq)
-        # push!(
-        #     [substance_model,SymPy.sympify(join(speciation_Eq.label,"+")*"-"*substance_model)]
-        # )
-    end
-
-    var1 = SymPy.solveset.(speciation_Eq_sys.Eq, SymPy.symbols.(speciation_Eq_sys.label))
-    sumvar = SymPy.sum(SymPy.elements.(var1))[1]
-
-    if base_species != substance_model
-        var2 = SymPy.solveset(
-            sumvar + SymPy.symbols(base_species) - SymPy.symbols(substance_model),
-            SymPy.symbols(base_species),
-        )
-        varele = SymPy.elements(var2)[1]
-        speciation_Str = [base_species * "=" * string(varele)]
-        for i in eachrow(speciation_Eq_sys)
-
-            res = SymPy.solveset(
-                i.Eq[1](SymPy.symbols(base_species) => varele),
-                SymPy.symbols(i.label),
-            )
-
-            push!(speciation_Str, i.label * "_aq=" * string(SymPy.elements(res)[1]))
-        end
-
-    else
-        var2 = SymPy.solveset(
-            sumvar + SymPy.symbols(base_species) -
-            SymPy.symbols("Dissolved_" * substance_model),
-            SymPy.symbols(base_species),
-        )
-        varele = SymPy.elements(var2)[1]
-
-        speciation_Str = [
-            base_species *
-            "_free" *
-            "=" *
-            replace(string(varele), "Dissolved_" * substance_model => substance_model),
-        ]
-        for i in eachrow(speciation_Eq_sys)
-
-            res = SymPy.solveset(
-                i.Eq[1](SymPy.symbols(base_species) => varele),
-                SymPy.symbols(i.label),
-            )
-
-            push!(
-                speciation_Str,
-                i.label *
-                "_aq=" *
-                replace(
-                    string(SymPy.elements(res)[1]),
-                    "Dissolved_" * substance_model => substance_model,
-                ),
-            )
-        end
-
-    end
-
-
-
-
-    # return substance_model * "_free = " * string(substance_free)
-    return speciation_Str
-end
-
-
-
-# function species_in_model(species_join, species_extra)
-#     # all the modelled species from species_joi and _extra
-#     species_modelled = @chain begin
-#         species_extra
-#         @subset(:comment .== "modelled but not in chemical equation")
-#         _.species
-#         vcat(species_join.species_modelled)
-#         unique
-#         split.(",")
-#         reduce(vcat, _)
-#         split.("/")
-#         reduce(vcat, _)
-#         split.("{")
-#     end
-
-#     for i in species_modelled
-#         if length(i) > 1
-#             deleteat!(i, 2)
-#         end
-#     end
-
-#     species_modelled = unique(reduce(vcat, species_modelled))
-#     return species_modelled
-# end
-
 function species_in_model(species_join, species_extra)
     # all the modelled species from species_joi and _extra
     spec_in_model =
         @subset(species_extra, :comment .== "modelled but not in chemical equation")
-    spec = vcat(spec_in_model.species, species_join.species_modelled)
+    spec = vcat(spec_in_model.species, species_join.formula)
     unique!(spec)
     spec = split.(spec, ",")
     spec = reduce(vcat, spec)
@@ -972,47 +813,17 @@ function species_in_model(species_join, species_extra)
 end
 
 
-
-# species_list = @chain begin
-#     substances
-#     dropmissing(:species_modelled)
-#     @transform(:species = split.(:species_modelled, ","))
-#     DataFrames.flatten(:species)
-#     @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
-#     select(:substance,:species)
-# end
-
-
-
 #-------------------------------------------------------------------------------------------
 # Generate reaction code
 #-------------------------------------------------------------------------------------------
 
-function reaction_code(reactions, substances, speciation, adsorption, cf, discontinuity)
+function reaction_code(reactions, substances,  speciation_df, cf, discontinuity)
 
     # parse species from the chemical reaction equations
     species_eq, element_eq = species_from_equation(reactions)
     # join that to the modelled species list
-    species_join, species_extra = join_eq_to_model(species_eq, substances, adsorption)
+    species_join, species_extra = join_eq_to_model(species_eq, substances, speciation_df)
 
-    if !isempty(speciation)
-        # speciation
-        spec_expr = map(speciation_code, [i for i in groupby(speciation, :substance)])
-        spec_expr = reduce(vcat, spec_expr)
-    end
-    # adsorbed species
-    # sp_ads = @subset(species_join, occursin.("Surf_", :species_eq))
-    # ads_expr = String[]
-    # for i in eachrow(sp_ads)
-    #     push!(ads_expr, i.codename * "=" * i.substance * "*K" * i.codename)
-    # end
-    # sp_ads = @subset(adsorption,:surface .!= "dissolved")
-    # ads_expr = String[]
-    # for i in eachrow(adsorption)
-    #         push!(ads_expr, i.adsorbed * "=" * i.expression)
-    # end
-
-    # append!(ads_expr, ads_summed_expr_str)
 
 
     # formate rate expressions
@@ -1026,13 +837,13 @@ function reaction_code(reactions, substances, speciation, adsorption, cf, discon
 
 
     code = vcat(
-        isempty(speciation) ? String[] : vcat("# speciation", "@. " .* spec_expr),
-        "",
-        "# reaction rates",
+        # isempty(speciation) ? String[] : vcat("# speciation", "@. " .* spec_expr),
+        # "",
+        "# Individual reaction rates",
         "@. " .* omega_expr,
         "@. " .* rate_expr,
         "",
-        "# species rates",
+        "# Summed rates for model substances",
         "@. " .* species_rate,
         "",
         "@. " .* dCdt,
@@ -1072,14 +883,15 @@ function reaction_code(reactions, substances, speciation, adsorption, cf, discon
 
 
     reac_expr = (
-        spec_expr = isempty(speciation) ? String[] : spec_expr,
+        # spec_expr = isempty(speciation) ? String[] : spec_expr,
         rate_expr = rate_expr,
         omega_expr = omega_expr,
         species_rate = species_rate,
     )
 
     cache_str = vcat(
-        isempty(speciation) ? String[] : spec_expr, omega_expr, rate_expr, species_rate)
+        # isempty(speciation) ? String[] : spec_expr, 
+        omega_expr, rate_expr, species_rate)
     cache_str = split.(cache_str, r"\=|\+\=|\*\=|\-\=|\/\=")
     cache_str = unique([replace(i[1], r"\s" => "") for i in cache_str])
 
