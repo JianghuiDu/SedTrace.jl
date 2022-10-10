@@ -125,7 +125,7 @@ function checkerrorSubstance!(substances::DataFrame)
                     error("A substance with dissolved_summed or dissolved_summed_pH type must be from this list: $(join(list_summed_species,",")). $(i.substance) is not from this list.")
                 )
             else
-                i.formula = join(EquilibriumInvariant(i.substance).species,",")
+                i.formula = join(EquilibriumInvariant(i.substance).species.*EquilibriumInvariant(i.substance).charge,",")
             end
         end
     end
@@ -202,6 +202,11 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     transform!(
         substances,
         :bioirrigation_scale => x -> ifelse.(ismissing.(x), "", x),
+        renamecols = false,
+    )
+    transform!(
+        substances,
+        :formula => x -> ifelse.(ismissing.(x), "", x),
         renamecols = false,
     )
 
@@ -438,5 +443,21 @@ function preprocessOutput!(output::DataFrame, EnableList::Dict = Dict())
 
     check_illegal_char(select(output,:name,:expression,:conversion_profile))
     checkismissing!(output,[:name,:conversion_profile],:name,"output")
+
+end
+
+
+
+function preprocessDiffusion!(diffusion::DataFrame)
+    for i in ["SedTrace_name","model_name"]
+        if !(i in names(diffusion))
+            throw(error("Column $i is not found in Sheet diffusion."))
+        end
+    end
+
+    df_str_replace!(diffusion, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
+
+    check_illegal_char(select(diffusion,:model_name))
+    checkismissing!(diffusion,[:SedTrace_name,:model_name],:model_name,"diffusion")
 
 end
