@@ -13,14 +13,14 @@ include(
     TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     AmPorg::Tridiagonal{T,Vector{T}} = AmPorg
     AmTH3PO4_dis::Tridiagonal{T,Vector{T}} = AmTH3PO4_dis
-    AmTH3PO4_ads::Tridiagonal{T,Vector{T}} = AmTH3PO4_ads
+    AmTH3PO4_ads_nsf::Tridiagonal{T,Vector{T}} = AmTH3PO4_ads_nsf
     BcAmPorg::Vector{T} = BcAmPorg
     BcCmPorg::Vector{T} = BcCmPorg
     Ngrid::Int64 = Ngrid
     BcAmTH3PO4_dis::Vector{T} = BcAmTH3PO4_dis
     BcCmTH3PO4_dis::Vector{T} = BcCmTH3PO4_dis
-    BcAmTH3PO4_ads::Vector{T} = BcAmTH3PO4_ads
-    BcCmTH3PO4_ads::Vector{T} = BcCmTH3PO4_ads
+    BcAmTH3PO4_ads_nsf::Vector{T} = BcAmTH3PO4_ads_nsf
+    BcCmTH3PO4_ads_nsf::Vector{T} = BcCmTH3PO4_ads_nsf
     alpha::Vector{T} = alpha
     TH3PO4_dis0::T = TH3PO4_dis0
     dstopw::Vector{T} = dstopw

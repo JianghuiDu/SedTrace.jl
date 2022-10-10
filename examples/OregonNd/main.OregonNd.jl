@@ -89,8 +89,8 @@ outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.N
 solution = load("sol.$modelname.jld2", "sol");
 
 solverctrlconfig = SolverCtrlConfig(
-    C0,
-    # solution.sol[end],
+    # C0,
+    solution.sol[end],
     (0.0, 1E6),
     reltol = 1e-6,
     abstol = 1e-18,

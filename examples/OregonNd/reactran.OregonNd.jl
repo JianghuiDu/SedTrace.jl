@@ -238,7 +238,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     KspFeS,
     KspCaCO3_dis,
     H4SiO4_dis_sat,
-    KspNdPO4,
     KspBasalt,
     rNC,
     rPC,
@@ -279,6 +278,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     DNdMn,
     DNdFe,
     kNdPO4_pre,
+    KspNdPO4,
     kIllite,
     KspIllite,
     kBasalt,
@@ -406,8 +406,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Omega_RFeS_pre = PreallocationTools.get_tmp(f.Omega_RFeS_pre, C)
     Omega_RCaCO3_dis = PreallocationTools.get_tmp(f.Omega_RCaCO3_dis, C)
     Omega_RBSi_dis = PreallocationTools.get_tmp(f.Omega_RBSi_dis, C)
-    Omega_RNdnrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdnrPO4_pre, C)
-    Omega_RNdrPO4_pre = PreallocationTools.get_tmp(f.Omega_RNdrPO4_pre, C)
     Omega_RBasalt_dis = PreallocationTools.get_tmp(f.Omega_RBasalt_dis, C)
     RO2POC = PreallocationTools.get_tmp(f.RO2POC, C)
     RNO2POC = PreallocationTools.get_tmp(f.RNO2POC, C)
@@ -1212,10 +1210,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. Omega_RFeS_pre = Fe_aq ⊗ HS / (H ⊗ KspFeS)
     @.. Omega_RCaCO3_dis = Ca ⊗ CO3 / KspCaCO3_dis
     @.. Omega_RBSi_dis = TH4SiO4 / H4SiO4_dis_sat
-    @.. Omega_RNdnrPO4_pre =
-        Ndnr_aq ⊗ PO4 / KspNdPO4 / (NdnrPO4 / (NdnrPO4 ⊕ NdrPO4))
-    @.. Omega_RNdrPO4_pre =
-        Ndr_aq ⊗ PO4 / KspNdPO4 / (NdrPO4 / (NdnrPO4 ⊕ NdrPO4))
     @.. Omega_RBasalt_dis =
         10^(
             log10(H4SiO4) ⊕ log10(Al_aq) ⊗ 0.36 - log10(H) ⊗ 1.08 -
@@ -1282,11 +1276,9 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. RFeOx_Ndr =
         (RO2Fe ⊕ RO2Fe_ads ⊕ RMnO2Fe ⊗ dstopw) ⊗ TNdr_dis / TFe_dis ⊗ DNdFe
     @.. RNdnrPO4_pre =
-        (tanh(1e3 ⊗ (Omega_RNdnrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
-        (kNdPO4_pre ⊗ NdnrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdnrPO4_pre - 1))
+        kNdPO4_pre ⊗ (Ndnr_aq ⊗ PO4 / KspNdPO4 - NdnrPO4 / (NdnrPO4 ⊕ NdrPO4))
     @.. RNdrPO4_pre =
-        (tanh(1e3 ⊗ (Omega_RNdrPO4_pre - 1.0)) / 2 ⊕ 0.5) ⊗
-        (kNdPO4_pre ⊗ NdrPO4 / (NdnrPO4 ⊕ NdrPO4) ⊗ (Omega_RNdrPO4_pre - 1))
+        kNdPO4_pre ⊗ (Ndr_aq ⊗ PO4 / KspNdPO4 - NdrPO4 / (NdnrPO4 ⊕ NdrPO4))
     @.. RIllite_pre =
         kIllite ⊗ Illite ⊗ (
             10^(

@@ -68,7 +68,7 @@ DTNH4_dis = 3.4531311564520092E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sedime
 # boundary fluxes and concentrations
 #----------------------------------------------
 TNH4_dis0 = 1.0e-6 # mmol cm^-3 # Concentration of NH4 at the TOP of sediment column
-TNH4_ads0 = KNH4_ads * TNH4_dis0 # mmol cm^-3 # Concentration of NH4_ads at the TOP of sediment column
+TNH4_ads_nsf0 = KNH4_ads * TNH4_dis0 # mmol cm^-3 # Concentration of NH4_ads at the TOP of sediment column
 N_org0 = 0.1 # mmol cm^-3 # Concentration of N_org at the TOP of sediment column
 N_orgL = 0.0 # mmol cm^-3 # Concentration of N_org at the BOTTOM of sediment column
 
@@ -77,7 +77,7 @@ N_orgL = 0.0 # mmol cm^-3 # Concentration of N_org at the BOTTOM of sediment col
 #----------------------------------------------
 BcN_org = ((1.0, 0.0, N_org0), (1.0, 0.0, N_orgL)) #  # Boundary condition of N_org
 BcTNH4_dis = ((1.0, 0.0, TNH4_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_dis
-BcTNH4_ads = ((1.0, 0.0, TNH4_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_ads
+BcTNH4_ads_nsf = ((1.0, 0.0, TNH4_ads_nsf0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_ads_nsf
 
 #----------------------------------------------
 # Boundary transport matrix
@@ -85,15 +85,15 @@ BcTNH4_ads = ((1.0, 0.0, TNH4_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of
 BcAmN_org, BcBmN_org, BcCmN_org = fvcf_bc(phis, Ds, us, dx, BcN_org, Ngrid) #  # Boundary transport matrix of N_org
 BcAmTNH4_dis, BcBmTNH4_dis, BcCmTNH4_dis =
     fvcf_bc(phif, DTNH4_dis, uf, dx, BcTNH4_dis, Ngrid) #  # Boundary transport matrix of TNH4_dis
-BcAmTNH4_ads, BcBmTNH4_ads, BcCmTNH4_ads =
-    fvcf_bc(phis, Ds, us, dx, BcTNH4_ads, Ngrid) #  # Boundary transport matrix of TNH4_ads
+BcAmTNH4_ads_nsf, BcBmTNH4_ads_nsf, BcCmTNH4_ads_nsf =
+    fvcf_bc(phis, Ds, us, dx, BcTNH4_ads_nsf, Ngrid) #  # Boundary transport matrix of TNH4_ads_nsf
 
 #----------------------------------------------
 # Interior transport matrix
 #----------------------------------------------
 AmN_org, BmN_org = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of N_org
 AmTNH4_dis, BmTNH4_dis = fvcf(phif, DTNH4_dis, uf, dx, Ngrid) #  # Interior transport matrix of TNH4_dis
-AmTNH4_ads, BmTNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads
+AmTNH4_ads_nsf, BmTNH4_ads_nsf = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads_nsf
 
 #----------------------------------------------
 # Reaction parameters

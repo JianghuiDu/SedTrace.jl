@@ -6,14 +6,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TNH4ID,
     AmN_org,
     AmTNH4_dis,
-    AmTNH4_ads,
+    AmTNH4_ads_nsf,
     BcAmN_org,
     BcCmN_org,
     Ngrid,
     BcAmTNH4_dis,
     BcCmTNH4_dis,
-    BcAmTNH4_ads,
-    BcCmTNH4_ads,
+    BcAmTNH4_ads_nsf,
+    BcCmTNH4_ads_nsf,
     alpha,
     TNH4_dis0,
     dstopw,
@@ -27,7 +27,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TNH4_ads = PreallocationTools.get_tmp(f.TNH4_ads, C)
     TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
     TNH4_dis_tran = PreallocationTools.get_tmp(f.TNH4_dis_tran, C)
-    TNH4_ads_tran = PreallocationTools.get_tmp(f.TNH4_ads_tran, C)
+    TNH4_ads_nsf_tran = PreallocationTools.get_tmp(f.TNH4_ads_nsf_tran, C)
     Rremin = PreallocationTools.get_tmp(f.Rremin, C)
     S_N_org = PreallocationTools.get_tmp(f.S_N_org, C)
     S_TNH4 = PreallocationTools.get_tmp(f.S_TNH4, C)
@@ -60,10 +60,12 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(TNH4_dis_tran, AmTNH4_dis, TNH4_dis)
     TNH4_dis_tran[1] += BcAmTNH4_dis[1] ⊗ TNH4_dis[1] ⊕ BcCmTNH4_dis[1]
     TNH4_dis_tran[Ngrid] += BcAmTNH4_dis[2] ⊗ TNH4_dis[Ngrid] ⊕ BcCmTNH4_dis[2]
-    mul!(TNH4_ads_tran, AmTNH4_ads, TNH4_ads)
-    TNH4_ads_tran[1] += BcAmTNH4_ads[1] ⊗ TNH4_ads[1] ⊕ BcCmTNH4_ads[1]
-    TNH4_ads_tran[Ngrid] += BcAmTNH4_ads[2] ⊗ TNH4_ads[Ngrid] ⊕ BcCmTNH4_ads[2]
-    @.. dTNH4 = TNH4_dis_tran ⊗ 1 ⊕ TNH4_ads_tran ⊗ dstopw
+    mul!(TNH4_ads_nsf_tran, AmTNH4_ads_nsf, TNH4_ads_nsf)
+    TNH4_ads_nsf_tran[1] +=
+        BcAmTNH4_ads_nsf[1] ⊗ TNH4_ads_nsf[1] ⊕ BcCmTNH4_ads_nsf[1]
+    TNH4_ads_nsf_tran[Ngrid] +=
+        BcAmTNH4_ads_nsf[2] ⊗ TNH4_ads_nsf[Ngrid] ⊕ BcCmTNH4_ads_nsf[2]
+    @.. dTNH4 = TNH4_dis_tran ⊗ 1 ⊕ TNH4_ads_nsf_tran ⊗ dstopw
     @.. dTNH4 += alpha ⊗ (TNH4_dis0 - TNH4_dis)
 
     #---------------------------------------------------------------------

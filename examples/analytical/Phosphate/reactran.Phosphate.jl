@@ -6,14 +6,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TH3PO4ID,
     AmPorg,
     AmTH3PO4_dis,
-    AmTH3PO4_ads,
+    AmTH3PO4_ads_nsf,
     BcAmPorg,
     BcCmPorg,
     Ngrid,
     BcAmTH3PO4_dis,
     BcCmTH3PO4_dis,
-    BcAmTH3PO4_ads,
-    BcCmTH3PO4_ads,
+    BcAmTH3PO4_ads_nsf,
+    BcCmTH3PO4_ads_nsf,
     alpha,
     TH3PO4_dis0,
     dstopw,
@@ -25,10 +25,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Cache
     #---------------------------------------------------------------------
     P_ads = PreallocationTools.get_tmp(f.P_ads, C)
+    TH3PO4_ads_nsf = PreallocationTools.get_tmp(f.TH3PO4_ads_nsf, C)
     TH3PO4_ads = PreallocationTools.get_tmp(f.TH3PO4_ads, C)
     TH3PO4_dis = PreallocationTools.get_tmp(f.TH3PO4_dis, C)
     TH3PO4_dis_tran = PreallocationTools.get_tmp(f.TH3PO4_dis_tran, C)
-    TH3PO4_ads_tran = PreallocationTools.get_tmp(f.TH3PO4_ads_tran, C)
+    TH3PO4_ads_nsf_tran = PreallocationTools.get_tmp(f.TH3PO4_ads_nsf_tran, C)
     Rremin = PreallocationTools.get_tmp(f.Rremin, C)
     Rpre = PreallocationTools.get_tmp(f.Rpre, C)
     S_Porg = PreallocationTools.get_tmp(f.S_Porg, C)
@@ -56,17 +57,19 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Concentrations of adsorbed/dissolved species
     @.. TH3PO4_dis = TH3PO4 / (K_ads ⊗ dstopw ⊕ 1)
     @.. P_ads = K_ads ⊗ TH3PO4_dis
+    @.. TH3PO4_ads_nsf = P_ads
     @.. TH3PO4_ads = P_ads
     #  Transport of adsorbed/dissolved species
     mul!(TH3PO4_dis_tran, AmTH3PO4_dis, TH3PO4_dis)
     TH3PO4_dis_tran[1] += BcAmTH3PO4_dis[1] ⊗ TH3PO4_dis[1] ⊕ BcCmTH3PO4_dis[1]
     TH3PO4_dis_tran[Ngrid] +=
         BcAmTH3PO4_dis[2] ⊗ TH3PO4_dis[Ngrid] ⊕ BcCmTH3PO4_dis[2]
-    mul!(TH3PO4_ads_tran, AmTH3PO4_ads, TH3PO4_ads)
-    TH3PO4_ads_tran[1] += BcAmTH3PO4_ads[1] ⊗ TH3PO4_ads[1] ⊕ BcCmTH3PO4_ads[1]
-    TH3PO4_ads_tran[Ngrid] +=
-        BcAmTH3PO4_ads[2] ⊗ TH3PO4_ads[Ngrid] ⊕ BcCmTH3PO4_ads[2]
-    @.. dTH3PO4 = TH3PO4_dis_tran ⊗ 1 ⊕ TH3PO4_ads_tran ⊗ dstopw
+    mul!(TH3PO4_ads_nsf_tran, AmTH3PO4_ads_nsf, TH3PO4_ads_nsf)
+    TH3PO4_ads_nsf_tran[1] +=
+        BcAmTH3PO4_ads_nsf[1] ⊗ TH3PO4_ads_nsf[1] ⊕ BcCmTH3PO4_ads_nsf[1]
+    TH3PO4_ads_nsf_tran[Ngrid] +=
+        BcAmTH3PO4_ads_nsf[2] ⊗ TH3PO4_ads_nsf[Ngrid] ⊕ BcCmTH3PO4_ads_nsf[2]
+    @.. dTH3PO4 = TH3PO4_dis_tran ⊗ 1 ⊕ TH3PO4_ads_nsf_tran ⊗ dstopw
     @.. dTH3PO4 += alpha ⊗ (TH3PO4_dis0 - TH3PO4_dis)
 
     #---------------------------------------------------------------------

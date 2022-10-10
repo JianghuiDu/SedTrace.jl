@@ -68,7 +68,7 @@ DTH3PO4_dis = 1.2376332592731156E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sedi
 # boundary fluxes and concentrations
 #----------------------------------------------
 TH3PO4_dis0 = 1.0e-6 # mmol cm^-3 # Concentration of H3PO4 at the TOP of sediment column
-TH3PO4_ads0 = TH3PO4_dis0 * K_ads # mmol cm^-3 # Concentration of P_ads at the TOP of sediment column
+TH3PO4_ads_nsf0 = TH3PO4_dis0 * K_ads # mmol cm^-3 # Concentration of P_ads at the TOP of sediment column
 Porg0 = 0.1 # mmol cm^-3 # Concentration of Porg at the TOP of sediment column
 PorgL = 0.0 # mmol cm^-3 # Concentration of Porg at the BOTTOM of sediment column
 
@@ -77,7 +77,7 @@ PorgL = 0.0 # mmol cm^-3 # Concentration of Porg at the BOTTOM of sediment colum
 #----------------------------------------------
 BcPorg = ((1.0, 0.0, Porg0), (1.0, 0.0, PorgL)) #  # Boundary condition of Porg
 BcTH3PO4_dis = ((1.0, 0.0, TH3PO4_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TH3PO4_dis
-BcTH3PO4_ads = ((1.0, 0.0, TH3PO4_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TH3PO4_ads
+BcTH3PO4_ads_nsf = ((1.0, 0.0, TH3PO4_ads_nsf0), (0.0, 1.0, 0.0)) #  # Boundary condition of TH3PO4_ads_nsf
 
 #----------------------------------------------
 # Boundary transport matrix
@@ -85,15 +85,15 @@ BcTH3PO4_ads = ((1.0, 0.0, TH3PO4_ads0), (0.0, 1.0, 0.0)) #  # Boundary conditio
 BcAmPorg, BcBmPorg, BcCmPorg = fvcf_bc(phis, Ds, us, dx, BcPorg, Ngrid) #  # Boundary transport matrix of Porg
 BcAmTH3PO4_dis, BcBmTH3PO4_dis, BcCmTH3PO4_dis =
     fvcf_bc(phif, DTH3PO4_dis, uf, dx, BcTH3PO4_dis, Ngrid) #  # Boundary transport matrix of TH3PO4_dis
-BcAmTH3PO4_ads, BcBmTH3PO4_ads, BcCmTH3PO4_ads =
-    fvcf_bc(phis, Ds, us, dx, BcTH3PO4_ads, Ngrid) #  # Boundary transport matrix of TH3PO4_ads
+BcAmTH3PO4_ads_nsf, BcBmTH3PO4_ads_nsf, BcCmTH3PO4_ads_nsf =
+    fvcf_bc(phis, Ds, us, dx, BcTH3PO4_ads_nsf, Ngrid) #  # Boundary transport matrix of TH3PO4_ads_nsf
 
 #----------------------------------------------
 # Interior transport matrix
 #----------------------------------------------
 AmPorg, BmPorg = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of Porg
 AmTH3PO4_dis, BmTH3PO4_dis = fvcf(phif, DTH3PO4_dis, uf, dx, Ngrid) #  # Interior transport matrix of TH3PO4_dis
-AmTH3PO4_ads, BmTH3PO4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TH3PO4_ads
+AmTH3PO4_ads_nsf, BmTH3PO4_ads_nsf = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TH3PO4_ads_nsf
 
 #----------------------------------------------
 # Reaction parameters

@@ -40,13 +40,11 @@ chunk_size = 10;
 C0 = SedTrace.Param.C0;
 parm = SedTrace.Param.ParamStruct();
 OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
+JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec);
 solverconfig = SolverConfig(chunk_size, :GMRES)
 solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
 OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
 outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
-
-
 
 
 # TestOdeFun(OdeFun,C0,parm)
@@ -56,10 +54,10 @@ outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.N
 # BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size,parm)
 
 
-
+# solution = load(modeldirectory*"sol.SBB.jld2","sol");
 solverctrlconfig = SolverCtrlConfig(
-    # C0,
-    solution.sol[end],
+    C0,
+    # solution.sol[end],
     (0.0, 50000.0),
     reltol = 1e-6,
     abstol = 1e-18,
