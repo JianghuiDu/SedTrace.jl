@@ -1,4 +1,5 @@
-function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(),showplt=true, saveplt=false,pltdir="",dpi=300,pltsize=nothing)
+function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(),showplt=true, saveplt=false,pltdir="",dpi=300,pltsize=nothing,ylim=nothing)
+    ylim === nothing ? ylim=(minimum(solution.x),maximum(solution.x)) : ylim
 
     if modelconfig.AssembleParam
         include("$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl")
@@ -151,7 +152,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
             value.flux_top,
             :roma,
             "$key $(value.unit_profile)",
-            (0.0, solution.L),
+            ylim,
             pwdata,
             flux_top_message,
             :identity,
