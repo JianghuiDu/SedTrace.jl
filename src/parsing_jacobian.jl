@@ -90,6 +90,9 @@ function jac_react_dependence(
     react_dependence = leftjoin(react_dependence,p_all, on = :label)
     @select!(react_dependence,:substance, :dependence)
     unique!(react_dependence)
+    
+    @subset!(react_dependence,.!ismissing.(:dependence))
+
     react_dependence = groupby(react_dependence,:substance)
     react_dependence= combine(react_dependence,:dependence => (x -> join(x, ",")), renamecols = false)
 
