@@ -1,4 +1,4 @@
-function parameter_code(param_model, substances, adsorption, assemble)
+function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     # error check
     # errorcheck(param_model, options)
 
@@ -205,16 +205,18 @@ function parameter_code(param_model, substances, adsorption, assemble)
     # if speciation not modelled, then the main species is chosen to calculate molecular diffusivity
 
 
-    model_name1 = ["TH3PO4", "TNH4", "TH4SiO4", "TH2S", "THF", "TH3BO3", "THSO4", "TCO2"]
-    species_name1 = ["HPO4", "NH4", "H4SiO4", "HS", "F", "H3BO3", "SO4", "HCO3"]
+    # model_name1 = ["TH3PO4", "TNH4", "TH4SiO4", "TH2S", "THF", "TH3BO3", "THSO4", "TCO2"]
+    # species_name1 = ["HPO4", "NH4", "H4SiO4", "HS", "F", "H3BO3", "SO4", "HCO3"]
 
-    model_name2 = ["Al", "Mo","TFe_dis","TNH4_dis","TH3PO4_dis","TMn_dis","Al_dis","TNdnr_dis","TNdr_dis"]
-    species_name2 = ["Al(OH)[4]", "MoO4","Fe","NH4","HPO4","Mn","Al(OH)[4]","Ndnr","Ndr"]
+    # model_name2 = ["Al", "Mo","TFe_dis","TNH4_dis","TH3PO4_dis","TMn_dis","Al_dis","TNdnr_dis","TNdr_dis"]
+    # species_name2 = ["Al(OH)[4]", "MoO4","Fe","NH4","HPO4","Mn","Al(OH)[4]","Ndnr","Ndr"]
 
-    model_name = [model_name1; model_name2]
-    species_name = [species_name1; species_name2]
+    # model_name = [model_name1; model_name2]
+    # species_name = [species_name1; species_name2]
 
-    dict = Dict(model_name[i] => species_name[i] for i in eachindex(model_name))
+    # dict = Dict(model_name[i] => species_name[i] for i in eachindex(model_name))
+
+    dict = Dict(diffusion.model_name[i] => diffusion.SedTrace_name[i] for i in eachindex(diffusion.model_name))
 
     dissolved = subset(
         substances,
@@ -236,8 +238,9 @@ function parameter_code(param_model, substances, adsorption, assemble)
         dissolved_summed = @subset(substances, :type .== "dissolved_summed_pH")
         @transform!(dissolved_summed, :species = split.(:formula, ","))
         dissolved_summed = DataFrames.flatten(dissolved_summed, :species)
-        @transform!(dissolved_summed, :species = mymatch.(r"[\w\[\]\(\)]+", :species))
-        @transform!(dissolved_summed, :species_name = :species)
+        # @transform!(dissolved_summed, :species = mymatch.(r"[\w\[\]\(\)]+", :species))
+        # @transform!(dissolved_summed, :species_name = :species)
+        @transform!(dissolved_summed, :species_name = mymatch.(r"[\w\[\]\(\)]+", :species))
     else
         dissolved_summed = newdf()
     end
@@ -255,47 +258,13 @@ function parameter_code(param_model, substances, adsorption, assemble)
 
 
 
-    # if any(substances.type .== "dissolved_adsorbed_summed")
-    #     dissolved_adsorbed_summed =
-    #         @subset(substances, :type .== "dissolved_adsorbed_summed")
-    #     # @transform!(dissolved_adsorbed_summed, :species = split.(:formula, ","))
-    #     # dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
-    #     # # @transform(:species = mymatch.(r"[\w\[\]\(\)]+", :species))
-    #     # @transform!(
-    #     #     dissolved_adsorbed_summed,
-    #     #     :species = myeachmatch.(r"(?<!\{)[\w\[\]\(\)]+(?!=\[\+-])", :species)
-    #     # )
-    #     # dissolved_adsorbed_summed = DataFrames.flatten(dissolved_adsorbed_summed, :species)
-    #     # @transform!(dissolved_adsorbed_summed, :species_name = :species)
-
-    #     # ads_dissolved = unique(select(adsorption, :substance, :dissolved))
-    #     # @transform!(ads_dissolved, :dissolved_sp = true)
-
-    #     # leftjoin!(
-    #     #     dissolved_adsorbed_summed,
-    #     #     ads_dissolved,
-    #     #     on = [:substance, :species => :dissolved],
-    #     #     makeunique = true,
-    #     # )
-    #     # @subset!(dissolved_adsorbed_summed, .!ismissing.(:dissolved_sp))
-    #     # unique!(dissolved_adsorbed_summed)
-    #     # select!(dissolved_adsorbed_summed, names(dissolved))
-
-    #     @transform!(dissolved_adsorbed_summed, :species = :substance .* "_dis")
-    #     @transform!(dissolved_adsorbed_summed, :species_name = :substance .* "_dis")
-
-    #     append!(dissolved_all, dissolved_adsorbed_summed)
-    # end
-
-
-
     salinity = getNumber!(globalParam, :parameter, "salinity", :value)
     temperature = getNumber!(globalParam, :parameter, "temp", :value)
     pressure = getNumber!(globalParam, :parameter, "depth", :value) / 10
     sw_dens = getNumber!(globalParam, :parameter, "sw_dens", :value)
 
 
-    mdif,species_noDiff = molecdiff(salinity, temperature, pressure,dissolved_all.species) # cm2 yr-1 in situ diffusivity
+    mdif = molecdiff(salinity, temperature, pressure,dissolved_all.species) # cm2 yr-1 in situ diffusivity
 
 
     diffusionParam = @subset(param_model, :class .== "diffusion")
