@@ -2,6 +2,7 @@ struct EquilibriumInvariant
     # container of summed species like TCO2
     name::String
     species::Vector{String} # subspecies
+    charge::Vector{String} # subspecies
     expr::Vector{String}
     coef::Vector{String} # subspecies coefficient in TA definition
     dTAdsum::String
@@ -17,6 +18,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TCO2",
             ["HCO3", "CO3", "CO2"],
+            ["{-}","{2-}",""],
             [
                 "H * KCO2 * TCO2 / (H^2 + H * KCO2 + KCO2 * KHCO3)",
                 "KCO2 * KHCO3 * TCO2 / (H^2 + H * KCO2 + KCO2 * KHCO3)",
@@ -31,6 +33,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TNH4",
             ["NH3", "NH4"],
+            ["","{+}"],
             ["KNH4 * TNH4 / (H + KNH4)", "KNH4 * TNH4 / (H + KNH4)"],
             ["1", "0"],
             "KNH4/(H + KNH4)",
@@ -41,6 +44,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TH3PO4",
             ["H3PO4", "H2PO4", "HPO4", "PO4"],
+            ["","{-}","{2-}","{3-}"],
             [
                 "H^3 * TH3PO4 / (H^3 + H^2 * KH3PO4 + H * KH2PO4 * KH3PO4 + KH2PO4 * KH3PO4 * KHPO4)",
                 "H^2 * KH3PO4 * TH3PO4 / (H^3 + H^2 * KH3PO4 + H * KH2PO4 * KH3PO4 + KH2PO4 * KH3PO4 * KHPO4)",
@@ -60,6 +64,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TH2S",
             ["H2S", "HS"],
+            ["","{-}"],
             ["H * TH2S / (H + KH2S)", "KH2S * TH2S / (H + KH2S)"],
             ["0", "1"],
             "KH2S / (H + KH2S)",
@@ -70,6 +75,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "THSO4",
             ["HSO4", "SO4"],
+            ["{-}","{2-}"],
             ["H * THSO4 / (H + KHSO4)", "KHSO4 * THSO4 / (H + KHSO4)"],
             ["-1", "0"],
             "-H/(H + KHSO4)",
@@ -80,6 +86,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TH3BO3",
             ["H3BO3", "H4BO4"],
+            ["","{-}"],
             ["H * TH3BO3 / (H + KH3BO3)", "KH3BO3 * TH3BO3 / (H + KH3BO3)"],
             ["0", "1"],
             "KH3BO3 / (H + KH3BO3)",
@@ -90,6 +97,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "THF",
             ["HF", "F"],
+            ["","{-}"],
             ["H * THF / (H + KHF)", "KHF * THF / (H + KHF)"],
             ["-1", "0"],
             "-H/(H + KHF)",
@@ -100,6 +108,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "TH4SiO4",
             ["H4SiO4", "H3SiO4"],
+            ["","{-}"],
             ["H * TH4SiO4 / (H + KH4SiO4)", "KH4SiO4 * TH4SiO4 / (H + KH4SiO4)"],
             ["0", "1"],
             "KH4SiO4 / (H + KH4SiO4)",
@@ -110,6 +119,7 @@ function EquilibriumInvariant(Tsum)
         return EquilibriumInvariant(
             "H",
             ["H", "OH"],
+            ["{+}","{-}"],
             ["H", "KH2O / H"],
             ["-1", "1"],
             "",
