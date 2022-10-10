@@ -1,4 +1,5 @@
 function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,react_jp::DataFrame, cf::Bool)
+    # @subset!(react_jp,.!ismissing.(:dependence))
     substances = leftjoin(substances, react_jp, on = :substance)
 
     jp_str = String[]
