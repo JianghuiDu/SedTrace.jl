@@ -43,22 +43,26 @@ function generate_code(
 
     substances = DataFrame(XLSX.gettable(model_config["substances"]))
     reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
+    parameters = DataFrame(XLSX.gettable(model_config["parameters"]))
+
+    diffusion = DataFrame(XLSX.gettable(model_config["diffusion"]))
     speciation = DataFrame(XLSX.gettable(model_config["speciation"]))
     adsorption = DataFrame(XLSX.gettable(model_config["adsorption"]))
-    parameters = DataFrame(XLSX.gettable(model_config["parameters"]))
 
 
     preprocessSubstances!(substances, EnableList)
     preprocessReactions!(reactions, EnableList)
+    preprocessParameters!(parameters, ParamDict, EnableList)
+    
+    preprocessDiffusion!(diffusion)
     preprocessAdsorption!(adsorption, EnableList)
     preprocessSpeciation!(speciation, EnableList)
-    preprocessParameters!(parameters, ParamDict, EnableList)
 
     #---------------------------------------------------------------------------
     # generate parameter, transport and reaction code
     #---------------------------------------------------------------------------
     params_code =
-        parameter_code(parameters, substances, adsorption, modelconfig.AssembleParam)
+        parameter_code(parameters, substances, adsorption,diffusion, modelconfig.AssembleParam)
 
 
     view_code,tran_code, tran_expr, tran_cache = transport_code(substances, adsorption)
