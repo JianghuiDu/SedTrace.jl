@@ -352,7 +352,7 @@ function join_eq_to_model(species_eq, species_modelled, speciation_df)
     transform!(
         species_modelled,
         [:formula, :substance] =>
-            ((a, b) -> ifelse.(ismissing.(a), b, b .* "," .* a)) => :formula,
+            ((a, b) -> ifelse.(a.=="", b, b .* "," .* a)) => :formula,
     )
 
     function joinspec(subs)
@@ -362,7 +362,7 @@ function join_eq_to_model(species_eq, species_modelled, speciation_df)
     end
     @transform!(
         species_modelled,
-        :formula = ifelse.(:type.=="dissolved_adsorbed_summed",:formula.* ",".*joinspec.(:substance),:formula)
+        :formula = ifelse.(:type.=="dissolved_speciation",:formula.* ",".*joinspec.(:substance),:formula)
     )
     # get the unique species read from the chemical equations
     # to join to the species_modelled list
@@ -433,17 +433,22 @@ function join_eq_to_model(species_eq, species_modelled, speciation_df)
     # make type changes to the adsorbed species
     # species_join_ads = @subset(species_join, .!ismissing.(:codename))
 
-    ads_df = @subset(speciation_df,:type.=="adsorbed")
-
+    # ads_df = @subset(speciation_df,in.(:comment,Ref(["adsorbed","Total adsorbed","Surface adsorbed"])))
+    ads_df = @subset(speciation_df,:type .== "adsorbed")
     # ads_spec = skipmissing(vcat(ads_df.adsorbed, ads_df.species_eq))
 
     ads_spec = ads_df.name
 
+    dis_df = @subset(speciation_df,:type .== "dissolved")
+    dis_spec = skipmissing(vcat(dis_df.name,dis_df.formula_))
     transform!(
         species_join,
         [:species_eq, :type] =>
             ((a, b) -> ifelse.(in.(a, Ref(ads_spec)), "adsorbed", b)) => :species_type,
     )
+    @transform!(species_join,:species_type = ifelse.(in.(:species_eq,Ref(dis_spec)),"dissolved",:species_type))
+    @transform!(species_join,:species_type = ifelse.(in.(:species_type, Ref(["dissolved_pH"])),"dissolved",:species_type))
+
     rename!(species_join, :type => :substance_type)
     species_join = groupby(species_join, :label)
     species_join = transform!(
@@ -574,7 +579,7 @@ function pH_rate(species_join)
     # @. S_H /= dTA_dH
 
 
-    species_summed_df = @subset(species_join, :substance_type .== "dissolved_summed_pH")
+    species_summed_df = @subset(species_join, :substance_type .== "dissolved_pH")
     species_summed = unique(species_summed_df.substance)
 
 
@@ -603,12 +608,12 @@ function pH_rate(species_join)
         if !(i in list_summed_species)
             throw(
                 error(
-                    "dissolved_summed species must be from this list: $list_summed_species. $i is not in the list.",
+                    "dissolved_pH species must be from this list: $list_summed_species. $i is not in the list.",
                 ),
             )
         else
             tmp = EquilibriumInvariant(i)
-            # if i.substance_type == "dissolved_summed_pH"
+            # if i.substance_type == "dissolved_pH"
             dTA_dH_rate(tmp, species_summed_df, dTAdt_str, dHdt_str)
             # end
             # append!(pHspecies.sumspecies, fill(tmp.name, length(tmp.species)))
@@ -649,9 +654,9 @@ function pH_rate_species(species_join)
     # @. S_H -= S_TH4SiO4 * dTA_dTH4SiO4
     # @. S_H /= dTA_dH
 
-    # only select "dissolved_summed" sustance
+    # only select "dissolved_pH" sustance
     species_summed_df = @chain begin
-        @subset(species_join, occursin.("dissolved_summed", :substance_type))
+        @subset(species_join, occursin.("dissolved_pH", :substance_type))
         select(:substance, :substance_type)
         unique
     end
@@ -663,7 +668,7 @@ function pH_rate_species(species_join)
         if !(i.substance in list_summed_species)
             throw(
                 error(
-                    "dissolved_summed species must be from this list: $list_summed_species. $(i.substance) is not in the list.",
+                    "dissolved_pH species must be from this list: $list_summed_species. $(i.substance) is not in the list.",
                 ),
             )
         else
@@ -686,23 +691,23 @@ function convfac(df)
         if df.substance_type[j] == df.reaction_type[j]
             conversion_fac[j] = ""
         elseif df.substance_type[j] in
-               ["dissolved_summed", "dissolved_summed_pH", "dissolved_adsorbed_summed"] &&
+               ["dissolved_pH", "dissolved_speciation"] &&
                df.reaction_type[j] == "dissolved"
             conversion_fac[j] = ""
         elseif df.substance_type[j] in
-               ["dissolved_summed", "dissolved_summed_pH", "dissolved_adsorbed_summed"] &&
+               ["dissolved_pH", "dissolved_speciation"] &&
                df.reaction_type[j] == "solid"
             conversion_fac[j] = "*dstopw"
         elseif df.substance_type[j] == "solid" && df.reaction_type[j] == "dissolved"
             conversion_fac[j] = "* pwtods"
         elseif df.substance_type[j] == "dissolved" && df.reaction_type[j] == "solid"
             conversion_fac[j] = "* dstopw"
-        elseif df.substance_type[j] == "dissolved_adsorbed" &&
-               df.reaction_type[j] == "dissolved"
-            conversion_fac[j] = "/(1+dstopw*K" * df.substance[j] * "_ads)"
-        elseif df.substance_type[j] == "dissolved_adsorbed" &&
-               df.reaction_type[j] == "solid"
-            conversion_fac[j] = "/(pwtods+K" * df.substance[j] * "_ads)"
+        # elseif df.substance_type[j] == "dissolved_adsorbed" &&
+        #        df.reaction_type[j] == "dissolved"
+        #     conversion_fac[j] = "/(1+dstopw*K" * df.substance[j] * "_ads)"
+        # elseif df.substance_type[j] == "dissolved_adsorbed" &&
+        #        df.reaction_type[j] == "solid"
+        #     conversion_fac[j] = "/(pwtods+K" * df.substance[j] * "_ads)"
         end
     end
 
