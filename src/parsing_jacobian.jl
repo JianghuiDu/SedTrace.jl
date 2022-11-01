@@ -5,7 +5,6 @@ function jac_react_dependence(
     spec_expr,
     react_expr,
     cache_str,
-    speciation_df,
     pHspecies
 )
     UnPack.@unpack rate_expr, omega_expr ,species_rate = react_expr
@@ -79,7 +78,7 @@ function jac_react_dependence(
     @select!(p_all,:label, :dependence)
     unique!(p_all)
     
-    species_join_H = @subset(species_join,:substance_type .== "dissolved_summed_pH")
+    species_join_H = @subset(species_join,:substance_type .== "dissolved_pH")
     @select!(species_join_H,:label, :substance)
     @transform!(species_join_H,:substance = "H")
     unique!(species_join_H)
