@@ -19,11 +19,14 @@ function struct_code(cache)
     push!(
         struct_str,
         # "function init(u0::Array{T,1},Ngrid::Int, ::Val{chunk_size}) where {T,chunk_size}",
-        "function init(u0::Array{T,1},Ngrid::Int, chunk_size::Int) where {T}",
+        # "function init(u0::Array{T,1},Ngrid::Int, chunk_size::Int) where {T}",
+        "function init(u0::Array{T,1},Ngrid::Int) where {T}",
     )
     for i in cache
         # push!(struct_str, i * "= PreallocationTools.dualcache(zeros(T,Ngrid), Val{chunk_size})")
-        push!(struct_str, i * "= PreallocationTools.dualcache(zeros(T,Ngrid), chunk_size)")
+        # push!(struct_str, i * "= PreallocationTools.dualcache(zeros(T,Ngrid), chunk_size)")
+        push!(struct_str, i * "= PreallocationTools.dualcache(zeros(T,Ngrid))")
+
     end
     push!(struct_str, "")
 
