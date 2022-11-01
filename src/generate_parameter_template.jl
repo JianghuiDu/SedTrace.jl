@@ -2,8 +2,7 @@ module TemplateGeneration
 using SedTrace: ModelConfig
 import XLSX
 import SymPy
-using DataFrames,
-    DataFramesMeta, Chain, UnPack
+using DataFrames, DataFramesMeta, Chain, UnPack
 
 include("helpers.jl")
 include("generate_reaction.jl")
@@ -13,10 +12,15 @@ include("moleculardiff.jl")
 include("pH_helpers.jl")
 include("identify_parameters.jl")
 include("parsing_jacobian.jl")
+include("speciation_code.jl")
 
-function generate_parameter_template(modelconfig::ModelConfig)
-    model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
-    template_path = replace(model_path, r".xlsx" => ".parameter_template.xlsx")
+function generate_parameter_template(
+    modelconfig::ModelConfig;
+    EnableList::Dict = Dict(),
+    overwrite = false,
+)
+    # model_path = modelconfig.ModelDirectory * "model_parameter_template."*modelconfig.ModelName*".xlsx"
+    template_path = modelconfig.ModelDirectory * "model_parameter_template."*modelconfig.ModelName*".xlsx"
     if template_path in readdir(modelconfig.ModelDirectory, join = true)
         throw(
             error(
@@ -24,7 +28,7 @@ function generate_parameter_template(modelconfig::ModelConfig)
             ),
         )
     else
-        param_template = generate_template(modelconfig)
+        param_template = generate_template(modelconfig, EnableList = EnableList)
         XLSX.writetable(
             template_path,
             overwrite = false,
@@ -37,7 +41,7 @@ function generate_parameter_template(modelconfig::ModelConfig)
 
 end
 
-function generate_template(modelconfig::ModelConfig)
+function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
     model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
 
     model_config = XLSX.readxlsx(model_path)
@@ -52,11 +56,13 @@ function generate_template(modelconfig::ModelConfig)
     reactions = DataFrame(XLSX.gettable(model_config["reactions"]))
     speciation = DataFrame(XLSX.gettable(model_config["speciation"]))
     adsorption = DataFrame(XLSX.gettable(model_config["adsorption"]))
+    diffusion = DataFrame(XLSX.gettable(model_config["diffusion"]))
 
-    preprocessSubstances!(substances)
-    preprocessReactions!(reactions)
-    preprocessAdsorption!(adsorption)
-    preprocessSpeciation!(speciation)
+    preprocessSubstances!(substances, EnableList)
+    preprocessReactions!(reactions, EnableList)
+    preprocessDiffusion!(diffusion, substances)
+    preprocessSpeciation!(speciation, substances, EnableList)
+    preprocessAdsorption!(adsorption, substances, speciation, EnableList)
 
 
     globalParam = @chain begin
@@ -73,16 +79,7 @@ function generate_template(modelconfig::ModelConfig)
         newdf()
         push!(["const", "L", "", "cm", "model sediment section thickness"],)
         push!(["const", "Ngrid", "", "integer", "number of model grid"],)
-        push!(
-            _,
-            [
-                "function",
-                "gridtran",
-                "",
-                "cm",
-                "grid transformation function",
-            ],
-        )
+        push!(_, ["function", "gridtran", "", "cm", "grid transformation function"])
         @transform!(:class = "grid")
     end
 
@@ -90,24 +87,9 @@ function generate_template(modelconfig::ModelConfig)
         newdf()
         push!(
             _,
-            [
-                "function",
-                "phi",
-                "",
-                "dimensionless",
-                "porosity as a function of depth",
-            ],
+            ["function", "phi", "", "dimensionless", "porosity as a function of depth"],
         )
-        push!(
-            _,
-            [
-                "const",
-                "phi_Inf",
-                "",
-                "dimensionless",
-                "porosity at burial depth",
-            ],
-        )
+        push!(_, ["const", "phi_Inf", "", "dimensionless", "porosity at infinite depth"])
         @transform!(:class = "porosity")
     end
 
@@ -153,10 +135,8 @@ function generate_template(modelconfig::ModelConfig)
     bcParam = newdf()
 
     option_beta = any(
-        (
-            substances.type .∈
-            Ref(["dissolved", "dissolved_summed", "dissolved_summed_pH"])
-        ) .& (substances.top_bc_type .== "robin"),
+        (substances.type .∈ Ref(["dissolved", "dissolved_pH"])) .&
+        (substances.top_bc_type .== "robin"),
     )
 
     if option_beta
@@ -166,7 +146,33 @@ function generate_template(modelconfig::ModelConfig)
         )
     end
 
-
+    function fill_bcParam_age!(df, top, bc_type)
+        if bc_type == "robin"
+            push!(
+                df,
+                [
+                    "const",
+                    "FAge0",
+                    "",
+                    "cm",
+                    "Flux of age at the  TOP of sediment column",
+                ],
+            )
+        elseif bc_type == "dirichlet"
+            push!(
+                df,
+                [
+                    "const",
+                    top ? "Age0" : "AgeL",
+                    "",
+                    "year",
+                    "Age at the " *
+                    (top ? "TOP" : "BOTTOM") *
+                    " of sediment column",
+                ],
+            )
+        end
+    end
     function fill_bcParam!(df, substance, top, bc_type, substance_type)
         if bc_type == "robin"
             if substance_type == "solid"
@@ -180,12 +186,7 @@ function generate_template(modelconfig::ModelConfig)
                         "Flux of " * substance * " at the  TOP of sediment column",
                     ],
                 )
-            elseif substance_type in [
-                "dissolved",
-                "dissolved_summed",
-                "dissolved_adsorbed",
-                "dissolved_summed_pH",
-            ]
+            elseif substance_type in ["dissolved", "dissolved_pH"]
                 push!(
                     df,
                     [
@@ -216,50 +217,58 @@ function generate_template(modelconfig::ModelConfig)
     end
 
     for i in eachrow(substances)
-        if i.type == "dissolved_adsorbed_summed"
-            ads_df = @subset(adsorption, :substance .== i.substance)
-            dis_spec = ads_df.dissolved[1]
-            fill_bcParam!(bcParam, dis_spec, true, i.top_bc_type, "dissolved")
-            fill_bcParam!(bcParam, dis_spec, false, i.bot_bc_type, "dissolved")
-            for j in eachrow(ads_df)
-                fill_bcParam!(bcParam, j.adsorbed, true, j.top_bc_type, "solid")
-                fill_bcParam!(bcParam, j.adsorbed, false, j.bot_bc_type, "solid")
-            end
+        if i.substance == "Age"
+            fill_bcParam_age!(bcParam, true, i.top_bc_type)
+            fill_bcParam_age!(bcParam, false, i.bot_bc_type)
         else
-            fill_bcParam!(bcParam, i.substance, true, i.top_bc_type, i.type)
-            fill_bcParam!(bcParam, i.substance, false, i.bot_bc_type, i.type)
+            if i.type == "dissolved_speciation"
+                dis_sp = i.substance * "_dis"
+                fill_bcParam!(bcParam, dis_sp, true, i.top_bc_type, "dissolved")
+                fill_bcParam!(bcParam, dis_sp, false, i.bot_bc_type, "dissolved")
+                ads_df = @subset(adsorption, :substance .== i.substance)
+
+                if !isempty(ads_df)
+                    ads_spec = i.substance * "_ads"
+                    fill_bcParam!(bcParam, ads_spec, true, ads_df.top_bc_type[1], "solid")
+                    fill_bcParam!(bcParam, ads_spec, false, ads_df.bot_bc_type[1], "solid")
+                end
+            else
+                fill_bcParam!(bcParam, i.substance, true, i.top_bc_type, i.type)
+                fill_bcParam!(bcParam, i.substance, false, i.bot_bc_type, i.type)
+            end
         end
     end
 
     bcParam = @transform!(bcParam, :class = "BoundaryCondition")
 
 
+    view_code, tran_code, tran_expr, tran_cache = transport_code(substances, adsorption)
 
-
-    tran_code, tran_expr, tran_cache, ads_str = transport_code(substances, adsorption)
-
+    spec_code, spec_expr, spec_cache, speciation_df =
+        speciation_code(substances, speciation, adsorption)
 
     react_code, parsing_df, species_modelled, react_expr, react_cache, pHspecies =
         reaction_code(
             reactions,
             substances,
-            speciation,
-            adsorption,
+            speciation_df,
             modelconfig.CompleteFlux,
             modelconfig.AllowDiscontinuity,
         )
 
-    cache_str = unique(vcat(react_cache, tran_cache))
+
+
+    cache_str = unique(vcat(spec_cache, react_cache, tran_cache))
     @unpack species_model_df, species_extra_df, elements_df = parsing_df
 
+    tran_param = identify_tran_param(species_modelled, tran_expr, cache_str)
 
     react_jp, react_param = jac_react_dependence(
         species_model_df,
         species_modelled,
+        spec_expr,
         react_expr,
         cache_str,
-        ads_str,
-        adsorption,
         pHspecies,
     )
 
@@ -269,33 +278,17 @@ function generate_template(modelconfig::ModelConfig)
     )
 
 
-    adsParam = @subset(react_param, :type .== "adsorption")
+    adsParam = @subset(react_param, :type .== "speciation")
     select!(adsParam, :parameter, :type)
-    @transform!(adsParam, :class = "adsorption")
     @transform!(adsParam, :type = "const")
     @transform!(adsParam, :value = "")
     @transform!(adsParam, :unit = "")
-    @transform!(adsParam, :comment = "Adsorption constant")
+    @transform!(adsParam, :comment = "speciation constant")
     @select!(adsParam, :type, :parameter, :value, :unit, :comment)
+    @transform!(adsParam, :class = "speciation")
 
 
-    dissolved_ads = @subset(substances, :type .== "dissolved_adsorbed")
-    for i in eachrow(dissolved_ads)
-        push!(
-            adsParam,
-            [
-                "const",
-                "K$(i.substance)_ads",
-                "",
-                "cm^3(porewater) cm^-3(dry sediment)",
-                "Adsorption constant",
-            ],
-        )
-    end
-    @transform!(adsParam, :class = "adsorption")
-
-
-    reacParam = @subset(react_param, :type .!= "adsorption")
+    reacParam = @subset(react_param, :type .!= "speciation")
     @transform!(reacParam, :type = "const")
     @transform!(reacParam, :value = "")
     @transform!(reacParam, :unit = "")
@@ -305,71 +298,17 @@ function generate_template(modelconfig::ModelConfig)
 
 
     dissolved =
-        subset(substances, :type => x -> x .∈ Ref(["dissolved", "dissolved_adsorbed"]))
+        subset(substances, :type => x -> x .∈ Ref(["dissolved", "dissolved_speciation"]))
+    @transform!(
+        dissolved,
+        :species =
+            ifelse.(:type .== "dissolved_speciation", :substance .* "_dis", :substance)
+    )
 
-    dis_sp_all = vcat(dissolved.substance, adsorption.dissolved)
-
-
-
-    model_name1 = ["TH3PO4", "TNH4", "TH4SiO4", "TH2S", "THF", "TH3BO3", "THSO4", "TCO2"]
-    species_name1 = ["HPO4", "NH4", "H4SiO4", "HS", "F", "H3BO3", "SO4", "HCO3"]
-
-    model_name2 = ["Al", "Mo"]
-    species_name2 = ["Al(OH)[4]", "MoO4"]
-
-    model_name = [model_name1; model_name2]
-    species_name = [species_name1; species_name2]
-
-    dict = Dict(model_name[i] => species_name[i] for i in eachindex(model_name))
-
-    dis_sp_all_new =
-        ifelse.(
-            in.(dis_sp_all, Ref(keys(dict))),
-            get.(Ref(dict), dis_sp_all, missing),
-            dis_sp_all,
-        )
-
-    species_default = [
-        "O2",
-        "NO3",
-        "NO2",
-        "Mn",
-        "Fe",
-        "SO4",
-        "HSO4",
-        "NH4",
-        "NH3",
-        "PO4",
-        "HPO4",
-        "H2PO4",
-        "H3PO4",
-        "CO2",
-        "HCO3",
-        "CO3",
-        "H2S",
-        "HS",
-        "CH4",
-        "H",
-        "Ca",
-        "H4SiO4",
-        "H3SiO4",
-        "HF",
-        "F",
-        "OH",
-        "H3BO3",
-        "H4BO4",
-        "Al(OH)[4]",
-        "MoO4",
-        "Nd",
-        "Nd144",
-        "Nd143",
-        "Ndnr",
-        "Ndr",
-    ]
 
     diffusionParam = newdf()
-    for i in dis_sp_all_new
-        if !(i in species_default)
+    for i in dissolved.species
+        if !in(i, diffusion.model_name)
             push!(
                 diffusionParam,
                 [
@@ -399,7 +338,7 @@ function generate_template(modelconfig::ModelConfig)
         append!(reacParam)
         select!(:class, :type, :parameter, :value, :unit, :comment)
     end
-    @transform!(parameters,:include = 1)
+    @transform!(parameters, :include = 1)
 
     return parameters
 end
