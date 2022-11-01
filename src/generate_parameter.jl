@@ -14,12 +14,11 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     ndissolved = sum(
         substances.type .∈ Ref([
             "dissolved",
-            "dissolved_adsorbed",
-            "dissolved_summed",
-            "dissolved_adsorbed_summed",
+            # "dissolved_adsorbed",
+            "dissolved_speciation",
         ]),
     )
-    nsummed = sum(substances.type .== "dissolved_summed_pH")
+    nsummed = sum(substances.type .== "dissolved_pH")
 
     NspeciesParam = newdf()
     push!(NspeciesParam, ["const", "nsolid", nsolid, "", "number of solid substances"])
@@ -190,7 +189,7 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
             "const",
             "alpha",
             "broadcast(x->$Dbir_fun,x)",
-            "cm^2 yr^-1",
+            "yr^-1",
             "Bioirrigation coefficient",
         ],
         promote = true,
@@ -198,7 +197,7 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     subset!(bioirrigationParam, :parameter => x -> x .!= "Dbir")
 
 
-    adsParam = subset(param_model, :class => x -> x .== "adsorption")
+    adsParam = subset(param_model, :class => x -> x .== "speciation")
     RmCol!(adsParam)
 
 
@@ -220,9 +219,14 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
 
     dissolved = subset(
         substances,
-        :type => x -> x .∈ Ref(["dissolved", "dissolved_adsorbed", "dissolved_summed","dissolved_adsorbed_summed"]),
+        :type => x -> x .∈ Ref(
+            [
+            "dissolved", 
+            # "dissolved_adsorbed", 
+            "dissolved_speciation"
+            ]),
     )
-    @transform!(dissolved,:substance = ifelse.(:type .== "dissolved_adsorbed_summed",:substance.*"_dis",:substance))
+    @transform!(dissolved,:substance = ifelse.(:type .== "dissolved_speciation",:substance.*"_dis",:substance))
     @transform!(
         dissolved,
         :species =
@@ -234,8 +238,8 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     )
     @transform!(dissolved, :species_name = :substance)
 
-    if any(substances.type .== "dissolved_summed_pH")
-        dissolved_summed = @subset(substances, :type .== "dissolved_summed_pH")
+    if any(substances.type .== "dissolved_pH")
+        dissolved_summed = @subset(substances, :type .== "dissolved_pH")
         @transform!(dissolved_summed, :species = split.(:formula, ","))
         dissolved_summed = DataFrames.flatten(dissolved_summed, :species)
         # @transform!(dissolved_summed, :species = mymatch.(r"[\w\[\]\(\)]+", :species))
@@ -245,16 +249,16 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
         dissolved_summed = newdf()
     end
 
-    if any(substances.type .== "dissolved_summed_pH")
+    if any(substances.type .== "dissolved_pH")
         dissolved_all = append!(dissolved, dissolved_summed)
     else
         dissolved_all = dissolved
     end
 
-    dissolved_adsorbed = @subset(substances, :type .== "dissolved_adsorbed")
-    @transform!(dissolved_adsorbed, :species = :substance .* "_ads")
-    @transform!(dissolved_adsorbed, :type = "solid")
-    @transform!(dissolved_adsorbed, :species_name = :species)
+    # dissolved_adsorbed = @subset(substances, :type .== "dissolved_adsorbed")
+    # @transform!(dissolved_adsorbed, :species = :substance .* "_ads")
+    # @transform!(dissolved_adsorbed, :type = "solid")
+    # @transform!(dissolved_adsorbed, :species_name = :species)
 
 
 
@@ -345,7 +349,7 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     bc = Line(OnGrid()), extrapolation_bc = Throw()) where {N,T} = scale(interpolate(vs, BSpline(Cubic(bc))), ranges...)
 
 
-    if any(substances.type .== "dissolved_summed_pH")
+    if nsummed !=0
         #---------------------------------------------------------------------
         # pH calculation of boundary conditions
         #---------------------------------------------------------------------
@@ -469,32 +473,32 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     @subset!(bcParam, :parameter .!= "delta")
 
     dissolved_summed_all =
-        @subset(substances, :type .∈ Ref(["dissolved_summed", "dissolved_summed_pH"]))
+        @subset(substances, :type .∈ Ref(["dissolved_pH"]))
 
     for m in dissolved_summed_all.substance
         pH_param(substances, bcParam, KpHParam, m, Ks)
     end
 
 
-    for i in eachrow(dissolved_adsorbed)
-        vscptTOP = varsubscript(i.top_bc_type, true)
-        vscptBOT = varsubscript(i.bot_bc_type, false)
-        vscpt = [vscptTOP, vscptBOT]
-        vscpt = filter!(x -> !isnothing(x), vscpt)
-        for j in vscpt
-            push!(
-                bcParam,
-                [
-                    "const",
-                    i.species_name * j,
-                    "K$(i.species_name) * $(i.substance)$j",
-                    "mmol cm^-3",
-                    comment(j, "adsorbed $(i.substance)"),
-                ],
-                promote = true,
-            )
-        end
-    end
+    # for i in eachrow(dissolved_adsorbed)
+    #     vscptTOP = varsubscript(i.top_bc_type, true)
+    #     vscptBOT = varsubscript(i.bot_bc_type, false)
+    #     vscpt = [vscptTOP, vscptBOT]
+    #     vscpt = filter!(x -> !isnothing(x), vscpt)
+    #     for j in vscpt
+    #         push!(
+    #             bcParam,
+    #             [
+    #                 "const",
+    #                 i.species_name * j,
+    #                 "K$(i.species_name) * $(i.substance)$j",
+    #                 "mmol cm^-3",
+    #                 comment(j, "adsorbed $(i.substance)"),
+    #             ],
+    #             promote = true,
+    #         )
+    #     end
+    # end
 
 
 
@@ -528,12 +532,13 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
 
     
     adsorbed_species = select(adsorption,:substance,:surface,:top_bc_type,:bot_bc_type)
-    unique!(adsorbed_species)
-    @transform!(adsorbed_species,:substance=ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
+    # @transform!(adsorbed_species,:substance=ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
+    @transform!(adsorbed_species,:substance=:substance.*"_ads")
     @transform!(adsorbed_species,
                 :type ="solid",
                 :formula="",
                 :species_name=:substance)
+    unique!(adsorbed_species)
 
     
 
@@ -541,7 +546,7 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     @transform!(substances_bc,:species_name=:substance)
     select!(substances_bc,:substance,:species_name,:type,:top_bc_type,:bot_bc_type)
     append!(substances_bc, select!(dissolved_all,names(substances_bc)))
-    append!(substances_bc, select!(dissolved_adsorbed,names(substances_bc)))
+    # append!(substances_bc, select!(dissolved_adsorbed,names(substances_bc)))
     append!(substances_bc, select!(adsorbed_species,names(substances_bc)))
     unique!(substances_bc)
 
@@ -613,7 +618,7 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     end
 
 
-    # if any(substances.type .== "dissolved_adsorbed_summed")
+    # if any(substances.type .== "dissolved_speciation")
     #     for i in eachrow(adsorption)
     #         BC_str_Top = setTopBC(i.adsorbed, "solid", i.top_bc_type)
     #         BC_str_Bot = setBotBC(i.adsorbed, "solid", i.bot_bc_type)
@@ -661,10 +666,10 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
     appendtostr!(param_str, globalParam, "global parameters", assemble)
     appendtostr!(param_str, gridParam, "grid parameters", assemble)
     appendtostr!(param_str, porosityParam, "porosity parameters", assemble)
-    appendtostr!(param_str, burialParam, "burial parameters", assemble)
+    appendtostr!(param_str, burialParam, "phase velocity parameters", assemble)
     appendtostr!(param_str, bioturbationParam, "bioturbation parameters", assemble)
     appendtostr!(param_str, bioirrigationParam, "bioirrigation parameters", assemble)
-    appendtostr!(param_str, adsParam, "adsorption parameters", assemble)
+    appendtostr!(param_str, adsParam, "speciation parameters", assemble)
     appendtostr!(param_str, diffusionParam, "solute diffusivity", assemble)
     appendtostr!(param_str, betaParam, "solute mass transfer velocities", assemble)
     appendtostr!(param_str, bcParam, "boundary fluxes and concentrations", assemble)
@@ -690,19 +695,24 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
             end
         elseif i.type ∈ [
             "dissolved",
-            "dissolved_adsorbed",
-            "dissolved_summed",
-            "dissolved_summed_pH",
+            # "dissolved_adsorbed",
+            "dissolved_pH",
         ]
             if i.top_bc_type == "robin"
                 ini = "$(i.substance)BW"
             elseif i.top_bc_type == "dirichlet"
                 ini = "$(i.substance)0"
             end
-        elseif i.type == "dissolved_adsorbed_summed"
+        elseif i.type == "dissolved_speciation"
             # dissolved_sp =
-            #     getval!(dissolved_adsorbed_summed, :substance, i.substance, :species)
-            ini = "$(i.substance)_dis0"
+            #     getval!(dissolved_speciation, :substance, i.substance, :species)
+            # ini = "$(i.substance)_dis0"
+            if i.top_bc_type == "robin"
+                ini = "$(i.substance)_disBW"
+            elseif i.top_bc_type == "dirichlet"
+                ini = "$(i.substance)_dis0"
+            end
+
         end
 
         push!(initialvec, ini)
