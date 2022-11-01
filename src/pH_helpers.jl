@@ -1,13 +1,13 @@
 struct EquilibriumInvariant
     # container of summed species like TCO2
-    name::String
-    species::Vector{String} # subspecies
-    charge::Vector{String} # subspecies
-    expr::Vector{String}
-    coef::Vector{String} # subspecies coefficient in TA definition
-    dTAdsum::String
-    dTAdH::String
-    diss_const::Vector{String}
+    name::String # name of EI
+    species::Vector{String} # species
+    charge::Vector{String} # charge of species
+    expr::Vector{String} # expression to compute species concentration
+    coef::Vector{String} # coefficient of species in TA definition
+    dTAdEI::String # expression to compute dTA/dEIs
+    dTAdH::String # expression to compute dTA/dH
+    diss_const::Vector{String} # dissociation constants
 end
 
 list_summed_species =
