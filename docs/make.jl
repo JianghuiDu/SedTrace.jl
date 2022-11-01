@@ -1,5 +1,5 @@
 push!(LOAD_PATH,"../src/")
-using SedTrace
+# using SedTrace
 using Documenter
 
 
@@ -7,7 +7,7 @@ using Documenter
 
 makedocs(
     sitename = "SedTrace.jl",
-    modules  = [SedTrace],
+    # modules  = [SedTrace],
     pages=[
         "Home" => "index.md",
         "User Guide" => "guide.md",
@@ -19,6 +19,6 @@ makedocs(
     ]
 )
 
-deploydocs(;
-    repo="github.com/JianghuiDu/SedTrace.jl",
-)
+# deploydocs(;
+#     repo="github.com/JianghuiDu/SedTrace.jl",
+# )
