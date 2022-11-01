@@ -61,14 +61,14 @@ function generate_output(
             ) # if expression given
             push!(profile_name, i.name)
 
-            if (!ismissing(i.type) && i.type == "dissolved_summed_pH")
+            if (!ismissing(i.type) && i.type == "dissolved_pH")
                 # compute both the profile of summed and individual species
                 EqInv = EquilibriumInvariant(i.name)
                 append!(profile_expr, ["($header) -> $i" for i in EqInv.expr])
                 append!(profile_name, [i for i in EqInv.species])
             end
         elseif i.name == "TA" # total alkalinity
-            TA_summed = @subset(substances, :type .== "dissolved_summed_pH")
+            TA_summed = @subset(substances, :type .== "dissolved_pH")
             TA_str = []
             for j in TA_summed.substance
                 EqInv = EquilibriumInvariant(j)
@@ -102,7 +102,7 @@ function generate_output(
                 calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
-        elseif i.type != "dissolved_summed_pH"
+        elseif i.type != "dissolved_pH"
             push!(
                 flux_top_raw_expr,
                 "($header) ->
@@ -149,7 +149,7 @@ function generate_output(
     flux_top_name = []
 
     for i in eachrow(@subset(plotting, .!ismissing.(:flux_top)))
-        if (ismissing(i.type) || i.type != "dissolved_summed_pH") && (i.name != "TA")
+        if (ismissing(i.type) || i.type != "dissolved_pH") && (i.name != "TA")
             push!(
                 flux_top_expr,
                 "($header_flux) ->
@@ -157,12 +157,12 @@ function generate_output(
                 i.name : i.expression)",
             )
             push!(flux_top_name, i.name)
-        elseif (!ismissing(i.type) && i.type == "dissolved_summed_pH") && (i.name != "TA")
+        elseif (!ismissing(i.type) && i.type == "dissolved_pH") && (i.name != "TA")
             EqInv = EquilibriumInvariant(i.name)
             push!(flux_top_expr, "($header_flux) -> $(join( EqInv.species,"+"))")
             push!(flux_top_name, i.name)
         elseif i.name == "TA"
-            TA_summed = @subset(substances, :type .== "dissolved_summed_pH")
+            TA_summed = @subset(substances, :type .== "dissolved_pH")
             TA_str = []
             for j in TA_summed.substance
                 EqInv = EquilibriumInvariant(j)
