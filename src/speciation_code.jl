@@ -9,6 +9,7 @@ function speciation_model(substance_spec, speciation, adsorption)
         speciation_parse = DataFrame(
             name = String[],
             formula = String[],
+            formula_ = String[],
             type = String[],
             comment = String[],
         )
@@ -48,7 +49,7 @@ function speciation_model(substance_spec, speciation, adsorption)
         @subset!(speciation_parse, :isspec)
         # @select!(speciation_parse, :dissolved, :species_eq)
         # rename!(speciation_parse, :species_eq => :formula, :dissolved => :name)
-        @select!(speciation_parse, :dissolved, :formula)
+        @select!(speciation_parse, :dissolved, :formula,:formula_)
         rename!(speciation_parse,:dissolved => :name)
 
         unique!(speciation_parse, :formula)
@@ -58,13 +59,20 @@ function speciation_model(substance_spec, speciation, adsorption)
             DataFrame(
                 name = TDissolved,
                 formula = "",
+                formula_ = "",
                 type = "dissolved",
                 comment = "Total dissolved",
             ),
         )
+        speciation_Str = String[]
+        cache = [base_species_name, TDissolved]
+        speciation_expr =
+            DataFrame(var = SymPy.Sym[], expr = SymPy.Sym[])
+
 
         @subset!(speciation_Eq, :dissolved .!= base_species_name)
 
+        if !isempty(speciation_Eq)
         @transform!(
             speciation_Eq,
             :species_eq =
@@ -105,11 +113,11 @@ function speciation_model(substance_spec, speciation, adsorption)
             SymPy.symbols(base_species_name),
         )
         base_expr = SymPy.elements(base_expr)[1]
-        speciation_Str = [base_species_name * "=" * string(base_expr)]
-        cache = [base_species_name, TDissolved]
 
-        speciation_expr =
-            DataFrame(var = SymPy.sympify(base_species_name), expr = base_expr)
+        append!(speciation_Str , [base_species_name * "=" * string(base_expr)])
+
+        append!(speciation_expr,
+            DataFrame(var = SymPy.sympify(base_species_name), expr = base_expr))
 
         for i in eachrow(speciation_Eq_sys)
             res = SymPy.solveset(
@@ -127,6 +135,7 @@ function speciation_model(substance_spec, speciation, adsorption)
                 ],
             )
         end
+    end
 
         if isempty(adsorption_df)
             speciation_Str = vcat(
@@ -192,6 +201,7 @@ function speciation_model(substance_spec, speciation, adsorption)
                 DataFrame(
                     name = adsorption_df.adsorbed,
                     formula = "",
+                    formula_ = "",
                     type = "adsorbed",
                     comment = "Adsorbed",
                 ),
@@ -201,7 +211,8 @@ function speciation_model(substance_spec, speciation, adsorption)
                 DataFrame(
                     name = TAdsorbed,
                     formula = "",
-                    type = "dissolved",
+                    formula_ = "",
+                    type = "adsorbed",
                     comment = "Total adsorbed",
                 ),
             )
@@ -210,6 +221,7 @@ function speciation_model(substance_spec, speciation, adsorption)
                 DataFrame(
                     name = ads_Eq___.ads_surf,
                     formula = "",
+                    formula_ = "",
                     type = "adsorbed",
                     comment = "Surface adsorbed",
                 ),
@@ -260,6 +272,7 @@ function speciation_model(substance_spec, speciation, adsorption)
         speciation_parse = DataFrame(
             name = adsorption_df.adsorbed,
             formula = "",
+            formula_ = "",
             type = "adsorbed",
             comment = "Adsorbed",
         )
@@ -268,6 +281,7 @@ function speciation_model(substance_spec, speciation, adsorption)
             DataFrame(
                 name = TAdsorbed,
                 formula = "",
+                formula_ = "",
                 type = "dissolved",
                 comment = "Total adsorbed",
             ),
@@ -277,6 +291,7 @@ function speciation_model(substance_spec, speciation, adsorption)
             DataFrame(
                 name = ads_Eq___.ads_surf,
                 formula = "",
+                formula_ = "",
                 type = "adsorbed",
                 comment = "Surface adsorbed",
             ),
@@ -286,6 +301,7 @@ function speciation_model(substance_spec, speciation, adsorption)
             DataFrame(
                 name = TDissolved,
                 formula = "",
+                formula_ = "",
                 type = "dissolved",
                 comment = "Total dissolved",
             ),
@@ -298,13 +314,14 @@ function speciation_model(substance_spec, speciation, adsorption)
 end
 
 function speciation_code(substances, speciation, adsorption)
-    substances_speciation = @subset(substances, :type .== "dissolved_adsorbed_summed")
+    substances_speciation = @subset(substances, :type .== "dissolved_speciation")
     spec_expr = String[]
     spec_cache = String[]
     speciation_parse = DataFrame(
         substance = String[],
         name = String[],
         formula = String[],
+        formula_ = String[],
         type = String[],
         comment = String[],
     )
