@@ -17,6 +17,7 @@ include(
     HID::StepRange{Int64,Int64} = HID
     TCO2ID::StepRange{Int64,Int64} = TCO2ID
     TH2SID::StepRange{Int64,Int64} = TH2SID
+    LorgID::StepRange{Int64,Int64} = LorgID
     AmPOC::Tridiagonal{T,Vector{T}} = AmPOC
     AmFeOOH::Tridiagonal{T,Vector{T}} = AmFeOOH
     AmFeS::Tridiagonal{T,Vector{T}} = AmFeS
@@ -29,7 +30,8 @@ include(
     AmH2S::Tridiagonal{T,Vector{T}} = AmH2S
     AmHS::Tridiagonal{T,Vector{T}} = AmHS
     AmTFe_dis::Tridiagonal{T,Vector{T}} = AmTFe_dis
-    AmTFe_ads_POC::Tridiagonal{T,Vector{T}} = AmTFe_ads_POC
+    AmTFe_ads::Tridiagonal{T,Vector{T}} = AmTFe_ads
+    AmLorg_dis::Tridiagonal{T,Vector{T}} = AmLorg_dis
     BcAmPOC::Vector{T} = BcAmPOC
     BcCmPOC::Vector{T} = BcCmPOC
     BcAmFeOOH::Vector{T} = BcAmFeOOH
@@ -55,10 +57,12 @@ include(
     BcCmHS::Vector{T} = BcCmHS
     BcAmTFe_dis::Vector{T} = BcAmTFe_dis
     BcCmTFe_dis::Vector{T} = BcCmTFe_dis
-    BcAmTFe_ads_POC::Vector{T} = BcAmTFe_ads_POC
-    BcCmTFe_ads_POC::Vector{T} = BcCmTFe_ads_POC
+    BcAmTFe_ads::Vector{T} = BcAmTFe_ads
+    BcCmTFe_ads::Vector{T} = BcCmTFe_ads
+    BcAmLorg_dis::Vector{T} = BcAmLorg_dis
+    BcCmLorg_dis::Vector{T} = BcCmLorg_dis
     alpha::Vector{T} = alpha
-    SO40::T = SO40
+    SO4BW::T = SO4BW
     H0::T = H0
     OH0::T = OH0
     HCO30::T = HCO30
@@ -67,6 +71,7 @@ include(
     H2S0::T = H2S0
     HS0::T = HS0
     TFe_dis0::T = TFe_dis0
+    Lorg_dis0::T = Lorg_dis0
     dstopw::Vector{T} = dstopw
     KH2O::T = KH2O
     KCO2::T = KCO2

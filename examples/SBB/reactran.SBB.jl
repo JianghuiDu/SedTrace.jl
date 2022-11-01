@@ -14,6 +14,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BSiID,
     SMolID,
     SMohID,
+    LMolID,
+    LMohID,
     TMnID,
     TFeID,
     TNH4ID,
@@ -44,6 +46,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AmBSi,
     AmSMol,
     AmSMoh,
+    AmLMol,
+    AmLMoh,
     AmO2,
     AmNO3,
     AmCH4,
@@ -68,11 +72,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AmHF,
     AmF,
     AmTMn_dis,
-    AmTMn_ads_nsf,
+    AmTMn_ads,
     AmTFe_dis,
-    AmTFe_ads_nsf,
+    AmTFe_ads,
     AmTNH4_dis,
-    AmTNH4_ads_nsf,
+    AmTNH4_ads,
     AmMol_dis,
     AmMoh_dis,
     BcAmPOC,
@@ -99,6 +103,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmSMol,
     BcAmSMoh,
     BcCmSMoh,
+    BcAmLMol,
+    BcCmLMol,
+    BcAmLMoh,
+    BcCmLMoh,
     BcAmO2,
     BcCmO2,
     BcAmNO3,
@@ -148,16 +156,16 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmF,
     BcAmTMn_dis,
     BcCmTMn_dis,
-    BcAmTMn_ads_nsf,
-    BcCmTMn_ads_nsf,
+    BcAmTMn_ads,
+    BcCmTMn_ads,
     BcAmTFe_dis,
     BcCmTFe_dis,
-    BcAmTFe_ads_nsf,
-    BcCmTFe_ads_nsf,
+    BcAmTFe_ads,
+    BcCmTFe_ads,
     BcAmTNH4_dis,
     BcCmTNH4_dis,
-    BcAmTNH4_ads_nsf,
-    BcCmTNH4_ads_nsf,
+    BcAmTNH4_ads,
+    BcCmTNH4_ads,
     BcAmMol_dis,
     BcCmMol_dis,
     BcAmMoh_dis,
@@ -260,6 +268,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
+    Mn = PreallocationTools.get_tmp(f.Mn, C)
+    TMn_dis = PreallocationTools.get_tmp(f.TMn_dis, C)
     Mn_ads = PreallocationTools.get_tmp(f.Mn_ads, C)
     TMn_ads_nsf = PreallocationTools.get_tmp(f.TMn_ads_nsf, C)
     TMn_ads = PreallocationTools.get_tmp(f.TMn_ads, C)
@@ -274,6 +284,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Fe_ads = PreallocationTools.get_tmp(f.Fe_ads, C)
     TFe_ads_nsf = PreallocationTools.get_tmp(f.TFe_ads_nsf, C)
     TFe_ads = PreallocationTools.get_tmp(f.TFe_ads, C)
+    NH4 = PreallocationTools.get_tmp(f.NH4, C)
+    TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
     NH4_ads = PreallocationTools.get_tmp(f.NH4_ads, C)
     TNH4_ads_nsf = PreallocationTools.get_tmp(f.TNH4_ads_nsf, C)
     TNH4_ads = PreallocationTools.get_tmp(f.TNH4_ads, C)
@@ -289,14 +301,12 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     MohO2S2_aq = PreallocationTools.get_tmp(f.MohO2S2_aq, C)
     MohOS3_aq = PreallocationTools.get_tmp(f.MohOS3_aq, C)
     MohS4_aq = PreallocationTools.get_tmp(f.MohS4_aq, C)
-    TMn_dis = PreallocationTools.get_tmp(f.TMn_dis, C)
     TMn_dis_tran = PreallocationTools.get_tmp(f.TMn_dis_tran, C)
-    TMn_ads_nsf_tran = PreallocationTools.get_tmp(f.TMn_ads_nsf_tran, C)
+    TMn_ads_tran = PreallocationTools.get_tmp(f.TMn_ads_tran, C)
     TFe_dis_tran = PreallocationTools.get_tmp(f.TFe_dis_tran, C)
-    TFe_ads_nsf_tran = PreallocationTools.get_tmp(f.TFe_ads_nsf_tran, C)
-    TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
+    TFe_ads_tran = PreallocationTools.get_tmp(f.TFe_ads_tran, C)
     TNH4_dis_tran = PreallocationTools.get_tmp(f.TNH4_dis_tran, C)
-    TNH4_ads_nsf_tran = PreallocationTools.get_tmp(f.TNH4_ads_nsf_tran, C)
+    TNH4_ads_tran = PreallocationTools.get_tmp(f.TNH4_ads_tran, C)
     Mol_dis_tran = PreallocationTools.get_tmp(f.Mol_dis_tran, C)
     Moh_dis_tran = PreallocationTools.get_tmp(f.Moh_dis_tran, C)
     H3PO4 = PreallocationTools.get_tmp(f.H3PO4, C)
@@ -408,6 +418,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     S_CaCO3 = PreallocationTools.get_tmp(f.S_CaCO3, C)
     S_Ca = PreallocationTools.get_tmp(f.S_Ca, C)
     S_MnCO3 = PreallocationTools.get_tmp(f.S_MnCO3, C)
+    S_FeCO3 = PreallocationTools.get_tmp(f.S_FeCO3, C)
     S_BSi = PreallocationTools.get_tmp(f.S_BSi, C)
     S_H4SiO4 = PreallocationTools.get_tmp(f.S_H4SiO4, C)
     S_THF = PreallocationTools.get_tmp(f.S_THF, C)
@@ -434,6 +445,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BSi = @view C[BSiID]
     SMol = @view C[SMolID]
     SMoh = @view C[SMohID]
+    LMol = @view C[LMolID]
+    LMoh = @view C[LMohID]
     TMn = @view C[TMnID]
     TFe = @view C[TFeID]
     TNH4 = @view C[TNH4ID]
@@ -464,6 +477,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dBSi = @view dC[BSiID]
     dSMol = @view dC[SMolID]
     dSMoh = @view dC[SMohID]
+    dLMol = @view dC[LMolID]
+    dLMoh = @view dC[LMohID]
     dTMn = @view dC[TMnID]
     dTFe = @view dC[TFeID]
     dTNH4 = @view dC[TNH4ID]
@@ -497,6 +512,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(dBSi, AmBSi, BSi)
     mul!(dSMol, AmSMol, SMol)
     mul!(dSMoh, AmSMoh, SMoh)
+    mul!(dLMol, AmLMol, LMol)
+    mul!(dLMoh, AmLMoh, LMoh)
     mul!(dO2, AmO2, O2)
     mul!(dNO3, AmNO3, NO3)
     mul!(dCH4, AmCH4, CH4)
@@ -515,6 +532,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dBSi[1] += BcAmBSi[1] ⊗ BSi[1] ⊕ BcCmBSi[1]
     dSMol[1] += BcAmSMol[1] ⊗ SMol[1] ⊕ BcCmSMol[1]
     dSMoh[1] += BcAmSMoh[1] ⊗ SMoh[1] ⊕ BcCmSMoh[1]
+    dLMol[1] += BcAmLMol[1] ⊗ LMol[1] ⊕ BcCmLMol[1]
+    dLMoh[1] += BcAmLMoh[1] ⊗ LMoh[1] ⊕ BcCmLMoh[1]
     dO2[1] += BcAmO2[1] ⊗ O2[1] ⊕ BcCmO2[1]
     dNO3[1] += BcAmNO3[1] ⊗ NO3[1] ⊕ BcCmNO3[1]
     dCH4[1] += BcAmCH4[1] ⊗ CH4[1] ⊕ BcCmCH4[1]
@@ -533,6 +552,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dBSi[Ngrid] += BcAmBSi[2] ⊗ BSi[Ngrid] ⊕ BcCmBSi[2]
     dSMol[Ngrid] += BcAmSMol[2] ⊗ SMol[Ngrid] ⊕ BcCmSMol[2]
     dSMoh[Ngrid] += BcAmSMoh[2] ⊗ SMoh[Ngrid] ⊕ BcCmSMoh[2]
+    dLMol[Ngrid] += BcAmLMol[2] ⊗ LMol[Ngrid] ⊕ BcCmLMol[2]
+    dLMoh[Ngrid] += BcAmLMoh[2] ⊗ LMoh[Ngrid] ⊕ BcCmLMoh[2]
     dO2[Ngrid] += BcAmO2[2] ⊗ O2[Ngrid] ⊕ BcCmO2[2]
     dNO3[Ngrid] += BcAmNO3[2] ⊗ NO3[Ngrid] ⊕ BcCmNO3[2]
     dCH4[Ngrid] += BcAmCH4[2] ⊗ CH4[Ngrid] ⊕ BcCmCH4[2]
@@ -829,34 +850,28 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     mul!(TMn_dis_tran, AmTMn_dis, TMn_dis)
     TMn_dis_tran[1] += BcAmTMn_dis[1] ⊗ TMn_dis[1] ⊕ BcCmTMn_dis[1]
     TMn_dis_tran[Ngrid] += BcAmTMn_dis[2] ⊗ TMn_dis[Ngrid] ⊕ BcCmTMn_dis[2]
-    mul!(TMn_ads_nsf_tran, AmTMn_ads_nsf, TMn_ads_nsf)
-    TMn_ads_nsf_tran[1] +=
-        BcAmTMn_ads_nsf[1] ⊗ TMn_ads_nsf[1] ⊕ BcCmTMn_ads_nsf[1]
-    TMn_ads_nsf_tran[Ngrid] +=
-        BcAmTMn_ads_nsf[2] ⊗ TMn_ads_nsf[Ngrid] ⊕ BcCmTMn_ads_nsf[2]
-    @.. dTMn = TMn_dis_tran ⊗ 1 ⊕ TMn_ads_nsf_tran ⊗ dstopw
+    mul!(TMn_ads_tran, AmTMn_ads, TMn_ads)
+    TMn_ads_tran[1] += BcAmTMn_ads[1] ⊗ TMn_ads[1] ⊕ BcCmTMn_ads[1]
+    TMn_ads_tran[Ngrid] += BcAmTMn_ads[2] ⊗ TMn_ads[Ngrid] ⊕ BcCmTMn_ads[2]
+    @.. dTMn = TMn_dis_tran ⊗ 1 ⊕ TMn_ads_tran ⊗ dstopw
     @.. dTMn += alpha ⊗ (TMn_dis0 - TMn_dis)
 
     mul!(TFe_dis_tran, AmTFe_dis, TFe_dis)
     TFe_dis_tran[1] += BcAmTFe_dis[1] ⊗ TFe_dis[1] ⊕ BcCmTFe_dis[1]
     TFe_dis_tran[Ngrid] += BcAmTFe_dis[2] ⊗ TFe_dis[Ngrid] ⊕ BcCmTFe_dis[2]
-    mul!(TFe_ads_nsf_tran, AmTFe_ads_nsf, TFe_ads_nsf)
-    TFe_ads_nsf_tran[1] +=
-        BcAmTFe_ads_nsf[1] ⊗ TFe_ads_nsf[1] ⊕ BcCmTFe_ads_nsf[1]
-    TFe_ads_nsf_tran[Ngrid] +=
-        BcAmTFe_ads_nsf[2] ⊗ TFe_ads_nsf[Ngrid] ⊕ BcCmTFe_ads_nsf[2]
-    @.. dTFe = TFe_dis_tran ⊗ 1 ⊕ TFe_ads_nsf_tran ⊗ dstopw
+    mul!(TFe_ads_tran, AmTFe_ads, TFe_ads)
+    TFe_ads_tran[1] += BcAmTFe_ads[1] ⊗ TFe_ads[1] ⊕ BcCmTFe_ads[1]
+    TFe_ads_tran[Ngrid] += BcAmTFe_ads[2] ⊗ TFe_ads[Ngrid] ⊕ BcCmTFe_ads[2]
+    @.. dTFe = TFe_dis_tran ⊗ 1 ⊕ TFe_ads_tran ⊗ dstopw
     @.. dTFe += alpha ⊗ (TFe_dis0 - TFe_dis)
 
     mul!(TNH4_dis_tran, AmTNH4_dis, TNH4_dis)
     TNH4_dis_tran[1] += BcAmTNH4_dis[1] ⊗ TNH4_dis[1] ⊕ BcCmTNH4_dis[1]
     TNH4_dis_tran[Ngrid] += BcAmTNH4_dis[2] ⊗ TNH4_dis[Ngrid] ⊕ BcCmTNH4_dis[2]
-    mul!(TNH4_ads_nsf_tran, AmTNH4_ads_nsf, TNH4_ads_nsf)
-    TNH4_ads_nsf_tran[1] +=
-        BcAmTNH4_ads_nsf[1] ⊗ TNH4_ads_nsf[1] ⊕ BcCmTNH4_ads_nsf[1]
-    TNH4_ads_nsf_tran[Ngrid] +=
-        BcAmTNH4_ads_nsf[2] ⊗ TNH4_ads_nsf[Ngrid] ⊕ BcCmTNH4_ads_nsf[2]
-    @.. dTNH4 = TNH4_dis_tran ⊗ 1 ⊕ TNH4_ads_nsf_tran ⊗ dstopw
+    mul!(TNH4_ads_tran, AmTNH4_ads, TNH4_ads)
+    TNH4_ads_tran[1] += BcAmTNH4_ads[1] ⊗ TNH4_ads[1] ⊕ BcCmTNH4_ads[1]
+    TNH4_ads_tran[Ngrid] += BcAmTNH4_ads[2] ⊗ TNH4_ads[Ngrid] ⊕ BcCmTNH4_ads[2]
+    @.. dTNH4 = TNH4_dis_tran ⊗ 1 ⊕ TNH4_ads_tran ⊗ dstopw
     @.. dTNH4 += alpha ⊗ (TNH4_dis0 - TNH4_dis)
 
     mul!(Mol_dis_tran, AmMol_dis, Mol_dis)
@@ -957,8 +972,10 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. RCFA_pre =
         (tanh(1e3 ⊗ (Omega_RCFA_pre - 1.0)) / 2 ⊕ 0.5) ⊗
         (kCFA_pre ⊗ (Omega_RCFA_pre - 1))
-    @.. RMolS4_pre = kMolS4_pre ⊗ MolS4_aq
-    @.. RMohS4_pre = kMohS4_pre ⊗ MohS4_aq
+    @.. RMolS4_pre =
+        kMolS4_pre ⊗ (MolS4_aq ⊕ MolOS3_aq ⊕ MolO2S2_aq ⊕ MolO3S_aq)
+    @.. RMohS4_pre =
+        kMohS4_pre ⊗ (MohS4_aq ⊕ MohOS3_aq ⊕ MohO2S2_aq ⊕ MohO3S_aq)
 
     # Summed rates for model substances
     @.. S_POC =
@@ -974,7 +991,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         1 ⊗ RMnO2POC ⊗ dstopw ⊕ 1 ⊗ RFeOOHPOC ⊗ dstopw ⊕ 1 ⊗ RSO4POC ⊗ dstopw ⊕
         1 / 2 ⊗ RCH4POC ⊗ dstopw ⊕ 1 ⊗ RO2CH4 ⊕ 1 ⊗ RSO4CH4 ⊕
         1 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -1 ⊗ RCaCO3_pre ⊕ 1 ⊗ RMnCO3_dis ⊗ dstopw ⊕
-        -1 ⊗ RMnCO3_pre ⊕ 1 ⊗ RFeCO3_dis ⊕ -1 ⊗ RFeCO3_pre ⊕ -1.2 ⊗ RCFA_pre
+        -1 ⊗ RMnCO3_pre ⊕ 1 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -1 ⊗ RFeCO3_pre ⊕
+        -1.2 ⊗ RCFA_pre
     @.. S_TNH4 =
         rNC ⊗ RO2POC ⊗ dstopw ⊕ rNC ⊗ RNO2POC ⊗ dstopw ⊕
         rNC ⊗ RNO3POC ⊗ dstopw ⊕ rNC ⊗ RMnO2POC ⊗ dstopw ⊕
@@ -1004,8 +1022,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. S_TFe =
         4 ⊗ RFeOOHPOC ⊗ dstopw ⊕ -1 ⊗ RO2Fe ⊕ -1 ⊗ RO2Fe_ads ⊗ dstopw ⊕
         -1 ⊗ RNO3Fe ⊕ -1 ⊗ RMnO2Fe ⊗ dstopw ⊕ 2 ⊗ RFeOOHH2S ⊗ dstopw ⊕
-        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre ⊕ -1 ⊗ RFeCO3_dis ⊕
-        1 ⊗ RFeCO3_dis ⊕ -1 ⊗ RFeCO3_pre ⊕ 1 ⊗ RFeCO3_pre
+        1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre ⊕ 1 ⊗ RFeCO3_dis ⊗ dstopw ⊕
+        -1 ⊗ RFeCO3_pre
     @.. S_THSO4 =
         -1 / 2 ⊗ RSO4POC ⊗ dstopw ⊕ 1 ⊗ RO2H2S ⊕ 1 ⊗ RO2FeS ⊗ dstopw ⊕
         1 ⊗ RNO3H2S ⊕ -1 ⊗ RSO4CH4
@@ -1020,13 +1038,16 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. S_CaCO3 = -1 ⊗ RCaCO3_dis ⊕ 1 ⊗ RCaCO3_pre ⊗ pwtods
     @.. S_Ca = 1 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -1 ⊗ RCaCO3_pre ⊕ -9.54 ⊗ RCFA_pre
     @.. S_MnCO3 = -1 ⊗ RMnCO3_dis ⊕ 1 ⊗ RMnCO3_pre ⊗ pwtods
+    @.. S_FeCO3 = -1 ⊗ RFeCO3_dis ⊕ 1 ⊗ RFeCO3_pre ⊗ pwtods
     @.. S_BSi = -1 ⊗ RBSi_dis
     @.. S_H4SiO4 = 1 ⊗ RBSi_dis ⊗ dstopw ⊕ -1 ⊗ RASi_pre
     @.. S_THF = -2.48 ⊗ RCFA_pre
-    @.. S_Mol = -1 ⊗ RMolS4_pre
-    @.. S_SMol = 1 ⊗ RMolS4_pre ⊗ pwtods
-    @.. S_Moh = -1 ⊗ RMohS4_pre
-    @.. S_SMoh = 1 ⊗ RMohS4_pre ⊗ pwtods
+    @.. S_Mol =
+        -1 ⊗ RMolS4_pre ⊕ -1 ⊗ RMolS4_pre ⊕ -1 ⊗ RMolS4_pre ⊕ -1 ⊗ RMolS4_pre
+    @.. S_SMol = 4 ⊗ RMolS4_pre ⊗ pwtods
+    @.. S_Moh =
+        -1 ⊗ RMohS4_pre ⊕ -1 ⊗ RMohS4_pre ⊕ -1 ⊗ RMohS4_pre ⊕ -1 ⊗ RMohS4_pre
+    @.. S_SMoh = 4 ⊗ RMohS4_pre ⊗ pwtods
     @.. S_TA =
         (rNC - rPC) ⊗ RO2POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4 / 3) ⊗ RNO2POC ⊗ dstopw ⊕
         (rNC - rPC) ⊗ RNO3POC ⊗ dstopw ⊕ (rNC - rPC ⊕ 4) ⊗ RMnO2POC ⊗ dstopw ⊕
@@ -1039,7 +1060,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre ⊕ -39 / 100 ⊗ RCFA_pre
     @.. S_TA +=
         2 ⊗ RCaCO3_dis ⊗ dstopw ⊕ -2 ⊗ RCaCO3_pre ⊕ 2 ⊗ RMnCO3_dis ⊗ dstopw ⊕
-        -2 ⊗ RMnCO3_pre ⊕ 2 ⊗ RFeCO3_dis ⊕ -2 ⊗ RFeCO3_pre ⊕ -12 / 5 ⊗ RCFA_pre
+        -2 ⊗ RMnCO3_pre ⊕ 2 ⊗ RFeCO3_dis ⊗ dstopw ⊕ -2 ⊗ RFeCO3_pre ⊕
+        -12 / 5 ⊗ RCFA_pre
     @.. S_TA += -48 / 5 ⊗ RCFA_pre
     @.. S_TA += 1 ⊗ RFeS_dis ⊗ dstopw ⊕ -1 ⊗ RFeS_pre
     @.. S_H = S_TA
@@ -1058,6 +1080,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dFeS2 += S_FeS2
     @.. dCaCO3 += S_CaCO3
     @.. dMnCO3 += S_MnCO3
+    @.. dFeCO3 += S_FeCO3
     @.. dAge += S_Age
     @.. dBSi += S_BSi
     @.. dSMol += S_SMol

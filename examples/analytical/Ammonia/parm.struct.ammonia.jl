@@ -13,14 +13,14 @@ include(
     TNH4ID::StepRange{Int64,Int64} = TNH4ID
     AmN_org::Tridiagonal{T,Vector{T}} = AmN_org
     AmTNH4_dis::Tridiagonal{T,Vector{T}} = AmTNH4_dis
-    AmTNH4_ads_nsf::Tridiagonal{T,Vector{T}} = AmTNH4_ads_nsf
+    AmTNH4_ads::Tridiagonal{T,Vector{T}} = AmTNH4_ads
     BcAmN_org::Vector{T} = BcAmN_org
     BcCmN_org::Vector{T} = BcCmN_org
     Ngrid::Int64 = Ngrid
     BcAmTNH4_dis::Vector{T} = BcAmTNH4_dis
     BcCmTNH4_dis::Vector{T} = BcCmTNH4_dis
-    BcAmTNH4_ads_nsf::Vector{T} = BcAmTNH4_ads_nsf
-    BcCmTNH4_ads_nsf::Vector{T} = BcCmTNH4_ads_nsf
+    BcAmTNH4_ads::Vector{T} = BcAmTNH4_ads
+    BcCmTNH4_ads::Vector{T} = BcCmTNH4_ads
     alpha::Vector{T} = alpha
     TNH4_dis0::T = TNH4_dis0
     dstopw::Vector{T} = dstopw

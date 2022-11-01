@@ -1,8 +1,6 @@
-function JacType(
-    IDdict::Dict{Symbol,StepRangeLen{Int,Int,Int,Int}},
-    Ngrid::Int,
-    nspec::Int,
-)
+function JacType(IDdict::Dict{Symbol,StepRangeLen{Int,Int,Int,Int}})
+    Ngrid = length(first(IDdict)[2])
+    nspec = length(IDdict)
     @unpack POCID, SO4ID = IDdict
 
     rowID = Vector{Int}()

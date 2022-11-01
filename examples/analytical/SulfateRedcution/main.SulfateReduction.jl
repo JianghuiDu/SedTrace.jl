@@ -12,39 +12,32 @@ modelconfig = ModelConfig(
     modelname,
 )
 
-# @time generate_parameter_template(modelconfig)
+@time generate_parameter_template(modelconfig)
 
 @time generate_code(modelconfig)
 
 IncludeFiles(modelconfig)
 
 
+# initial values
+C0 = Param.C0;
+# initalize parameters
+parm = Param.ParamStruct();
+# initialize cache and ODE function
+OdeFun = Cache.init(C0, parm.Ngrid);
+# initialize Jacobian 
+JacPrototype = JacType(Param.IDdict);
 
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
+TestOdeFun(OdeFun,C0,parm)
+TestJacobian(JacPrototype,OdeFun,parm)
+BenchmarkReactran(OdeFun,C0,parm)
+BenchmarkJacobian(JacPrototype,OdeFun,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,parm)
 
-ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
+# configure the solver
+solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
-chunk_size = 10;
-
-C0 = SedTrace.Param.C0;
-parm = SedTrace.Param.ParamStruct();
-RHSFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-solverconfig = SolverConfig(chunk_size, :GMRES)
-solver = generate_ODESolver(RHSFun, JacPrototype, solverconfig,parm);
-OdeFunction = generate_ODEFun(RHSFun, JacPrototype, solverconfig);
-outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
-
-
-
-TestOdeFun(RHSFun,C0,parm)
-TestJacobian(JacPrototype,RHSFun,chunk_size,parm)
-BenchmarkReactran(RHSFun,C0,parm)
-BenchmarkJacobian(JacPrototype,RHSFun,chunk_size,parm)
-BenchmarkPreconditioner(JacPrototype,RHSFun,chunk_size,parm)
-
-
-
-solverctrlconfig = SolverCtrlConfig(
+solutionconfig = SolutionConfig(
     C0,
     # solution.sol[end],
     (0.0, 1E5),
@@ -54,16 +47,15 @@ solverctrlconfig = SolverCtrlConfig(
     callback = TerminateSteadyState(1e-16, 1e-6, DiffEqCallbacks.allDerivPass),
 );
 
+solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
-
-@time solution = modelrun(OdeFunction, parm, solver, solverctrlconfig, outputconfig);
 
 gr(; size = (400, 800))
 
-generate_substance_plot(
+generate_output(
     modelconfig,
     solution,
-    ["analytical"],
+    site = "analytical",
     showplt = true,
 )
 

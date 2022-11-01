@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions
 include(
-    "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\OregonNd\\parm.OregonNd.jl",
+    "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\OregonNd\\old\\parm.OregonNd.jl",
 )
 
 #---------------------------------------------------------------

@@ -52,13 +52,13 @@ EnableList = Dict(
 )
 
 ParamDict = Dict(
-    "Basalt0" => 2,
+    "Basalt0" => 1,
     "a_lith0" =>  1e5,
     "rNdSi_lith" =>1.9e-5
 )
 
 
-# @time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig,EnableList=EnableList)
 
 
 @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
@@ -66,52 +66,57 @@ ParamDict = Dict(
 
 IncludeFiles(modelconfig)
 
+# initial values
+C0 = Param.C0;
+# initalize parameters
+parm = Param.ParamStruct();
+# initialize cache and ODE function
+OdeFun = Cache.init(C0, parm.Ngrid);
+# initialize Jacobian 
+JacPrototype = JacType(SedTrace.Param.IDdict);
 
-C0 = SedTrace.Param.C0;
-parm = SedTrace.Param.ParamStruct();
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec);
-ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
-chunk_size = 10;
+# # test the ODE function
+# TestOdeFun(OdeFun, C0, parm)
+# # test if the Jacobian is correct
+# TestJacobian(JacPrototype, OdeFun, parm)
+# # benchmark the ODE function performance
+# BenchmarkReactran(OdeFun, C0, parm)
+# # benchmark the Jacobian performance
+# BenchmarkJacobian(JacPrototype, OdeFun, parm)
+# # benchmark the preconditioner performance
+# BenchmarkPreconditioner(JacPrototype, OdeFun, parm)
 
-OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-solverconfig = SolverConfig(chunk_size, :GMRES)
-solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
-OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
-outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
+# configure the solver
+solverconfig = SolverConfig(:FGMRES, :ILU0, 2)
 
-
-# TestOdeFun(OdeFun,C0,parm)
-# TestJacobian(JacPrototype,OdeFun,chunk_size,parm)
-# BenchmarkReactran(OdeFun,C0,parm)
-# BenchmarkJacobian(JacPrototype,OdeFun,chunk_size,parm)
-# BenchmarkPreconditioner(JacPrototype,OdeFun,chunk_size,parm)
-
-solution = load("sol.$modelname.jld2", "sol");
-
-solverctrlconfig = SolverCtrlConfig(
-    # C0,
-    solution.sol[end],
+# solution = load("sol.$modelname.jld2", "sol");
+# configure the solution
+solutionconfig = SolutionConfig(
+    C0,
+    # solution,
     (0.0, 1E6),
     reltol = 1e-6,
     abstol = 1e-18,
     saveat = 1000.0,
-    callback = TerminateSteadyState(1e-16, 1e-6, DiffEqCallbacks.allDerivPass),
+    callback = TerminateSteadyState(1e-16, 1e-6),
 );
 
-@time solution = modelrun(OdeFunction, parm, solver, solverctrlconfig, outputconfig);
+# run the model
+@time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
+
 
 gr(; size = (400, 650))
 
-
-generate_substance_plot(
+generate_output(
     modelconfig,
     solution,
-    ["HH3000"],
+    site = "HH3000",
     EnableList = EnableList,
     showplt = true,
 )
 
-jldsave("sol.$modelname.jld2"; sol = solution)
+jldsave("sol.$modelname.jld2"; sol = solution.sol[end])
+
 
 ParamDict = Dict(
     "Basalt0" => 2,
@@ -122,40 +127,31 @@ ParamDict = Dict(
 
 @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
 
-
 IncludeFiles(modelconfig)
 
-# ForwardDiff.pickchunksize(maximum(matrix_colors(JacPrototype)))
-chunk_size = 10;
+parm = Param.ParamStruct();
+OdeFun = Cache.init(C0, parm.Ngrid);
 
-C0 = SedTrace.Param.C0;
-parm = SedTrace.Param.ParamStruct();
-OdeFun = SedTrace.Cache.init(C0, SedTrace.Param.Ngrid, chunk_size);
-JacPrototype = SedTrace.JacType(SedTrace.Param.IDdict,SedTrace.Param.Ngrid,SedTrace.Param.nspec)
-solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,2)
-solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
-OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
-outputconfig = OutputConfig(SedTrace.Param.x, SedTrace.Param.L, SedTrace.Param.Ngrid, SedTrace.Param.IDdict);
-
-
-
-solverctrlconfig = SolverCtrlConfig(
+solutionconfig = SolutionConfig(
     solution.sol[end],
     (0.0, 1E6),
     reltol = 1e-6,
     abstol = 1e-18,
     saveat = 1000.0,
-    callback = TerminateSteadyState(1e-16, 1e-6, DiffEqCallbacks.allDerivPass),
+    callback = TerminateSteadyState(1e-16, 1e-6),
 );
 
-@time solution = modelrun(OdeFunction, parm, solver, solverctrlconfig, outputconfig);
+# run the model
+@time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
-generate_substance_plot(
+
+generate_output(
     modelconfig,
     solution,
-    ["HH3000"],
+    site = "HH3000",
     EnableList = EnableList,
     showplt = true,
 )
 
-jldsave("sol.$modelname.jld2"; sol = solution)
+jldsave("sol.$modelname.jld2"; sol = solution.sol[end])
+

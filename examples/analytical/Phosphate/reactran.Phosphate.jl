@@ -6,14 +6,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TH3PO4ID,
     AmPorg,
     AmTH3PO4_dis,
-    AmTH3PO4_ads_nsf,
+    AmTH3PO4_ads,
     BcAmPorg,
     BcCmPorg,
     Ngrid,
     BcAmTH3PO4_dis,
     BcCmTH3PO4_dis,
-    BcAmTH3PO4_ads_nsf,
-    BcCmTH3PO4_ads_nsf,
+    BcAmTH3PO4_ads,
+    BcCmTH3PO4_ads,
     alpha,
     TH3PO4_dis0,
     dstopw,
@@ -29,7 +29,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TH3PO4_ads = PreallocationTools.get_tmp(f.TH3PO4_ads, C)
     TH3PO4_dis = PreallocationTools.get_tmp(f.TH3PO4_dis, C)
     TH3PO4_dis_tran = PreallocationTools.get_tmp(f.TH3PO4_dis_tran, C)
-    TH3PO4_ads_nsf_tran = PreallocationTools.get_tmp(f.TH3PO4_ads_nsf_tran, C)
+    TH3PO4_ads_tran = PreallocationTools.get_tmp(f.TH3PO4_ads_tran, C)
     Rremin = PreallocationTools.get_tmp(f.Rremin, C)
     Rpre = PreallocationTools.get_tmp(f.Rpre, C)
     S_Porg = PreallocationTools.get_tmp(f.S_Porg, C)
@@ -64,12 +64,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TH3PO4_dis_tran[1] += BcAmTH3PO4_dis[1] ⊗ TH3PO4_dis[1] ⊕ BcCmTH3PO4_dis[1]
     TH3PO4_dis_tran[Ngrid] +=
         BcAmTH3PO4_dis[2] ⊗ TH3PO4_dis[Ngrid] ⊕ BcCmTH3PO4_dis[2]
-    mul!(TH3PO4_ads_nsf_tran, AmTH3PO4_ads_nsf, TH3PO4_ads_nsf)
-    TH3PO4_ads_nsf_tran[1] +=
-        BcAmTH3PO4_ads_nsf[1] ⊗ TH3PO4_ads_nsf[1] ⊕ BcCmTH3PO4_ads_nsf[1]
-    TH3PO4_ads_nsf_tran[Ngrid] +=
-        BcAmTH3PO4_ads_nsf[2] ⊗ TH3PO4_ads_nsf[Ngrid] ⊕ BcCmTH3PO4_ads_nsf[2]
-    @.. dTH3PO4 = TH3PO4_dis_tran ⊗ 1 ⊕ TH3PO4_ads_nsf_tran ⊗ dstopw
+    mul!(TH3PO4_ads_tran, AmTH3PO4_ads, TH3PO4_ads)
+    TH3PO4_ads_tran[1] += BcAmTH3PO4_ads[1] ⊗ TH3PO4_ads[1] ⊕ BcCmTH3PO4_ads[1]
+    TH3PO4_ads_tran[Ngrid] +=
+        BcAmTH3PO4_ads[2] ⊗ TH3PO4_ads[Ngrid] ⊕ BcCmTH3PO4_ads[2]
+    @.. dTH3PO4 = TH3PO4_dis_tran ⊗ 1 ⊕ TH3PO4_ads_tran ⊗ dstopw
     @.. dTH3PO4 += alpha ⊗ (TH3PO4_dis0 - TH3PO4_dis)
 
     #---------------------------------------------------------------------

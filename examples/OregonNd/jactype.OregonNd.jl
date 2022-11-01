@@ -1,8 +1,6 @@
-function JacType(
-    IDdict::Dict{Symbol,StepRangeLen{Int,Int,Int,Int}},
-    Ngrid::Int,
-    nspec::Int,
-)
+function JacType(IDdict::Dict{Symbol,StepRangeLen{Int,Int,Int,Int}})
+    Ngrid = length(first(IDdict)[2])
+    nspec = length(IDdict)
     @unpack MnO2ID,
     FeOOHID,
     POCID,
@@ -620,6 +618,8 @@ function JacType(
     append!(colID, getindex(IlliteID, 1:Ngrid))
     append!(rowID, getindex(TH4SiO4ID, 1:Ngrid))
     append!(colID, getindex(BasaltID, 1:Ngrid))
+    append!(rowID, getindex(TH4SiO4ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(HID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TCO2ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(TCO2ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TCO2ID, 1:Ngrid))
@@ -767,6 +767,8 @@ function JacType(
     append!(rowID, getindex(HID, 1:Ngrid))
     append!(colID, getindex(CaCO3ID, 1:Ngrid))
     append!(rowID, getindex(HID, 1:Ngrid))
+    append!(colID, getindex(BSiID, 1:Ngrid))
+    append!(rowID, getindex(HID, 1:Ngrid))
     append!(colID, getindex(NdnrPO4ID, 1:Ngrid))
     append!(rowID, getindex(HID, 1:Ngrid))
     append!(colID, getindex(NdrPO4ID, 1:Ngrid))
@@ -780,6 +782,8 @@ function JacType(
     append!(colID, getindex(TH3BO3ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(TH3BO3ID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(HID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
+    append!(rowID, getindex(HID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
+    append!(colID, getindex(TH4SiO4ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(HID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))
     append!(colID, getindex(TCO2ID, vcat(1:Ngrid, 2:Ngrid, 1:(Ngrid-1))))
     append!(rowID, getindex(HID, vcat(1:Ngrid, 1:(Ngrid-1), 2:Ngrid)))

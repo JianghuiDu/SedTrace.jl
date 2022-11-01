@@ -30,14 +30,14 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 #----------------------------------------------
 # porosity parameters
 #----------------------------------------------
-phi_Inf = 0.8 # dimensionless # porosity at infinite sediment depth (normally where porosity stops changing). Needed to calculate burial velocities. If constant_porosity_profile = no, then phi_Inf should be consistent with the depth dependent porosity function
+phi_Inf = 0.8 # dimensionless # porosity at burial depth
 phif = broadcast(x -> 0.8, x) # dimensionless # fluid volume fraction
 phis = 1.0 .- phif # dimensionless # solid volume fraction
 pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit
 dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore water volume unit
 
 #----------------------------------------------
-# burial parameters
+# phase velocity parameters
 #----------------------------------------------
 Fsed = 0.073 # g cm^-2 yr^-1 # total sediment flux
 w_Inf = Fsed / ds_rho / (1 - phi_Inf) # cm yr^-1 # solid sediment burial velocity at infinite depth
@@ -52,7 +52,7 @@ Ds = broadcast(x -> 0.0, x) # cm^2 yr^-1 # Bioturbation coefficient
 #----------------------------------------------
 # bioirrigation parameters
 #----------------------------------------------
-alpha = broadcast(x -> 0.0, x) # cm^2 yr^-1 # Bioirrigation coefficient
+alpha = broadcast(x -> 0.0, x) # yr^-1 # Bioirrigation coefficient
 
 #----------------------------------------------
 # solute diffusivity

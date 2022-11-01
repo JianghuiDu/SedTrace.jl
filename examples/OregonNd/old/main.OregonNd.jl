@@ -58,10 +58,10 @@ ParamDict = Dict(
 )
 
 
-@time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig)
 
 
-@time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
+# @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
 
 
 IncludeFiles(modelconfig)
@@ -158,3 +158,54 @@ generate_substance_plot(
 )
 
 jldsave("sol.$modelname.jld2"; sol = solution)
+
+
+
+
+
+
+
+
+using SpecialFunctions,UnPack
+include(modelconfig.ModelDirectory*"parm.OregonNd.jl")
+include(modelconfig.ModelDirectory*"parm.struct.OregonNd.jl")
+include(modelconfig.ModelDirectory*"cache.OregonNd.jl")
+include(modelconfig.ModelDirectory*"reactran.OregonNd.jl")
+include(modelconfig.ModelDirectory*"jactype.OregonNd.jl")
+
+chunk_size = 10;
+
+C0 = Param.C0;
+parm = Param.ParamStruct();
+OdeFun = Cache.init(C0, Param.Ngrid, chunk_size);
+JacPrototype = JacType(Param.IDdict,Param.Ngrid,Param.nspec)
+solverconfig = SolverConfig(chunk_size, :GMRES,:ILU0,2)
+solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,parm);
+OdeFunction = generate_ODEFun(OdeFun, JacPrototype, solverconfig);
+outputconfig = OutputConfig(Param.x, Param.L, Param.Ngrid, Param.IDdict);
+
+
+
+using Random
+Random.seed!(1234);
+u0 = rand(length(C0));
+du0 = similar(u0);
+C = u0;
+dC = du0;
+SO4 = @view C[SO4ID]
+dSO4 = @view dC[SO4ID]
+mul!(dSO4, AmSO4, SO4)
+dSO4[1] += BcAmSO4[1] * SO4[1] + BcCmSO4[1]
+dSO4[Ngrid] += BcAmSO4[2] * SO4[Ngrid] + BcCmSO4[2]
+@.. dSO4 += alpha * (SO4BW - SO4)
+
+
+
+using Random
+Random.seed!(1234);
+u0 = rand(length(C0));
+du0 = similar(u0);
+OdeFun(du0,u0,parm,0)
+using DelimitedFiles
+writedlm("Mn_adso.txt",OdeFun.Mn_ads_Fe.du.+OdeFun.Mn_ads_Mn.du)
+writedlm("duo.txt",du0)

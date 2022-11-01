@@ -3,8 +3,8 @@
 # Number of substances
 #----------------------------------------------
 nsolid = 16 #  # number of solid substances
-ndissolved = 13 #  # number of dissolved substances
-nsummed = 5 #  # number of summed substances
+ndissolved = 12 #  # number of dissolved substances
+nsummed = 6 #  # number of summed substances
 nspec = 34 #  # number of total substances
 
 #----------------------------------------------
@@ -14,16 +14,15 @@ depth = 3000.0 # m # water depth
 salinity = 35.0 # psu # bottom water salinity
 temp = 2.0 # Celsius # bottom water temperature
 ds_rho = 2.6 # g cm^-3 # dry sediment density
-Fsed = 0.01014 # g cm^-2 yr^-1 # total sediment flux
 sw_dens = 1.0290834608199197 # g cm^-3 # seawater density
 
 #----------------------------------------------
 # grid parameters
 #----------------------------------------------
 L = 50.0 # cm # model sediment section thickness
-Ngrid = 200 # integer # number of model grid
+Ngrid = 300 # integer # number of model grid
 pgrid = L / 10 # cm # constant in gridtran, attenuation scale
-Nmat = 6800 # integer # Jacobian dimension
+Nmat = 10200 # integer # Jacobian dimension
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
 xᵥ = broadcast(x -> L * (exp(x * pgrid / L) - 1) / (exp(pgrid) - 1), ξ) # cm # non-uniform grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
@@ -32,10 +31,10 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 #----------------------------------------------
 # porosity parameters
 #----------------------------------------------
-phi0 = 0.8 # dimentionless # surface porosity
-phiL = 0.7 # dimentionless # bottom porosity
+phi0 = 0.8 # dimensionless # surface porosity
+phiL = 0.7 # dimensionless # bottom porosity
 xphi = 5.0 # cm # porosity attenuation scale
-phi_Inf = 0.7 # dimentionless # porosity at infinite sediment depth (normally where porosity stops changing). Needed to calculate burial velocities. If constant_porosity_profile = yes, then phi_Inf should be the same as the porosity constant. If constant_porosity_profile = no, then phi_Inf should be consistent with the depth dependent porosity function
+phi_Inf = 0.7 # dimensionless # porosity at burial depth
 phif = broadcast(x -> phiL + (phi0 - phiL) * exp(-x / xphi), x) # dimensionless # fluid volume fraction
 phis = 1.0 .- phif # dimensionless # solid volume fraction
 pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit
@@ -44,6 +43,7 @@ dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore w
 #----------------------------------------------
 # burial parameters
 #----------------------------------------------
+Fsed = 0.01014 # g cm^-2 yr^-1 # total sediment flux
 w_Inf = Fsed / ds_rho / (1 - phi_Inf) # cm yr^-1 # solid sediment burial velocity at infinite depth
 uf = phi_Inf * w_Inf ./ phif # cm yr^-1 # pore water burial velocity
 us = Fsed / ds_rho ./ phis # cm yr^-1 # solid sediment burial velocity
@@ -51,7 +51,7 @@ us = Fsed / ds_rho ./ phis # cm yr^-1 # solid sediment burial velocity
 #----------------------------------------------
 # bioturbation parameters
 #----------------------------------------------
-Dbt0 = 1.93554531569282 # cm2/yr # bioturbation coefficient
+Dbt0 = 1.93554531569282 # cm^2/yr # bioturbation coefficient
 xbt = 6.0 # cm # attentuation scale of bioturbation
 Ds = broadcast(x -> Dbt0 * erfc((x - xbt) / 1) / 2, x) # cm^2 yr^-1 # Bioturbation coefficient
 
@@ -63,22 +63,21 @@ xbir = 2.0 # cm # attentuation scale of bioirrigation
 alpha = broadcast(x -> Dbir0 * exp(-x / xbir), x) # cm^2 yr^-1 # Bioirrigation coefficient
 
 #----------------------------------------------
-# adsorption parameters
+# speciation parameters
 #----------------------------------------------
-KNH4_ads = 1.6 * ds_rho # cm^3(porewater) cm^-3(dry sediment) # Adsorption constant
-KMn_ads_Mn = 10000.0 # (mmol cm-3 pw)^-1  # missing
-KMn_ads_Fe = 100.0 # (mmol cm-3 pw)^-1  # missing
-KFe_ads_Mn = 10000.0 # (mmol cm-3 pw)^-1  # missing
-KFe_ads_Fe = 10000.0 # (mmol cm-3 pw)^-1  # missing
-KNd_ads_Mn = 0.0 # (mmol cm-3 pw)^-1  # missing
-KNd_ads_Fe = 0.0 # (mmol cm-3 pw)^-1  # missing
-DNdMn = 0.025 # dimensionless # missing
-DNdFe = 0.005 # dimensionless # missing
+KNH4_ads = 1.6 * ds_rho # cm^3(porewater) cm^-3(dry sediment) # speciation constant
+KMn_ads_Mn = 10000.0 # (mmol cm-3 pw)^-1  # speciation constant
+KMn_ads_Fe = 100.0 # (mmol cm-3 pw)^-1  # speciation constant
+KFe_ads_Mn = 10000.0 # (mmol cm-3 pw)^-1  # speciation constant
+KFe_ads_Fe = 10000.0 # (mmol cm-3 pw)^-1  # speciation constant
+KNd_ads_Mn = 0.0 # (mmol cm-3 pw)^-1  # speciation constant
+KNd_ads_Fe = 0.0 # (mmol cm-3 pw)^-1  # speciation constant
+Cl = 0.565772678 # mmol cm^-3 # speciation constant
 
 #----------------------------------------------
 # solute diffusivity
 #----------------------------------------------
-DO2 = 3.4675408461925849E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DO2 = 3.6643881431380163E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DNO3 = 3.1390297096278300E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTMn_dis = 1.0660970890036131E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTFe_dis = 1.1027537224364021E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -90,11 +89,12 @@ DTNH4_dis = 3.1543033068914923E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sedime
 DSO4 = 1.6324420755402028E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTNdnr_dis = 8.9792651606646430E+01 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTNdr_dis = 8.9792651606646430E+01 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DTH4SiO4 = 1.6311069866893683E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DH4SiO4 = 1.6311069866893683E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DH3SiO4 = 1.6311069866893683E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHCO3 = 1.7136976129828849E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCO3 = 1.4442713572518861E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCO2 = 2.9072831548863599E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DH2S = 3.1798409506569561E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DH2S = 2.0593255680445054E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHS = 3.3436959129609028E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH3BO3 = 1.8019098720389422E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH4BO4 = 1.5766711380340743E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -109,17 +109,19 @@ DOH = 8.5800959988348086E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment dif
 # solute mass transfer velocities
 #----------------------------------------------
 delta = 0.05 # cm # thickness of the diffusive boundary layer
-betaO2 = 6.9350816923851698E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaO2 = 7.3287762862760319E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO3 = 6.2780594192556600E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCH4 = 5.0574613215210629E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO2 = 6.6971669281705481E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCa = 2.4181159187829803E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaAl_dis = 3.0217284826429050E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaSO4 = 3.2648841510804054E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaTH4SiO4 = 3.2622139733787367E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaH4SiO4 = 3.2622139733787367E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaH3SiO4 = 3.2622139733787367E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHCO3 = 3.4273952259657699E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCO3 = 2.8885427145037720E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCO2 = 5.8145663097727193E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaH2S = 6.3596819013139120E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaH2S = 4.1186511360890108E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHS = 6.6873918259218053E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH3BO3 = 3.6038197440778845E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH4BO4 = 3.1533422760681483E+03 # cm yr^-1 # solute mass transfer velocity across SWI
@@ -140,46 +142,43 @@ FFeS0 = 0.0 # mmol cm^-2 yr^-1 # Flux of FeS at the  TOP of sediment column
 FFeS20 = 0.0 # mmol cm^-2 yr^-1 # Flux of FeS2 at the  TOP of sediment column
 FCaCO30 = 10 / 100 * Fsed / 100 * 1000 # mmol cm^-2 yr^-1 # Flux of CaCO3 at the  TOP of sediment column
 FBSi0 = 9 / 100 * Fsed / 28.09 * 1000 # mmol cm^-2 yr^-1 # Flux of BSi at the  TOP of sediment column
-Age0 = 0.0 # year # missing
+Age0 = 0.0 # year # Age at the TOP of sediment column
 CaBW = 0.01033 # mmol cm^-3 # Bottom water concentration of Ca
 SO4BW = 0.028 # mmol cm^-3 # Bottom water concentration of SO4
 TH3BO3BW = 8.7062e-5 # mmol cm^-3 # Bottom water concentration of TH3BO3
-TMn_dis0 = 5.0e-10 # mmol cm^-3 # Concentration of Mn at the TOP of sediment column
-TFe_dis0 = 5.0e-10 # mmol cm^-3 # Concentration of Fe at the TOP of sediment column
-Al_dis0 = 5.0e-10 # mmol cm^-3 # Bottom water concentration of Al
+TMn_dis0 = 5.0e-10 # mmol cm^-3 # Concentration of TMn_dis at the TOP of sediment column
+TFe_dis0 = 5.0e-10 # mmol cm^-3 # Concentration of TFe_dis at the TOP of sediment column
+Al_disBW = 5.0e-10 # mmol cm^-3 # Bottom water concentration of Al_dis
 CH4BW = 0.0 # mmol cm^-3 # Bottom water concentration of CH4
 O2BW = 8.0e-5 # mmol cm^-3 # Bottom water concentration of O2
 NO3BW = 4.0e-5 # mmol cm^-3 # Bottom water concentration of NO3
 NO2BW = 5.0e-8 # mmol cm^-3 # Bottom water concentration of NO2
-TNH4_dis0 = 0.0 # mmol cm^-3 # Concentration of NH4 at the TOP of sediment column
-TNH4_ads_nsf0 = TNH4_dis0 * KNH4_ads # missing # missing
-TH3PO4BW = 2.8e-6 # mmol cm^-3 # Bottom water concentration of H3PO4
-TH4SiO4BW = 0.00019 # mmol cm^-3 # Bottom water concentration of H4SiO4
+TNH4_dis0 = 0.0 # mmol cm^-3 # Concentration of TNH4_dis at the TOP of sediment column
+TNH4_ads0 = TNH4_dis0 * KNH4_ads # mmol cm^-3 # Concentration of TNH4_ads at the TOP of sediment column
+TH3PO4BW = 2.8e-6 # mmol cm^-3 # Bottom water concentration of TH3PO4
+TH4SiO4BW = 0.00019 # mmol cm^-3 # Bottom water concentration of TH4SiO4
 pHBW = 7.7 # free pH scale # Bottom water pH
 TCO2BW = 0.00238 # mmol cm^-3 # Bottom water concentration of TCO2
 TH2SBW = 0.0 # mmol cm^-3 # Bottom water concentration of TH2S
-FTMn_ads_MnO20 = KMn_ads_Mn * FMnO20 * TMn_dis0 # mmol cm^-2 yr^-1 # missing
-FTMn_ads_FeOOH0 = KMn_ads_Fe * FFeOOH0 * TMn_dis0 # mmol cm^-2 yr^-1 # missing
-FTFe_ads_MnO20 = KFe_ads_Mn * FMnO20 * TFe_dis0 # mmol cm^-2 yr^-1 # missing
-FTFe_ads_FeOOH0 = KFe_ads_Fe * FFeOOH0 * TFe_dis0 # mmol cm^-2 yr^-1 # missing
-eNd_MnO2 = -2.4 # missing # missing
-eNd_FeOOH = -2.4 # missing # missing
-TNdnr_dis0 = 2.3140266884232977e-11 # mmol cm^-3 # Bottom water concentration of Nd144
-TNdr_dis0 = 1.1859733115767025e-11 # mmol cm^-3 # Bottom water concentration of Nd143
-FNdnrPO40 = 1.0e-14 # mmol cm^-2 yr^-1 # missing
-FNdrPO40 = 5.1251496688e-15 # mmol cm^-2 yr^-1 # missing
-FTNdnr_ads_MnO20 = KNd_ads_Mn * FMnO20 * TNdnr_dis0 # mmol cm^-2 yr^-1 # missing
-FTNdr_ads_MnO20 = KNd_ads_Mn * FMnO20 * TNdr_dis0 # mmol cm^-2 yr^-1 # missing
-FTNdnr_ads_FeOOH0 = KNd_ads_Fe * FFeOOH0 * TNdnr_dis0 # mmol cm^-2 yr^-1 # missing
-FTNdr_ads_FeOOH0 = KNd_ads_Fe * FFeOOH0 * TNdr_dis0 # mmol cm^-2 yr^-1 # missing
-FSurfMn_Ndnr0 = FMnO20 * TNdnr_dis0 / TMn_dis0 * DNdMn # mmol cm^-2 yr^-1 # missing
-FSurfMn_Ndr0 = FMnO20 * TNdr_dis0 / TMn_dis0 * DNdMn # mmol cm^-2 yr^-1 # missing
-FSurfFe_Ndnr0 = FFeOOH0 * TNdnr_dis0 / TFe_dis0 * DNdFe # mmol cm^-2 yr^-1 # missing
-FSurfFe_Ndr0 = FFeOOH0 * TNdr_dis0 / TFe_dis0 * DNdFe # mmol cm^-2 yr^-1 # missing
-Illite0 = 2.0 # wt% # missing
-FIllite0 = Illite0 / 100 * Fsed / 392.609 * 1000 # mmol cm^-2 yr^-1 # missing
+FTMn_ads0 = KMn_ads_Mn * FMnO20 * TMn_dis0 + KMn_ads_Fe * FFeOOH0 * TMn_dis0 # mmol cm^-2 yr^-1 # Flux of TMn_ads at the  TOP of sediment column
+FTFe_ads0 = KFe_ads_Mn * FMnO20 * TFe_dis0 + KFe_ads_Fe * FFeOOH0 * TFe_dis0 # mmol cm^-2 yr^-1 # Flux of TFe_ads at the  TOP of sediment column
+TNdnr_dis0 = 2.3140266884232977e-11 # mmol cm^-3 # Concentration of TNdnr_dis at the TOP of sediment column
+TNdr_dis0 = 1.1859733115767025e-11 # mmol cm^-3 # Concentration of TNdr_dis at the TOP of sediment column
+FNdnrPO40 = 1.0e-14 # mmol cm^-2 yr^-1 # Flux of NdnrPO4 at the  TOP of sediment column
+FNdrPO40 = 5.1251496688e-15 # mmol cm^-2 yr^-1 # Flux of NdrPO4 at the  TOP of sediment column
+FTNdnr_ads0 =
+    KNd_ads_Mn * FMnO20 * TNdnr_dis0 + KNd_ads_Fe * FFeOOH0 * TNdnr_dis0 # mmol cm^-2 yr^-1 # Flux of TNdnr_ads at the  TOP of sediment column
+FTNdr_ads0 = KNd_ads_Mn * FMnO20 * TNdr_dis0 + KNd_ads_Fe * FFeOOH0 * TNdr_dis0 # mmol cm^-2 yr^-1 # Flux of TNdr_ads at the  TOP of sediment column
+DNdMn = 0.025 # dimensionless # missing
+DNdFe = 0.005 # dimensionless # missing
+FSurfMn_Ndnr0 = FMnO20 * TNdnr_dis0 / TMn_dis0 * DNdMn # mmol cm^-2 yr^-1 # Flux of SurfMn_Ndnr at the  TOP of sediment column
+FSurfMn_Ndr0 = FMnO20 * TNdr_dis0 / TMn_dis0 * DNdMn # mmol cm^-2 yr^-1 # Flux of SurfMn_Ndr at the  TOP of sediment column
+FSurfFe_Ndnr0 = FFeOOH0 * TNdnr_dis0 / TFe_dis0 * DNdFe # mmol cm^-2 yr^-1 # Flux of SurfFe_Ndnr at the  TOP of sediment column
+FSurfFe_Ndr0 = FFeOOH0 * TNdr_dis0 / TFe_dis0 * DNdFe # mmol cm^-2 yr^-1 # Flux of SurfFe_Ndr at the  TOP of sediment column
 Basalt0 = 2.0 # wt% # missing
 FBasalt0 = Basalt0 / 100 * Fsed / 88.16 * 1000 # mmol cm^-2 yr^-1 # Flux of Basalt at the  TOP of sediment column
+Illite0 = 2.0 # wt% # missing
+FIllite0 = Illite0 / 100 * Fsed / 392.609 * 1000 # mmol cm^-2 yr^-1 # missing
 H4SiO4BW = 1.8810951339764959E-04 # mmol cm^-3 # Bottom water concentration of H4SiO4
 H3SiO4BW = 1.8904866023504390E-06 # mmol cm^-3 # Bottom water concentration of H3SiO4
 HCO3BW = 2.2786338081836337E-03 # mmol cm^-3 # Bottom water concentration of HCO3
@@ -231,7 +230,10 @@ BcNO2 = (
     (0.0, 1.0, 0.0),
 ) #  # Boundary condition of NO2
 BcCa = ((betaCa + phif[1]uf[1], -phif[1]DCa[1], betaCa * CaBW), (0.0, 1.0, 0.0)) #  # Boundary condition of Ca
-BcAl_dis = ((1.0, 0.0, Al_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of Al_dis
+BcAl_dis = (
+    (betaAl_dis + phif[1]uf[1], -phif[1]DAl_dis[1], betaAl_dis * Al_disBW),
+    (0.0, 1.0, 0.0),
+) #  # Boundary condition of Al_dis
 BcTNH4_dis = ((1.0, 0.0, TNH4_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_dis
 BcSO4 = (
     (betaSO4 + phif[1]uf[1], -phif[1]DSO4[1], betaSO4 * SO4BW),
@@ -239,8 +241,12 @@ BcSO4 = (
 ) #  # Boundary condition of SO4
 BcTNdnr_dis = ((1.0, 0.0, TNdnr_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdnr_dis
 BcTNdr_dis = ((1.0, 0.0, TNdr_dis0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdr_dis
-BcTH4SiO4 = (
-    (betaTH4SiO4 + phif[1]uf[1], -phif[1]DTH4SiO4[1], betaTH4SiO4 * TH4SiO4BW),
+BcH4SiO4 = (
+    (betaH4SiO4 + phif[1]uf[1], -phif[1]DH4SiO4[1], betaH4SiO4 * H4SiO4BW),
+    (0.0, 1.0, 0.0),
+) #  # Boundary condition of TH4SiO4
+BcH3SiO4 = (
+    (betaH3SiO4 + phif[1]uf[1], -phif[1]DH3SiO4[1], betaH3SiO4 * H3SiO4BW),
     (0.0, 1.0, 0.0),
 ) #  # Boundary condition of TH4SiO4
 BcHCO3 = (
@@ -286,23 +292,11 @@ BcPO4 = (
 ) #  # Boundary condition of TH3PO4
 BcH = ((betaH + phif[1]uf[1], -phif[1]DH[1], betaH * HBW), (0.0, 1.0, 0.0)) #  # Boundary condition of H
 BcOH = ((betaOH + phif[1]uf[1], -phif[1]DOH[1], betaOH * OHBW), (0.0, 1.0, 0.0)) #  # Boundary condition of H
-BcTNdnr_ads_MnO2 =
-    ((phis[1]us[1], -phis[1]Ds[1], FTNdnr_ads_MnO20), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdnr_ads_MnO2
-BcTNdnr_ads_FeOOH =
-    ((phis[1]us[1], -phis[1]Ds[1], FTNdnr_ads_FeOOH0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdnr_ads_FeOOH
-BcTNdr_ads_MnO2 =
-    ((phis[1]us[1], -phis[1]Ds[1], FTNdr_ads_MnO20), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdr_ads_MnO2
-BcTNdr_ads_FeOOH =
-    ((phis[1]us[1], -phis[1]Ds[1], FTNdr_ads_FeOOH0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdr_ads_FeOOH
-BcTFe_ads_MnO2 =
-    ((phis[1]us[1], -phis[1]Ds[1], FTFe_ads_MnO20), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe_ads_MnO2
-BcTFe_ads_FeOOH =
-    ((phis[1]us[1], -phis[1]Ds[1], FTFe_ads_FeOOH0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe_ads_FeOOH
-BcTMn_ads_MnO2 =
-    ((phis[1]us[1], -phis[1]Ds[1], FTMn_ads_MnO20), (0.0, 1.0, 0.0)) #  # Boundary condition of TMn_ads_MnO2
-BcTMn_ads_FeOOH =
-    ((phis[1]us[1], -phis[1]Ds[1], FTMn_ads_FeOOH0), (0.0, 1.0, 0.0)) #  # Boundary condition of TMn_ads_FeOOH
-BcTNH4_ads_nsf = ((1.0, 0.0, TNH4_ads_nsf0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_ads_nsf
+BcTNdnr_ads = ((phis[1]us[1], -phis[1]Ds[1], FTNdnr_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdnr_ads
+BcTNdr_ads = ((phis[1]us[1], -phis[1]Ds[1], FTNdr_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNdr_ads
+BcTFe_ads = ((phis[1]us[1], -phis[1]Ds[1], FTFe_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TFe_ads
+BcTMn_ads = ((phis[1]us[1], -phis[1]Ds[1], FTMn_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TMn_ads
+BcTNH4_ads = ((1.0, 0.0, TNH4_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of TNH4_ads
 
 #----------------------------------------------
 # Boundary transport matrix
@@ -346,8 +340,10 @@ BcAmTNdnr_dis, BcBmTNdnr_dis, BcCmTNdnr_dis =
     fvcf_bc(phif, DTNdnr_dis, uf, dx, BcTNdnr_dis, Ngrid) #  # Boundary transport matrix of TNdnr_dis
 BcAmTNdr_dis, BcBmTNdr_dis, BcCmTNdr_dis =
     fvcf_bc(phif, DTNdr_dis, uf, dx, BcTNdr_dis, Ngrid) #  # Boundary transport matrix of TNdr_dis
-BcAmTH4SiO4, BcBmTH4SiO4, BcCmTH4SiO4 =
-    fvcf_bc(phif, DTH4SiO4, uf, dx, BcTH4SiO4, Ngrid) #  # Boundary transport matrix of TH4SiO4
+BcAmH4SiO4, BcBmH4SiO4, BcCmH4SiO4 =
+    fvcf_bc(phif, DH4SiO4, uf, dx, BcH4SiO4, Ngrid) #  # Boundary transport matrix of H4SiO4
+BcAmH3SiO4, BcBmH3SiO4, BcCmH3SiO4 =
+    fvcf_bc(phif, DH3SiO4, uf, dx, BcH3SiO4, Ngrid) #  # Boundary transport matrix of H3SiO4
 BcAmHCO3, BcBmHCO3, BcCmHCO3 = fvcf_bc(phif, DHCO3, uf, dx, BcHCO3, Ngrid) #  # Boundary transport matrix of HCO3
 BcAmCO3, BcBmCO3, BcCmCO3 = fvcf_bc(phif, DCO3, uf, dx, BcCO3, Ngrid) #  # Boundary transport matrix of CO3
 BcAmCO2, BcBmCO2, BcCmCO2 = fvcf_bc(phif, DCO2, uf, dx, BcCO2, Ngrid) #  # Boundary transport matrix of CO2
@@ -361,24 +357,16 @@ BcAmHPO4, BcBmHPO4, BcCmHPO4 = fvcf_bc(phif, DHPO4, uf, dx, BcHPO4, Ngrid) #  # 
 BcAmPO4, BcBmPO4, BcCmPO4 = fvcf_bc(phif, DPO4, uf, dx, BcPO4, Ngrid) #  # Boundary transport matrix of PO4
 BcAmH, BcBmH, BcCmH = fvcf_bc(phif, DH, uf, dx, BcH, Ngrid) #  # Boundary transport matrix of H
 BcAmOH, BcBmOH, BcCmOH = fvcf_bc(phif, DOH, uf, dx, BcOH, Ngrid) #  # Boundary transport matrix of OH
-BcAmTNdnr_ads_MnO2, BcBmTNdnr_ads_MnO2, BcCmTNdnr_ads_MnO2 =
-    fvcf_bc(phis, Ds, us, dx, BcTNdnr_ads_MnO2, Ngrid) #  # Boundary transport matrix of TNdnr_ads_MnO2
-BcAmTNdnr_ads_FeOOH, BcBmTNdnr_ads_FeOOH, BcCmTNdnr_ads_FeOOH =
-    fvcf_bc(phis, Ds, us, dx, BcTNdnr_ads_FeOOH, Ngrid) #  # Boundary transport matrix of TNdnr_ads_FeOOH
-BcAmTNdr_ads_MnO2, BcBmTNdr_ads_MnO2, BcCmTNdr_ads_MnO2 =
-    fvcf_bc(phis, Ds, us, dx, BcTNdr_ads_MnO2, Ngrid) #  # Boundary transport matrix of TNdr_ads_MnO2
-BcAmTNdr_ads_FeOOH, BcBmTNdr_ads_FeOOH, BcCmTNdr_ads_FeOOH =
-    fvcf_bc(phis, Ds, us, dx, BcTNdr_ads_FeOOH, Ngrid) #  # Boundary transport matrix of TNdr_ads_FeOOH
-BcAmTFe_ads_MnO2, BcBmTFe_ads_MnO2, BcCmTFe_ads_MnO2 =
-    fvcf_bc(phis, Ds, us, dx, BcTFe_ads_MnO2, Ngrid) #  # Boundary transport matrix of TFe_ads_MnO2
-BcAmTFe_ads_FeOOH, BcBmTFe_ads_FeOOH, BcCmTFe_ads_FeOOH =
-    fvcf_bc(phis, Ds, us, dx, BcTFe_ads_FeOOH, Ngrid) #  # Boundary transport matrix of TFe_ads_FeOOH
-BcAmTMn_ads_MnO2, BcBmTMn_ads_MnO2, BcCmTMn_ads_MnO2 =
-    fvcf_bc(phis, Ds, us, dx, BcTMn_ads_MnO2, Ngrid) #  # Boundary transport matrix of TMn_ads_MnO2
-BcAmTMn_ads_FeOOH, BcBmTMn_ads_FeOOH, BcCmTMn_ads_FeOOH =
-    fvcf_bc(phis, Ds, us, dx, BcTMn_ads_FeOOH, Ngrid) #  # Boundary transport matrix of TMn_ads_FeOOH
-BcAmTNH4_ads_nsf, BcBmTNH4_ads_nsf, BcCmTNH4_ads_nsf =
-    fvcf_bc(phis, Ds, us, dx, BcTNH4_ads_nsf, Ngrid) #  # Boundary transport matrix of TNH4_ads_nsf
+BcAmTNdnr_ads, BcBmTNdnr_ads, BcCmTNdnr_ads =
+    fvcf_bc(phis, Ds, us, dx, BcTNdnr_ads, Ngrid) #  # Boundary transport matrix of TNdnr_ads
+BcAmTNdr_ads, BcBmTNdr_ads, BcCmTNdr_ads =
+    fvcf_bc(phis, Ds, us, dx, BcTNdr_ads, Ngrid) #  # Boundary transport matrix of TNdr_ads
+BcAmTFe_ads, BcBmTFe_ads, BcCmTFe_ads =
+    fvcf_bc(phis, Ds, us, dx, BcTFe_ads, Ngrid) #  # Boundary transport matrix of TFe_ads
+BcAmTMn_ads, BcBmTMn_ads, BcCmTMn_ads =
+    fvcf_bc(phis, Ds, us, dx, BcTMn_ads, Ngrid) #  # Boundary transport matrix of TMn_ads
+BcAmTNH4_ads, BcBmTNH4_ads, BcCmTNH4_ads =
+    fvcf_bc(phis, Ds, us, dx, BcTNH4_ads, Ngrid) #  # Boundary transport matrix of TNH4_ads
 
 #----------------------------------------------
 # Interior transport matrix
@@ -411,7 +399,8 @@ AmTNH4_dis, BmTNH4_dis = fvcf(phif, DTNH4_dis, uf, dx, Ngrid) #  # Interior tran
 AmSO4, BmSO4 = fvcf(phif, DSO4, uf, dx, Ngrid) #  # Interior transport matrix of SO4
 AmTNdnr_dis, BmTNdnr_dis = fvcf(phif, DTNdnr_dis, uf, dx, Ngrid) #  # Interior transport matrix of TNdnr_dis
 AmTNdr_dis, BmTNdr_dis = fvcf(phif, DTNdr_dis, uf, dx, Ngrid) #  # Interior transport matrix of TNdr_dis
-AmTH4SiO4, BmTH4SiO4 = fvcf(phif, DTH4SiO4, uf, dx, Ngrid) #  # Interior transport matrix of TH4SiO4
+AmH4SiO4, BmH4SiO4 = fvcf(phif, DH4SiO4, uf, dx, Ngrid) #  # Interior transport matrix of H4SiO4
+AmH3SiO4, BmH3SiO4 = fvcf(phif, DH3SiO4, uf, dx, Ngrid) #  # Interior transport matrix of H3SiO4
 AmHCO3, BmHCO3 = fvcf(phif, DHCO3, uf, dx, Ngrid) #  # Interior transport matrix of HCO3
 AmCO3, BmCO3 = fvcf(phif, DCO3, uf, dx, Ngrid) #  # Interior transport matrix of CO3
 AmCO2, BmCO2 = fvcf(phif, DCO2, uf, dx, Ngrid) #  # Interior transport matrix of CO2
@@ -425,15 +414,11 @@ AmHPO4, BmHPO4 = fvcf(phif, DHPO4, uf, dx, Ngrid) #  # Interior transport matrix
 AmPO4, BmPO4 = fvcf(phif, DPO4, uf, dx, Ngrid) #  # Interior transport matrix of PO4
 AmH, BmH = fvcf(phif, DH, uf, dx, Ngrid) #  # Interior transport matrix of H
 AmOH, BmOH = fvcf(phif, DOH, uf, dx, Ngrid) #  # Interior transport matrix of OH
-AmTNdnr_ads_MnO2, BmTNdnr_ads_MnO2 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdnr_ads_MnO2
-AmTNdnr_ads_FeOOH, BmTNdnr_ads_FeOOH = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdnr_ads_FeOOH
-AmTNdr_ads_MnO2, BmTNdr_ads_MnO2 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdr_ads_MnO2
-AmTNdr_ads_FeOOH, BmTNdr_ads_FeOOH = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdr_ads_FeOOH
-AmTFe_ads_MnO2, BmTFe_ads_MnO2 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TFe_ads_MnO2
-AmTFe_ads_FeOOH, BmTFe_ads_FeOOH = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TFe_ads_FeOOH
-AmTMn_ads_MnO2, BmTMn_ads_MnO2 = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TMn_ads_MnO2
-AmTMn_ads_FeOOH, BmTMn_ads_FeOOH = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TMn_ads_FeOOH
-AmTNH4_ads_nsf, BmTNH4_ads_nsf = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads_nsf
+AmTNdnr_ads, BmTNdnr_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdnr_ads
+AmTNdr_ads, BmTNdr_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNdr_ads
+AmTFe_ads, BmTFe_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TFe_ads
+AmTMn_ads, BmTMn_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TMn_ads
+AmTNH4_ads, BmTNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads
 
 #----------------------------------------------
 # Acid dissociation constants
@@ -451,8 +436,7 @@ KH2O = 7.2927301954929983E-15 #  # H 1th dissociation constant
 #----------------------------------------------
 # Reaction parameters
 #----------------------------------------------
-Cl = 0.565772678 # mmol cm-3 # bottom water Cl concentration
-nu = 0.125 # dimentionless # POC reactivity
+nu = 0.125 # dimensionless # POC reactivity
 a = 60.0 # yr # initial POC age
 rNC = 16 / 170 # mol mol^-1 # N/C ratio Sediment trap 
 rPC = 1 / 170 # mol mol^-2 # P/C ratio Sediment trap
@@ -487,22 +471,22 @@ kCaCO3dis0 = 0.055368829236732454 # yr^-1  # close to equilibrium rate
 kCaCO3dis1 = 175.09161176499725 # yr^-1  # far from equilibrum rate
 nCaCO3dis = 5.0 # missing # far from equilibrium reaction order
 KspCaCO3_dis = 7.863574397229617e-7 # (mmol cm^-3 pw)^2 # missing
-kBSi_dis = broadcast(x -> 0.025, x) # yr-1  # depth dependent dissolution rate
+kBSi_dis = 0.025 # yr-1  # depth dependent dissolution rate
 H4SiO4_dis_sat = 0.00062 # mmol cm-3 pw # solubility of opal
 KspNdPO4 = 1.167542472671615e-18 # (mmol cm^-3)^2 # missing
 kNdPO4_pre = 1.0e-7 # mmol cm^-3  ds yr^-1 # missing
-KspIllite = 4.334745915300865e18 # missing # missing
-MIllite = 392.609 # g/mol # missing
-kIllite = 6.8097245832e-8 # yr^-1 # missing
-rNdSi_lith = 1.9e-5 # dimentionless (mol/mol) # Nd:Si ratio in oceanic arc basalt
+rAlSi = 0.0025 # missing # missing
+rNdSi_lith = 1.9e-5 # dimensionless (mol/mol) # Nd:Si ratio in oceanic arc basalt
 eNd_lith = 6.2 # missing # missing
 rNdnrSi_lith = rNdSi_lith / ((eNd_lith / 1e4 + 1) * 0.512638 + 1) # missing # missing
 rNdrSi_lith = rNdSi_lith - rNdnrSi_lith # missing # missing
 a_lith0 = 10.0 # yr # missing
+KspIllite = 4.334745915300865e18 # missing # missing
+MIllite = 392.609 # g/mol # missing
+kIllite = 6.8097245832e-8 # yr^-1 # missing
 KspBasalt = 4.323907704303024 # mmol cm^-2 yr^-2 # missing
 MBasalt = 88.16 # g/mol # missing
 kBasalt = 174.13246746987554 # yr^-1 # missing
-rAlSi = 0.0025 # missing # missing
 
 #----------------------------------------------
 # Inital values
@@ -531,7 +515,7 @@ C_ini = [
     CH4BW,
     NO2BW,
     CaBW,
-    Al_dis0,
+    Al_disBW,
     TNH4_dis0,
     SO4BW,
     TNdnr_dis0,
