@@ -1,10 +1,13 @@
-function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=Dict(),showplt=true, saveplt=false,pltdir="",dpi=300,pltsize=nothing,ylim=nothing)
-    ylim === nothing ? ylim=(minimum(solution.x),maximum(solution.x)) : ylim
+function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=Dict(),showplt=true, saveplt=false,pltsize=nothing,ylim=nothing)
+    
 
     if modelconfig.AssembleParam
         include("$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl")
     end
     
+    ylim === nothing ? ylim=(minimum(x),maximum(x)) : ylim
+
+
     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
     model_config = XLSX.readxlsx(input_path)
 
@@ -17,8 +20,8 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
 
     SedTrace.preprocessSubstances!(substances,EnableList)
     SedTrace.preprocessReactions!(reactions,EnableList)
-    SedTrace.preprocessAdsorption!(adsorption,EnableList)
-    SedTrace.preprocessSpeciation!(speciation,EnableList)
+    SedTrace.preprocessSpeciation!(speciation,substances,EnableList)
+    SedTrace.preprocessAdsorption!(adsorption,substances,speciation,EnableList)
     SedTrace.preprocessOutput!(plotting,EnableList)
 
 
@@ -27,22 +30,22 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
     _,_,_,speciation_df = SedTrace.speciation_code(substances,speciation,adsorption)
 
 
-    if !isempty(vars)
-        plotting = @subset(plotting,:name .∈ Ref(vars))
-    end
+    # if !isempty(vars)
+    #     plotting = @subset(plotting,:name .∈ Ref(vars))
+    # end
 
     data = @chain begin
         DataFrame(XLSX.gettable(model_config["data"]))
-        @subset(:site .∈ Ref(site))
+        @subset(:site .== site)
         sort!([:substance, :depth])
-        @subset(:depth .<= solution.L)
+        @subset(:depth .<= L)
     end
 
     nt = length(solution.sol.t)
-    ModelledProfile = SedTrace.get_all_vars(substances, solution)
-    ModelledFlux = SedTrace.get_all_flux_top(substances, speciation_df, ModelledProfile,nt)
+    ModelledProfile = get_all_vars(substances, solution)
+    ModelledFlux,pH_species,EI_names = get_all_flux_top(substances, speciation_df, ModelledProfile,nt)
 
-    summedspecies = @subset(substances, :type .== "dissolved_summed_pH").substance
+    summedspecies = @subset(substances, :type .== "dissolved_pH").substance
 
     OutputProfile, OutputFlux = SedTrace.get_required_vars(
         substances,
@@ -50,7 +53,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
         ModelledProfile,
         ModelledFlux,
         nt,
-        solution.Ngrid,
+        Ngrid,
         summedspecies,
     )
 
@@ -68,20 +71,25 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
 
     all_vars = collect(keys(ModelledProfile))
 
-    df_substance = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in substances.substance]),vcat(:depth,Symbol.(substances.substance)))
+    df_substance = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in substances.substance]),vcat(:depth,Symbol.(substances.substance)))
 
-    df_reacrate = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in reactions.label]),vcat(:depth,Symbol.(reactions.label)))
+    df_reacrate = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in reactions.label]),vcat(:depth,Symbol.(reactions.label)))
 
     omega_vars = filter(x->occursin(r"\bOmega_",x)==1,all_vars)
 
-    df_omega = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in omega_vars]),vcat(:depth,Symbol.(omega_vars)))
+    df_omega = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in omega_vars]),vcat(:depth,Symbol.(omega_vars)))
+
+    species_vars = speciation_df.name
+    df_species = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in species_vars]),vcat(:depth,Symbol.(species_vars)))
+
+    pH_vars = vcat(filter(x -> in(x,pH_species),all_vars),"dTA_d".*EI_names)
+    df_pH_species = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in pH_vars]),vcat(:depth,Symbol.(pH_vars)))
+
+    int_vars = filter(x-> !in(x,vcat(substances.substance,reactions.label,omega_vars,species_vars,pH_vars)) ,all_vars)
+    df_int_vars = DataFrame(vcat([x],[ModelledProfile[i][end,:] for i in int_vars]),vcat(:depth,Symbol.(int_vars)))
 
 
-    species_vars = filter(x-> !in(x,substances.substance)&& !in(x,reactions.label) && !in(x,omega_vars) && !occursin(r"_tran/b",x) && !occursin(r"\bS_",x),all_vars)
-
-    df_species = DataFrame(vcat([solution.x],[ModelledProfile[i][end,:] for i in species_vars]),vcat(:depth,Symbol.(species_vars)))
-
-    df_output_profile = DataFrame(vcat([solution.x],[OutputProfile[i][end,:] for i in plotting.name]),vcat(:depth,Symbol.(plotting.name)))
+    df_output_profile = DataFrame(vcat([x],[OutputProfile[i][end,:] for i in plotting.name]),vcat(:depth,Symbol.(plotting.name)))
     
     
     df_output_flux = DataFrame(name=collect(keys(OutputFlux)),flux=[OutputFlux[i][end] for i in keys(OutputFlux)])
@@ -90,35 +98,45 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
     XLSX.writetable(
         modelconfig.ModelDirectory*"model_output."*modelconfig.ModelName*".xlsx",
         overwrite = true,
-        substances = (
+        Substances = (
             collect(DataFrames.eachcol(df_substance)),
             DataFrames.names(df_substance),
         ),
-        reacrates = (
+        ReacRates = (
             collect(DataFrames.eachcol(df_reacrate)),
             DataFrames.names(df_reacrate),
         ),
-        omega = (
+        Omega = (
             collect(DataFrames.eachcol(df_omega)),
             DataFrames.names(df_omega),
         ),
-        species = (
+        pHspecies = (
+            collect(DataFrames.eachcol(df_pH_species)),
+            DataFrames.names(df_pH_species),
+        ),
+        Speciation = (
             collect(DataFrames.eachcol(df_species)),
             DataFrames.names(df_species),
         ),
-        outputProfile = (
+        IntermediateVar = (
+            collect(DataFrames.eachcol(df_int_vars)),
+            DataFrames.names(df_int_vars),
+        ),
+        OutputProfile = (
             collect(DataFrames.eachcol(df_output_profile)),
             DataFrames.names(df_output_profile),
         ),
-        outputFlux = (
+        OutputFlux = (
             collect(DataFrames.eachcol(df_output_flux)),
             DataFrames.names(df_output_flux),
         ),
     )
 
-
+    select_var = isempty(vars) ? plotting.name : vars
     for (key, value) in output
+        if in(key,select_var)
         data_select = @subset(data, :substance .== key)
+        @subset!(data_select,(:depth.>=ylim[1]) .& (:depth.<=ylim[2]))
 
         if size(data_select, 1) != 0
             if value.unit_profile != data_select.unit[1]
@@ -147,7 +165,7 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
         p = SedTrace.secplot(
             site,
             solution.sol.t,
-            solution.x,
+            x,
             value.profile',
             value.flux_top,
             :roma,
@@ -163,92 +181,28 @@ function generate_substance_plot(modelconfig, solution,site,vars=[];EnableList=D
             display(p)
         end
         if saveplt
-            gr()
-            p = plot(p,size=pltsize)
-            savefig(p, "$pltdir/$key.pdf")
+            # gr()
+            # p = plot(p,size=pltsize)
+            mkpath("$(modelconfig.ModelDirectory)/plots/")
+            savefig(p, "$(modelconfig.ModelDirectory)/plots/$key.pdf")
         end
 
     end
 end
+end
 
-# function generate_aux_plot(modelconfig, solution,site,vars=[],showplt=true, saveplt=false,pltdir="")
-#     input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
-#     model_config = XLSX.readxlsx(input_path)
-#     substances = @chain begin
-#         DataFrame(XLSX.gettable(model_config["substances"]))
-#         @subset(:include .== 1)
-#     end
-
-#     adsorption = @chain begin
-#         DataFrame(XLSX.gettable(model_config["adsorption"]))
-#         @subset(:include .== 1)
-#     end
-
-#     # remove empty space or weird minus signs
-#     SedTrace.df_str_replace!(substances, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-#     SedTrace.df_str_replace!(adsorption, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
-#     plotting = @chain begin
-#         DataFrame(XLSX.gettable(model_config["output"]))
-#         @subset(:include .== 1)
-#         leftjoin(select(substances, :substance, :type), on = [:name => :substance])
-#     end
-
-#     SedTrace.df_str_replace!(plotting, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
-
-#     if !isempty(vars)
-#         plotting = @subset(plotting,:name .∈ Ref(vars))
-#     end
-
-#     data = @chain begin
-#         DataFrame(XLSX.gettable(model_config["data"]))
-#         @subset(:site .∈ Ref(site))
-#         sort!([:substance, :depth])
-#     end
-
-#     nt = length(solution.sol.t)
-#     ModelledProfile = get_all_vars(substances, solution)
-
-#     if !isempty(vars)
-#         Selectvar = filter(k->k.first in vars,ModelledProfile)
-#     end
-
-#     for (key,value) in Selectvar
-#         p = secplot(
-#             nothing,
-#             solution.sol.t,
-#             solution.x,
-#             value',
-#             nothing,
-#             :roma,
-#             key,
-#             solution.L,
-#             nothing,
-#             nothing,
-#             :identity,
-#         )
-#         # display(Main.VSCodeServer.InlineDisplay(), "image/svg+xml", p)
-#         if showplt 
-#             display(p) 
-#         end            
-#         if saveplt
-#             savefig(p, pltdir * "$key.pdf")
-#         end
-#     end
-
-# end
 
 # get the profiles of all modelled substances and species
-function get_all_vars(substances, solution::SolutionConfig)
+function get_all_vars(substances, solution::OutputConfig)
 
     nt = length(solution.sol.t)
 
     OutputDict = Dict(
-        i.substance => [solution.sol.u[j][m] for j = 1:nt, m in solution.IDdict[Symbol(i.substance*"ID")]] for
+        i.substance => [solution.sol.u[j][m] for j = 1:nt, m in IDdict[Symbol(i.substance*"ID")]] for
         i in eachrow(substances)
     )
 
-    return merge!(OutputDict, solution.VarVal)
+    return merge!(OutputDict, solution.IntVal)
 end
 
 
@@ -257,6 +211,8 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
 
     flux_top_raw_expr = [] # species to calculate flux at top
     flux_top_raw_name = [] # species to calculate flux at top
+    pH_species = String[]
+    EI_names = String[]
 
     for i in eachrow(substances)
         if i.type == "solid"
@@ -266,15 +222,17 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
                 calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
-        elseif i.type in ["dissolved", "dissolved_summed", "dissolved_adsorbed"]
+        elseif i.type in ["dissolved"]
             push!(
                 flux_top_raw_expr,
                 "($(i.substance)) ->
                 calc_flux_top(phif[1],D$(i.substance)[1],uf[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
-        elseif i.type == "dissolved_summed_pH"
+        elseif i.type == "dissolved_pH"
             EqInv = SedTrace.EquilibriumInvariant(i.substance)
+            append!(pH_species, EqInv.species)
+            push!(EI_names, EqInv.name)
             append!(flux_top_raw_name, EqInv.species)
             append!(
                 flux_top_raw_expr,
@@ -282,10 +240,10 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
                   calc_flux_top(phif[1],D" .* EqInv.species .* "[1],uf[1],x[1:3]," .*
                 EqInv.species .* ",Bc" .* EqInv.species .* "[1])",
             )
-        elseif i.type == "dissolved_adsorbed_summed"
+        elseif i.type == "dissolved_speciation"
             spec_df = @subset(speciation_df,:substance .== i.substance)
             dis_sp = @subset(spec_df,:comment .=="Total dissolved")
-            ads_sp = @subset(spec_df,:comment .=="Surface adsorbed")
+            ads_sp = @subset(spec_df,:comment .=="Total adsorbed")
 
             if !isempty(dis_sp)
             push!(flux_top_raw_name, dis_sp.name[1])
@@ -324,13 +282,13 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
     end
 
     for i in eachrow(substances)
-        if i.type == "dissolved_summed_pH"
+        if i.type == "dissolved_pH"
             EqInv = SedTrace.EquilibriumInvariant(i.substance)
             nsub = length(EqInv.species)
             fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
             input = Tuple(SpecFluxTop[j] for j in EqInv.species)
             SpecFluxTop[i.substance] = Base.invokelatest(fun_expr,input...)
-        elseif i.type == "dissolved_adsorbed_summed"
+        elseif i.type == "dissolved_speciation"
             # ads_df = @subset(adsorption, :substance .== i.substance)
             # nsub = length(ads_df.species)
             # fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
@@ -338,7 +296,7 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
             # SpecFluxTop[i.substance] = Base.invokelatest(fun_expr,input...)
             # spec = vcat(ads_df.adsorbed,ads_df.dissolved[1])
             spec_df = @subset(speciation_df,:substance .== i.substance)
-            @subset!(spec_df,in.(:comment,Ref(["Total dissolved","Surface adsorbed"])))
+            @subset!(spec_df,in.(:comment,Ref(["Total dissolved","Total adsorbed"])))
             spec = spec_df.name
             nsub = length(spec) 
             fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
@@ -347,7 +305,7 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
        end
     end
 
-    return SpecFluxTop
+    return (SpecFluxTop,pH_species,EI_names)
 end
 
 # compute the output profiles and fluxes using modelled profiles and fluxes
