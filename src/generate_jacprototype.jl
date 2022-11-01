@@ -3,7 +3,10 @@ function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,reac
     substances = leftjoin(substances, react_jp, on = :substance)
 
     jp_str = String[]
-    push!(jp_str, "function JacType(IDdict::Dict{Symbol, StepRangeLen{Int, Int, Int, Int}},Ngrid::Int,nspec::Int)")
+    push!(jp_str, "function JacType(IDdict::Dict{Symbol, StepRangeLen{Int, Int, Int, Int}})")
+    push!(jp_str,"Ngrid = length(first(IDdict)[2])")
+    push!(jp_str,"nspec = length(IDdict)")
+
     push!(jp_str, "@unpack " * join(substances.substance.*"ID",",") *"=IDdict")
     push!(jp_str,"")
 
@@ -50,7 +53,7 @@ function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,reac
                     end
                 end
             end
-            if i.type == "dissolved_summed_pH" && i.substance != "H"
+            if i.type == "dissolved_pH" && i.substance != "H"
                 push!(
                     jp_str,
                     "append!(
@@ -63,12 +66,14 @@ function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,reac
                 )
                 push!(sumspecies, i.substance)
             end
-            if i.type == "dissolved_adsorbed_summed"
+            if i.type == "dissolved_speciation"
                 ads_df = @chain begin
                     adsorption
                     @subset(:substance.==i.substance)
-                    @subset(:surface .!= "dissolved")
-                    @subset(:surface .!= "0")
+                    # @subset(:surface .!= "dissolved")
+                    # @subset(:surface .!= "0")
+                    @subset(:surface .!= "")
+                    unique!
                 end
                 for j in eachrow(ads_df)
                     push!(
