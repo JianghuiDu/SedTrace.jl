@@ -28,10 +28,8 @@ import JuliaFormatter:format_file
 @reexport import Plots.PlotMeasures:mm
 @reexport import StatsPlots:@df
 
-# using RCall
 # import SymPy:simplify,solve,nsimplify,sympify,symbols
 import SymPy
-# using CSV
 
 @reexport using DiffEqCallbacks
 # using DiffEqOperators
@@ -94,19 +92,19 @@ const ⊗ = *
 
 export ⊕, ⊗
 
+export Param,Cache
+export SolverConfig, ModelConfig, SolutionConfig,OutputConfig
 
-export SolverConfig, ModelConfig, SolutionConfig,SolverCtrlConfig,OutputConfig
-
-export generate_code,generate_ODESolver,generate_ODEFun,generate_parameter_template
+export generate_code,generate_parameter_template
 export modelrun
-export generate_jacobian
+# export generate_jacobian,generate_ODESolver,generate_ODEFun
 
 export fvcf_bc,fvcf
 
-export generate_substance_plot,generate_aux_plot,calc_flux_top
-
+# export generate_substance_plot,generate_aux_plot,calc_flux_top
+export generate_output
 export IncludeFiles
-
+export JacType
 export TestOdeFun
 export TestJacobian
 export BenchmarkJacobian
