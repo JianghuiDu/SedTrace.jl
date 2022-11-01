@@ -1,12 +1,12 @@
 
-function checkismissing!(df::DataFrame,cols::Vector{Symbol},col_id::Symbol,sheet::String)
+function checkismissing!(df::DataFrame, cols::Vector{Symbol}, col_id::Symbol, sheet::String)
     if !isempty(df)
-        for i in eachindex(df[!,col_id])
+        for i in eachindex(df[!, col_id])
             for j in cols
-                if ismissing(df[i,j])
-                    throw(error(
-                        "The row $i of column $j in Excel sheet [$sheet] is emtpy."
-                    ))
+                if ismissing(df[i, j])
+                    throw(
+                        error("The row $i of column $j in Excel sheet [$sheet] is emtpy."),
+                    )
                 end
             end
         end
@@ -16,12 +16,12 @@ end
 # test if substance type and boundary condition type are compatible
 function iscompatible(substance_type, bc_type, top)
     if top
-        if bc_type in ["robin", "dirichlet"] && substance_type in
-           ["solid", "dissolved", "dissolved_summed", "dissolved_summed_pH"]
+        if bc_type in ["robin", "dirichlet"] &&
+           substance_type in ["solid", "dissolved", "dissolved_pH", "dissolved_speciation"]
             return true
-        elseif bc_type in ["dirichlet"] &&
-               substance_type in ["dissolved_adsorbed", "dissolved_adsorbed_summed"]
-            return true
+            # elseif bc_type in ["dirichlet"] &&
+            #        substance_type in ["dissolved_adsorbed"]
+            #     return true
         else
             return false
         end
@@ -110,22 +110,43 @@ end
 
 function checkerrorSubstance!(substances::DataFrame)
     # check type
-    allowed_type = ["solid","dissolved","dissolved_adsorbed","dissolved_adsorbed_summed","dissolved_summed","dissolved_summed_pH"]
+    allowed_type = ["solid", "dissolved", "dissolved_speciation", "dissolved_pH"]
     list_summed_species =
-    ["TCO2", "TNH4", "TH3PO4", "TH2S", "THSO4", "TH3BO3", "THF", "TH4SiO4", "H"]
+        ["TCO2", "TNH4", "TH3PO4", "TH2S", "THSO4", "TH3BO3", "THF", "TH4SiO4", "H"]
+
+    species_pH = @subset(substances, :type .== "dissolved_pH")
+
+    if length(species_pH.substance) != 0
+        if !("H" ∈ species_pH.substance)
+            throw(
+                error(
+                    "Proton H must be included in the dissolved_pH species in the Substance sheet.",
+                ),
+            )
+        end
+    end
 
     for i in eachrow(substances)
         if !(i.type in allowed_type)
-            throw(error("The type of $(i.substance) is $(i.type), which is not allowed. Allowed types are: $(join(allowed_type,","))"
-            ))
+            throw(
+                error(
+                    "The type of $(i.substance) is $(i.type), which is not allowed. Allowed types are: $(join(allowed_type,","))",
+                ),
+            )
         end
-        if i.type in ["dissolved_summed","dissolved_summed_pH"]
+        if i.type in ["dissolved_pH"]
             if !(i.substance in list_summed_species)
                 throw(
-                    error("A substance with dissolved_summed or dissolved_summed_pH type must be from this list: $(join(list_summed_species,",")). $(i.substance) is not from this list.")
+                    error(
+                        "A substance with dissolved_pH type must be from this list: $(join(list_summed_species,",")). $(i.substance) is not from this list.",
+                    ),
                 )
             else
-                i.formula = join(EquilibriumInvariant(i.substance).species.*EquilibriumInvariant(i.substance).charge,",")
+                i.formula = join(
+                    EquilibriumInvariant(i.substance).species .*
+                    EquilibriumInvariant(i.substance).charge,
+                    ",",
+                )
             end
         end
     end
@@ -197,7 +218,12 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     select!(substances, Not(:include))
 
     check_illegal_char(substances)
-    checkismissing!(substances,[:substance,:type,:top_bc_type,:bot_bc_type],:substance,"substances")
+    checkismissing!(
+        substances,
+        [:substance, :type, :top_bc_type, :bot_bc_type],
+        :substance,
+        "substances",
+    )
 
     transform!(
         substances,
@@ -219,17 +245,26 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     checkerrorSubstance!(substances)
 
     # ord = [
-    #     "dissolved_adsorbed_summed",
+    #     "dissolved_speciation",
     #     "solid",
     #     "dissolved",
     #     "dissolved_adsorbed",
     #     "dissolved_summed",
-    #     "dissolved_summed_pH",
+    #     "dissolved_pH",
     # ]
     # orderdict = Dict(x => i for (i, x) in enumerate(ord))
     # sort!(substances, :type, by = x -> orderdict[x])
     insertcols!(substances, :order => 1:length(substances.substance))
-    select!(substances,:substance,:type,:formula,:top_bc_type,:bot_bc_type,:bioirrigation_scale,:order)
+    select!(
+        substances,
+        :substance,
+        :type,
+        :formula,
+        :top_bc_type,
+        :bot_bc_type,
+        :bioirrigation_scale,
+        :order,
+    )
 end
 
 
@@ -258,9 +293,9 @@ function preprocessReactions!(reactions::DataFrame, EnableList::Dict = Dict())
     df_str_replace!(reactions, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
     check_illegal_char(reactions)
 
-    checkismissing!(reactions,	[ :label, :equation, :rate],:label,"reactions")
+    checkismissing!(reactions, [:label, :equation, :rate], :label, "reactions")
 
-    select!(reactions,	:check, :label, :equation, :rate, :Omega)
+    select!(reactions, :check, :label, :equation, :rate, :Omega)
 end
 
 
@@ -268,8 +303,12 @@ end
 
 
 
-function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
-    for i in ["substance", "dissolved","formula", "equation", "logK", "include"]
+function preprocessSpeciation!(
+    speciation::DataFrame,
+    substances::DataFrame,
+    EnableList::Dict = Dict(),
+)
+    for i in ["substance", "dissolved", "formula", "equation", "logK", "include"]
         if !(i in names(speciation))
             throw(error("Column $i is not found in Sheet speciation."))
         end
@@ -289,14 +328,36 @@ function preprocessSpeciation!(speciation::DataFrame, EnableList::Dict = Dict())
     df_str_replace!(speciation, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
     check_illegal_char(speciation)
-    checkismissing!(speciation,[:substance,:dissolved,:formula,:equation,:logK],:dissolved,"speciation")
+    checkismissing!(
+        speciation,
+        [:substance, :dissolved, :formula, :equation, :logK],
+        :dissolved,
+        "speciation",
+    )
 
-    @transform!(speciation,:formula_ = split.(:formula,"{"))
-    @transform!(speciation,:formula_ = getindex.(:formula_,1))
+    @transform!(speciation, :formula_ = split.(:formula, "{"))
+    @transform!(speciation, :formula_ = getindex.(:formula_, 1))
     insertcols!(speciation, :K => 10.0 .^ parse.(Float64, speciation.logK))
     select!(speciation, Not(:logK))
     insertcols!(speciation, :check .=> 1)
-    select!(speciation,:check,:substance,:dissolved,:formula,:formula_,:equation,:K)
+    select!(speciation, :check, :substance, :dissolved, :formula, :formula_, :equation, :K)
+
+    for i in eachrow(speciation)
+        if !in(i.substance, substances.substance)
+            throw(
+                error(
+                    "Substance $(i.substance) in the Speciation sheet is not listed in the Substances sheet.",
+                ),
+            )
+        end
+        if i.dissolved in substances.substance
+            throw(
+                error(
+                    "Please change the name of the aqueous species $(i.dissolved) in the Speciation sheet. It has the same name as $i in the Substances sheet.",
+                ),
+            )
+        end
+    end
 end
 
 
@@ -304,7 +365,12 @@ end
 
 
 
-function preprocessAdsorption!(adsorption::DataFrame, EnableList::Dict = Dict())
+function preprocessAdsorption!(
+    adsorption::DataFrame,
+    substances::DataFrame,
+    speciation::DataFrame,
+    EnableList::Dict = Dict(),
+)
     for i in [
         "substance",
         "dissolved",
@@ -336,8 +402,9 @@ function preprocessAdsorption!(adsorption::DataFrame, EnableList::Dict = Dict())
     check_illegal_char(adsorption)
     checkismissing!(
         adsorption,
-        [:substance,:dissolved,:adsorbed,:expression, :top_bc_type,:bot_bc_type],
-        :adsorbed,"adsorption"
+        [:substance, :dissolved, :adsorbed, :expression, :top_bc_type, :bot_bc_type],
+        :adsorbed,
+        "adsorption",
     )
 
 
@@ -346,13 +413,67 @@ function preprocessAdsorption!(adsorption::DataFrame, EnableList::Dict = Dict())
         [:top_bc_type, :bot_bc_type] .=> ByRow(x -> lowercase(x)),
         renamecols = false,
     )
-    select!(adsorption,:substance,
-    :dissolved,
-    :adsorbed,
-    :surface,
-    :expression,
-    :top_bc_type,
-    :bot_bc_type)
+    select!(
+        adsorption,
+        :substance,
+        :dissolved,
+        :adsorbed,
+        :surface,
+        :expression,
+        :top_bc_type,
+        :bot_bc_type,
+    )
+    ads_substance = @subset(substances, :type .== "dissolved_speciation")
+
+    for i in eachrow(adsorption)
+        if !in(i.substance, substances.substance)
+            throw(
+                error(
+                    "Substance $(i.substance) in the Adsorption sheet is not listed in the Substance sheet.",
+                ),
+            )
+        end
+        if !ismissing(i.surface)
+            if !in(i.surface, substances.substance)
+                throw(
+                    error(
+                        "Surface $(i.surface) in the Adsorption sheet is not listed in the Substances sheet.",
+                    ),
+                )
+            end
+        end
+        if i.adsorbed in substances.substance
+            throw(
+                error(
+                    "Please change the name of the adsorbed species $(i.adsorbed) in the Adsorption sheet. It has the same name as $(i.adsorbed) in the Substances sheet.",
+                ),
+            )
+        end
+        if !in(i.dissolved, vcat(speciation.dissolved, ads_substance.substance .* "_dis"))
+            throw(
+                error(
+                    "The dissolved species $(i.dissolved) is not listed in the Speciation sheet nor it is a total dissolved species.",
+                ),
+            )
+        end
+    end
+
+    gp_adsorption = groupby(adsorption, :substance)
+    gp_adsorption_ = combine(
+        gp_adsorption,
+        :top_bc_type => (x -> length(unique(x))) => :ntbc,
+        :bot_bc_type => (x -> length(unique(x))) => :nbbc,
+    )
+
+    for i in eachrow(gp_adsorption_)
+        if (i.ntbc > 1) | (i.nbbc > 1)
+            throw(
+                error(
+                    "The adsorbed species of substance $(i.substance) can only one set of boundary condition in the Adsorption sheet. Multiple sets are detected.",
+                ),
+            )
+        end
+    end
 end
 
 
@@ -391,7 +512,12 @@ function preprocessParameters!(
 
     subset!(parameters, :include => ByRow(!ismissing))
     select!(parameters, Not(:include))
-    checkismissing!(parameters,[:class, :type, :parameter, :value],:parameter,"parameters")
+    checkismissing!(
+        parameters,
+        [:class, :type, :parameter, :value],
+        :parameter,
+        "parameters",
+    )
 
 
     transform!(
@@ -412,7 +538,7 @@ function preprocessParameters!(
     check_illegal_char(select(parameters, :class, :type, :parameter, :value))
 
     checkerrorParameters!(parameters)
-    select!(parameters,:class, :type, :parameter, :value, :unit,:comment)
+    select!(parameters, :class, :type, :parameter, :value, :unit, :comment)
 end
 
 
@@ -422,14 +548,24 @@ end
 
 
 function preprocessOutput!(output::DataFrame, EnableList::Dict = Dict())
-    for i in ["name", "expression", "conversion_profile", "unit_profile", "include","flux_top","conversion_flux","unit_flux","flux_top_measured"]
+    for i in [
+        "name",
+        "expression",
+        "conversion_profile",
+        "unit_profile",
+        "include",
+        "flux_top",
+        "conversion_flux",
+        "unit_flux",
+        "flux_top_measured",
+    ]
         if !(i in names(output))
             throw(error("Column $i is not found in Sheet output."))
         end
     end
     if haskey(EnableList, "output")
         for i in EnableList["output"]
-            if !in(i,output.name)
+            if !in(i, output.name)
                 throw(error("$i is not in the output!"))
             else
                 setval!(output, :name, i, :include, 1)
@@ -441,15 +577,15 @@ function preprocessOutput!(output::DataFrame, EnableList::Dict = Dict())
     select!(output, Not(:include))
     df_str_replace!(output, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
-    check_illegal_char(select(output,:name,:expression,:conversion_profile))
-    checkismissing!(output,[:name,:conversion_profile],:name,"output")
+    check_illegal_char(select(output, :name, :expression, :conversion_profile))
+    checkismissing!(output, [:name, :conversion_profile], :name, "output")
 
 end
 
 
 
-function preprocessDiffusion!(diffusion::DataFrame)
-    for i in ["SedTrace_name","model_name"]
+function preprocessDiffusion!(diffusion::DataFrame, substances::DataFrame)
+    for i in ["SedTrace_name", "model_name"]
         if !(i in names(diffusion))
             throw(error("Column $i is not found in Sheet diffusion."))
         end
@@ -457,7 +593,25 @@ function preprocessDiffusion!(diffusion::DataFrame)
 
     df_str_replace!(diffusion, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 
-    check_illegal_char(select(diffusion,:model_name))
-    checkismissing!(diffusion,[:SedTrace_name,:model_name],:model_name,"diffusion")
+    check_illegal_char(select(diffusion, :model_name))
+    checkismissing!(diffusion, [:SedTrace_name, :model_name], :model_name, "diffusion")
+
+    ads_substance = @subset(substances, :type .== "dissolved_speciation")
+    dis_substance =
+        @subset(substances, (:type .!= "solid") .& (:type .!= "dissolved_speciation"))
+
+
+    for i in eachrow(diffusion)
+        if !in(
+            i.model_name,
+            vcat(dis_substance.substance, ads_substance.substance .* "_dis"),
+        )
+            throw(
+                error(
+                    "The model_name $(i.model_name) in the Diffusion sheet is not listed in as a dissolved substance in the Substance sheet nor it is a total dissolved species.",
+                ),
+            )
+        end
+    end
 
 end
