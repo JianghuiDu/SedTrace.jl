@@ -4,7 +4,7 @@ function generate_jacobian(
     # jp::Union{BandedMatrix{T},SparseMatrixCSC{T,Int}},
     jp::SparseMatrixCSC{T,Int},
     # C0::Vector{T},
-    chunk_size::Int,
+    # chunk_size::Int,
     parm
 ) where {T}
     f_ = (du, u) -> f(du, u, parm, 0.0)
@@ -12,6 +12,7 @@ function generate_jacobian(
     Nmat = size(jp,1)
     utmp = zeros(T,Nmat)
     dutmp = zeros(T,Nmat)
+    chunk_size = ForwardDiff.pickchunksize(Nmat)
     jac_cache =
         ForwardColorJacCache(f_, utmp, chunk_size, dx = dutmp, colorvec = colors, sparsity = jp)
     return (J, u, p, t) -> SparseDiffTools.forwarddiff_color_jacobian!(J, f_, u, jac_cache)
@@ -37,13 +38,14 @@ end
 function generate_jacobian(
     f,
     jp::Matrix{T},
-    chunk_size::Int,
+    # chunk_size::Int,
     parm
 ) where {T}
     f_ = (y, x) -> f(y, x, parm, 0.0)
     Nmat = size(jp,1)
     utmp = zeros(T,Nmat)
     dutmp = zeros(T,Nmat)
+    chunk_size = ForwardDiff.pickchunksize(Nmat)
     conf = ForwardDiff.JacobianConfig(f_, dutmp, utmp, ForwardDiff.Chunk{chunk_size}())
     return (J, u, p, t) -> ForwardDiff.jacobian!(J, f_, dutmp, u, conf, Val(true))
 end
