@@ -29,22 +29,24 @@ function molecdiff(salinity, temp, pres, species_list)
     D0 =  XLSX.readxlsx(path*"diffusion.xlsx")
     D0_type1 =  DataFrame(XLSX.gettable(D0["type1"]))
     D0_type2 =  DataFrame(XLSX.gettable(D0["type2"]))
+    @subset!(D0_type1,:include.==1)
+    @subset!(D0_type2,:include.==1)
 
 
     for i in species_list
-        if i in D0_type1.ion
-            id = findfirst(x -> x == i, D0_type1.ion)
+        if i in D0_type1.SedTrace_name
+            id = findfirst(x -> x == i, D0_type1.SedTrace_name)
             mdif[i] =
                 (D0_type1.m0[id] + D0_type1.m1[id] * temp) * 1e-6 * mu_T / mu *
                 365 *
                 24 *
                 3600
-        elseif i in D0_type2.ion
-            id = findfirst(x -> x == i, D0_type2.ion)
+        elseif i in D0_type2.SedTrace_name
+            id = findfirst(x -> x == i, D0_type2.SedTrace_name)
             mdif[i] =
                 D0_type2.D0[id] * mu_0 / 298.15 * (temp + 273.15) / mu * 1e-6 * 365 * 24 * 3600
         else 
-            @warn "The molecular diffusion coefficient of $(i) is not computed by SedTrace. Please supply the value in the parameter sheet."
+            # @warn "The molecular diffusion coefficient of $(i) is not computed by SedTrace. Please supply the value in the parameter sheet."
         end
     end
 
