@@ -4,12 +4,11 @@ function transport_code(substances, adsorption)
     ndissolved = sum(
         substances.type .∈ Ref([
             "dissolved",
-            "dissolved_adsorbed",
-            "dissolved_summed",
-            "dissolved_adsorbed_summed",
+            # "dissolved_adsorbed",
+            "dissolved_speciation",
         ]),
     )
-    nsummed = sum(substances.type .== "dissolved_summed_pH")
+    nsummed = sum(substances.type .== "dissolved_pH")
 
     tran_cache = String[]
     C_views = String[]
@@ -33,7 +32,7 @@ function transport_code(substances, adsorption)
     for i in eachrow(substances)
         push!(C_views, "$(i.substance) = @view C[$(i.substance)ID]")
         push!(dC_views, "d$(i.substance) = @view dC[$(i.substance)ID]")
-        if i.type ∈ ["solid", "dissolved", "dissolved_summed"]
+        if i.type ∈ ["solid", "dissolved"]
             push!(A_str, "mul!(d$(i.substance), Am$(i.substance), $(i.substance))")
             push!(
                 bc_str1,
@@ -44,56 +43,59 @@ function transport_code(substances, adsorption)
                 "d$((i.substance))[Ngrid] += BcAm$((i.substance))[2]*$((i.substance))[Ngrid] + BcCm$((i.substance))[2]",
             )
         end
-        if i.type ∈ ["dissolved", "dissolved_summed"]
+        if i.type ∈ ["dissolved"]
             push!(
                 alpha_str,
                 "@. d$(i.substance) += $(i.bioirrigation_scale)alpha*($(i.substance)$(bc_type(i.top_bc_type,i.substance))-$(i.substance))",
             )
         end
-        if i.type == "dissolved_adsorbed"
-            push!(tran_cache, "$(i.substance)_ads")
-            push!(ads_str, "@. $((i.substance))_ads = $(i.substance)*K$((i.substance))_ads")
-            push!(
-                ads_str,
-                "mul!(d$(i.substance),Am$((i.substance))_ads,$((i.substance))_ads)",
-            )
-            push!(ads_str, "@. d$(i.substance) *= dstopw")
-            push!(
-                ads_str,
-                "mul!(d$(i.substance), Am$(i.substance), $(i.substance),1.0,1.0)",
-            )
-            push!(
-                ads_str,
-                "d$(i.substance)[1] += (BcAm$((i.substance))_ads[1]*$((i.substance))_ads[1]+BcCm$((i.substance))_ads[1])*$dstopw1",
-            )
-            push!(
-                ads_str,
-                "d$(i.substance)[1] += BcAm$(i.substance)[1]*$(i.substance)[1]+BcCm$(i.substance)[1]",
-            )
-            push!(
-                ads_str,
-                "d$(i.substance)[Ngrid] += (BcAm$((i.substance))_ads[2]*$((i.substance))_ads[Ngrid]+BcCm$((i.substance))_ads[2])*$dstopwN",
-            )
-            push!(
-                ads_str,
-                "d$(i.substance)[Ngrid] += BcAm$(i.substance)[2]*$(i.substance)[Ngrid]+BcCm$(i.substance)[2]",
-            )
-            push!(
-                ads_str,
-                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha * ($((i.substance))0 - $(i.substance))",
-            )
-            # push!(ads_str, "@. d$(i.substance) /=1+dstopw*K$((i.substance))_ads")
-            push!(ads_str, "@. d$(i.substance) *= 1/(1+dstopw*K$((i.substance))_ads)")
+        # if i.type == "dissolved_adsorbed"
+        #     push!(tran_cache, "$(i.substance)_ads")
+        #     push!(ads_str, "@. $((i.substance))_ads = $(i.substance)*K$((i.substance))_ads")
+        #     push!(
+        #         ads_str,
+        #         "mul!(d$(i.substance),Am$((i.substance))_ads,$((i.substance))_ads)",
+        #     )
+        #     push!(ads_str, "@. d$(i.substance) *= dstopw")
+        #     push!(
+        #         ads_str,
+        #         "mul!(d$(i.substance), Am$(i.substance), $(i.substance),1.0,1.0)",
+        #     )
+        #     push!(
+        #         ads_str,
+        #         "d$(i.substance)[1] += (BcAm$((i.substance))_ads[1]*$((i.substance))_ads[1]+BcCm$((i.substance))_ads[1])*$dstopw1",
+        #     )
+        #     push!(
+        #         ads_str,
+        #         "d$(i.substance)[1] += BcAm$(i.substance)[1]*$(i.substance)[1]+BcCm$(i.substance)[1]",
+        #     )
+        #     push!(
+        #         ads_str,
+        #         "d$(i.substance)[Ngrid] += (BcAm$((i.substance))_ads[2]*$((i.substance))_ads[Ngrid]+BcCm$((i.substance))_ads[2])*$dstopwN",
+        #     )
+        #     push!(
+        #         ads_str,
+        #         "d$(i.substance)[Ngrid] += BcAm$(i.substance)[2]*$(i.substance)[Ngrid]+BcCm$(i.substance)[2]",
+        #     )
+        #     push!(
+        #         ads_str,
+        #         "@. d$(i.substance) += $(i.bioirrigation_scale)alpha * ($((i.substance))0 - $(i.substance))",
+        #     )
+        #     # push!(ads_str, "@. d$(i.substance) /=1+dstopw*K$((i.substance))_ads")
+        #     push!(ads_str, "@. d$(i.substance) *= 1/(1+dstopw*K$((i.substance))_ads)")
 
-            push!(ads_str, " ")
-        end
-        if i.type == "dissolved_adsorbed_summed"
+        #     push!(ads_str, " ")
+        # end
+        if i.type == "dissolved_speciation"
             ads_df = @subset(adsorption, :substance .== i.substance)
-            @select!(ads_df,:substance,:surface)
+            @transform!(ads_df,:species = :substance .*"_ads",:type = "solid",:convfac = "dstopw")
+            @select!(ads_df,:substance,:species,:type,:convfac)
             unique!(ads_df)
-            @transform!(ads_df,:species = ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
-            @select!(ads_df,:substance,:species)
-            @transform!(ads_df,:type="solid",:convfac ="dstopw")
+            # @select!(ads_df,:substance,:surface)
+            # unique!(ads_df)
+            # @transform!(ads_df,:species = ifelse.(ismissing.(:surface),:substance.*"_ads_nsf",:substance.*"_ads_".*:surface))
+            # @select!(ads_df,:substance,:species)
+            # @transform!(ads_df,:type="solid",:convfac ="dstopw")
 
             dis_sp = i.substance*"_dis"
             dis_df = DataFrame(substance=i.substance,species=dis_sp,type="dissolved",convfac="1")
@@ -121,22 +123,14 @@ function transport_code(substances, adsorption)
             )
             push!(
                 ads_str,
-                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha*($(dis_sp)0-$(dis_sp))",
+                "@. d$(i.substance) += $(i.bioirrigation_scale)alpha*($(dis_sp)$(bc_type(i.top_bc_type,i.substance))-$(dis_sp))",
             )
             push!(ads_str, " ")
         end
     end
 
     if nsummed != 0
-        species_summed_pH = @subset(substances, :type .== "dissolved_summed_pH")
-
-        if length(species_summed_pH.substance) != 0
-            if !("H" ∈ species_summed_pH.substance)
-                throw(
-                    error("Proton H must be included in the dissolved_summed_pH species!"),
-                )
-            end
-        end
+        species_summed_pH = @subset(substances, :type .== "dissolved_pH")
 
         subspecies = String[]
         subspecies_scrpt = String[]
@@ -157,13 +151,6 @@ function transport_code(substances, adsorption)
         j = 0
         n_subspecies = 0
         for i in species_summed_pH.substance
-            if !(i in list_summed_species)
-                throw(
-                    error(
-                        "dissolved_summed_pH species must be from this list: $list_summed_species. $i is not in the list.",
-                    ),
-                )
-            else
                 tmp = EquilibriumInvariant(i)
                 bc = getval!(species_summed_pH, :substance, i, :top_bc_type)
                 append!(subspecies, tmp.species)
@@ -182,7 +169,7 @@ function transport_code(substances, adsorption)
                     append!(Tsum_str, ["d$i = $(join(tmp.species .* "_tran", "+"))"])
                     append!(dH_str, ["dH -= d$i*dTA_d$i"])
                     append!(species_conc_str, tmp.species .* "=" .* tmp.expr)
-                    append!(dTA_dTsum_str, ["dTA_d$i = " * tmp.dTAdsum])
+                    append!(dTA_dTsum_str, ["dTA_d$i = " * tmp.dTAdEI])
                     n_subspecies += length(tmp.species)
                 else
                     push!(species_conc_str, tmp.species[2] .* "=" .* tmp.expr[2])
@@ -191,26 +178,25 @@ function transport_code(substances, adsorption)
                 end
 
                 j += 1
-            end
         end
 
-        species_summed = @subset(substances, :type .== "dissolved_summed")
+        # species_summed = @subset(substances, :type .== "dissolved_summed")
 
-        subspecies_non_pH = String[]
-        species_conc_str_non_pH = String[]
-        for i in species_summed.substance
-            if !(i in list_summed_species)
-                throw(
-                    error(
-                        "dissolved_summed species must be from this list: $list_summed_species. $i is not in the list.",
-                    ),
-                )
-            else
-                tmp = EquilibriumInvariant(i)
-                append!(subspecies_non_pH, tmp.species)
-                append!(species_conc_str_non_pH, tmp.species .* "=" .* tmp.expr)
-            end
-        end
+        # subspecies_non_pH = String[]
+        # species_conc_str_non_pH = String[]
+        # for i in species_summed.substance
+        #     if !(i in list_summed_species)
+        #         throw(
+        #             error(
+        #                 "dissolved_summed species must be from this list: $list_summed_species. $i is not in the list.",
+        #             ),
+        #         )
+        #     else
+        #         tmp = EquilibriumInvariant(i)
+        #         append!(subspecies_non_pH, tmp.species)
+        #         append!(species_conc_str_non_pH, tmp.species .* "=" .* tmp.expr)
+        #     end
+        # end
 
         append!(dH_str, ["dH = dH/dTA_dH"])
 
@@ -221,13 +207,13 @@ function transport_code(substances, adsorption)
             "@. " .* dTA_dTsum_str,
             "#  dTA/dH",
             "@. " .* dTA_dH_str)
-            if !isempty(species_conc_str_non_pH)
-                pH_code = vcat(
-                    pH_code,
-                    "#  Speciation of non-EIs",
-                    "@. " .* species_conc_str_non_pH,
-                )
-            end
+            # if !isempty(species_conc_str_non_pH)
+            #     pH_code = vcat(
+            #         pH_code,
+            #         "#  Speciation of non-EIs",
+            #         "@. " .* species_conc_str_non_pH,
+            #     )
+            # end
 
         append!(pH_code, ["#  Transport of individual species"])
 
@@ -284,7 +270,7 @@ function transport_code(substances, adsorption)
             tran_cache,
             vcat(
                 species_conc_str,
-                species_conc_str_non_pH,
+                # species_conc_str_non_pH,
                 subspecies .* "_tran",
                 TA_tran_str,
                 dTA_dH_str,
