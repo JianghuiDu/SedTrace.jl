@@ -39,27 +39,27 @@ end
 
 
 struct SolverConfig <: TEIConfig
-    chunk_size::Int
+    # chunk_size::Int
     linsolve::Symbol
     Precondition::Symbol
     PrecSide::Int
 end
 
 function SolverConfig(
-    chunk_size,
+    # chunk_size,
     linsolve;
     Precondition = :ILU0,
     PrecSide = 2
 )
     return SolverConfig(
-        chunk_size,
+        # chunk_size,
         linsolve,
         Precondition,
         PrecSide,
     )
 end
 
-struct SolverCtrlConfig <: TEIConfig
+struct SolutionConfig <: TEIConfig
     u0::AbstractArray
     tspan::Tuple{Real,Real}
     reltol::Real
@@ -71,7 +71,7 @@ struct SolverCtrlConfig <: TEIConfig
     # tstops::Union{Nothing,Real}
 end
 
-function SolverCtrlConfig(
+function SolutionConfig(
     u0,
     tspan;
     reltol = 1e-6,
@@ -82,7 +82,7 @@ function SolverCtrlConfig(
     maxiters = Int(1e6),
     # tstops = nothing
 )
-    return SolverCtrlConfig(
+    return SolutionConfig(
         u0,
         tspan,
         reltol,
@@ -95,19 +95,9 @@ function SolverCtrlConfig(
     )
 end
 
-struct OutputConfig
-    x::Vector{Float64}
-    L::Float64
-    Ngrid::Int
-    IDdict::Dict{Symbol, StepRange{Int64, Int64}}
-end
 
-struct SolutionConfig
+struct OutputConfig
     sol::SciMLBase.ODESolution
-    x::Vector{Float64}
-    L::Float64
-    Ngrid::Int
-    IDdict::Dict{Symbol, StepRange{Int64, Int64}}
-    VarVal::Dict{String,Matrix{Float64}}
+    IntVal::Dict{String,Matrix{Float64}}
 end
 
