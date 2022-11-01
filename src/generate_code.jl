@@ -54,9 +54,9 @@ function generate_code(
     preprocessReactions!(reactions, EnableList)
     preprocessParameters!(parameters, ParamDict, EnableList)
     
-    preprocessDiffusion!(diffusion)
-    preprocessAdsorption!(adsorption, EnableList)
-    preprocessSpeciation!(speciation, EnableList)
+    preprocessDiffusion!(diffusion,substances)
+    preprocessSpeciation!(speciation,substances, EnableList)
+    preprocessAdsorption!(adsorption,substances,speciation, EnableList)
 
     #---------------------------------------------------------------------------
     # generate parameter, transport and reaction code
@@ -93,7 +93,6 @@ function generate_code(
         spec_expr,
         react_expr,
         cache_str,
-        speciation_df,
         pHspecies,
     )
 
@@ -252,6 +251,10 @@ function generate_code(
         elements_in_reactions = (
             collect(DataFrames.eachcol(elements_df)),
             DataFrames.names(elements_df),
+        ),
+        speciation = (
+            collect(DataFrames.eachcol(speciation_df)),
+            DataFrames.names(speciation_df),
         ),
         reaction_dependency = (
             collect(DataFrames.eachcol(react_jp)),
