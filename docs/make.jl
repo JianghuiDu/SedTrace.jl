@@ -19,6 +19,6 @@ makedocs(
     ]
 )
 
-# deploydocs(;
-#     repo="github.com/JianghuiDu/SedTrace.jl",
-# )
+deploydocs(;
+    repo="github.com/JianghuiDu/SedTrace.jl",
+)
