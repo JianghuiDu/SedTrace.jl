@@ -4,20 +4,20 @@
     ((-exp(-Peᵢ / 2 - Peᵢ₊₁ / 2) + exp(-Peᵢ / 2)) * zᵢ + (1 - exp(-Peᵢ / 2)) * zᵢ₊₁)
 
 
-@inline Bfunₗ(hᵢ, uᵢ, φᵢ, uᵢ₊₁, φᵢ₊₁, Peᵢ, Peᵢ₊₁) =
-    hᵢ * (exp(-Peᵢ / 2.0) / (uᵢ * Peᵢ) + 1.0 / (2.0*uᵢ) - 1 / (uᵢ * Peᵢ)) / (
-        (1 - exp(-Peᵢ / 2)) / (uᵢ * φᵢ) +
-        (exp(-Peᵢ / 2) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)) / (uᵢ₊₁ * φᵢ₊₁)
-    )
+# @inline Bfunₗ(hᵢ, uᵢ, φᵢ, uᵢ₊₁, φᵢ₊₁, Peᵢ, Peᵢ₊₁) =
+#     hᵢ * (exp(-Peᵢ / 2.0) / (uᵢ * Peᵢ) + 1.0 / (2.0*uᵢ) - 1 / (uᵢ * Peᵢ)) / (
+#         (1 - exp(-Peᵢ / 2)) / (uᵢ * φᵢ) +
+#         (exp(-Peᵢ / 2) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)) / (uᵢ₊₁ * φᵢ₊₁)
+#     )
 
-@inline Bfunᵤ(hᵢ₊₁, uᵢ, φᵢ, uᵢ₊₁, φᵢ₊₁, Peᵢ, Peᵢ₊₁) =
-    hᵢ₊₁ * (
-        exp(-Peᵢ / 2) / (uᵢ₊₁ * Peᵢ₊₁) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2) / (uᵢ₊₁ * Peᵢ₊₁) -
-        1 / 2 / (uᵢ₊₁) * exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)
-    ) / (
-        (1 - exp(-Peᵢ / 2)) / (uᵢ * φᵢ) +
-        (exp(-Peᵢ / 2) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)) / (uᵢ₊₁ * φᵢ₊₁)
-    )
+# @inline Bfunᵤ(hᵢ₊₁, uᵢ, φᵢ, uᵢ₊₁, φᵢ₊₁, Peᵢ, Peᵢ₊₁) =
+#     hᵢ₊₁ * (
+#         exp(-Peᵢ / 2) / (uᵢ₊₁ * Peᵢ₊₁) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2) / (uᵢ₊₁ * Peᵢ₊₁) -
+#         1 / 2 / (uᵢ₊₁) * exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)
+#     ) / (
+#         (1 - exp(-Peᵢ / 2)) / (uᵢ * φᵢ) +
+#         (exp(-Peᵢ / 2) - exp(-Peᵢ / 2 - Peᵢ₊₁ / 2)) / (uᵢ₊₁ * φᵢ₊₁)
+#     )
 
 
 
@@ -30,11 +30,11 @@ function fvcf(φ, D, u, dx, N)
     Aₘₗ = zeros(N)
     Aₘᵤ = zeros(N)
 
-    Bₗ = zeros(N - 1)
-    Bᵤ = zeros(N - 1)
-    Bₘ = zeros(N)
-    Bₘₗ = zeros(N)
-    Bₘᵤ = zeros(N)
+    # Bₗ = zeros(N - 1)
+    # Bᵤ = zeros(N - 1)
+    # Bₘ = zeros(N)
+    # Bₘₗ = zeros(N)
+    # Bₘᵤ = zeros(N)
 
 
     for i = 1:(N-1)
@@ -47,26 +47,27 @@ function fvcf(φ, D, u, dx, N)
             Afun(u[i]φ[i], u[i+1]φ[i+1], Pe[i], Pe[i+1]) * exp(-Pe[i] / 2 - Pe[i+1] / 2) /
             (dx[i]φ[i])
 
-        Bₗ[i] = Bfunₗ(dx[i], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i+1]φ[i+1])
-        Bₘₗ[i+1] =
-            -Bfunᵤ(dx[i+1], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i+1]φ[i+1])
-        Bₘᵤ[i] = -Bfunₗ(dx[i], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i]φ[i])
-        Bᵤ[i] = Bfunᵤ(dx[i+1], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i]φ[i])
+        # Bₗ[i] = Bfunₗ(dx[i], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i+1]φ[i+1])
+        # Bₘₗ[i+1] =
+        #     -Bfunᵤ(dx[i+1], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i+1]φ[i+1])
+        # Bₘᵤ[i] = -Bfunₗ(dx[i], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i]φ[i])
+        # Bᵤ[i] = Bfunᵤ(dx[i+1], u[i], φ[i], u[i+1], φ[i+1], Pe[i], Pe[i+1]) / (dx[i]φ[i])
     end
 
     Aₘ .= Aₘₗ .+ Aₘᵤ
     A = Tridiagonal(Aₗ, Aₘ, Aᵤ)
-    Bₘ .= Bₘₗ .+ Bₘᵤ #.+ 1.0
-    B = Tridiagonal(Bₗ, Bₘ, Bᵤ)
+    # Bₘ .= Bₘₗ .+ Bₘᵤ #.+ 1.0
+    # B = Tridiagonal(Bₗ, Bₘ, Bᵤ)
 
 
-    return (A, B)
+    # return (A, B)
+    return A
 end
 
 
 function fvcf_bc(φ, D, u, dx, BC::Tuple{Tuple,Tuple}, N, ads = false)
     A_bc = zeros(2)
-    B_bc = zeros(2)
+    # B_bc = zeros(2)
     b_bc = zeros(2)
 
     if ads
@@ -89,14 +90,14 @@ function fvcf_bc(φ, D, u, dx, BC::Tuple{Tuple,Tuple}, N, ads = false)
             u[N]φ[N] * (αᴸ * D[N] + βᴸ * u[N]) /
             (αᴸ * D[N] * exp(-Pe[N] / 2) - αᴸ * D[N] - βᴸ * u[N]) / (dx[N]φ[N])
 
-        B_bc[1] =
-            (α⁰ * D[1] + β⁰ * u[1]) *
-            (-exp(-Pe[1] / 2) / Pe[1] + 1 / Pe[1] - 1 / 2 * exp(-Pe[1] / 2)) /
-            (α⁰ * D[1] * exp(-Pe[1] / 2) - α⁰ * D[1] + β⁰ * u[1] * exp(-Pe[1] / 2)) 
-        B_bc[2] =
-            (αᴸ * D[N] + βᴸ * u[N]) *
-            (exp(-Pe[N] / 2) / Pe[N] - 1 / Pe[N] + 1 / 2) /
-            (αᴸ * D[N] * exp(-Pe[N] / 2) - αᴸ * D[N] - βᴸ * u[N])
+        # B_bc[1] =
+        #     (α⁰ * D[1] + β⁰ * u[1]) *
+        #     (-exp(-Pe[1] / 2) / Pe[1] + 1 / Pe[1] - 1 / 2 * exp(-Pe[1] / 2)) /
+        #     (α⁰ * D[1] * exp(-Pe[1] / 2) - α⁰ * D[1] + β⁰ * u[1] * exp(-Pe[1] / 2)) 
+        # B_bc[2] =
+        #     (αᴸ * D[N] + βᴸ * u[N]) *
+        #     (exp(-Pe[N] / 2) / Pe[N] - 1 / Pe[N] + 1 / 2) /
+        #     (αᴸ * D[N] * exp(-Pe[N] / 2) - αᴸ * D[N] - βᴸ * u[N])
 
 
         b_bc[1] =
@@ -107,5 +108,6 @@ function fvcf_bc(φ, D, u, dx, BC::Tuple{Tuple,Tuple}, N, ads = false)
             φ[N]u[N]D[N] * γᴸ * exp(-Pe[N] / 2) /
             (-αᴸ * D[N] * exp(-Pe[N] / 2) + αᴸ * D[N] + βᴸ * u[N]) / (dx[N]φ[N])
     end
-    return (A_bc, B_bc, b_bc)
+    # return (A_bc, B_bc, b_bc)
+    return (A_bc,b_bc)
 end
