@@ -7,15 +7,11 @@ mutable struct Reactran{T}
     FeSO4_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     FeCO3_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     FeHS_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    FeLorg_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Fe_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TFe_ads_POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TFe_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Lorg_aq::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Lorg_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TFe_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TFe_ads_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
-    Lorg_dis_tran::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     OH::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     HCO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     CO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -56,15 +52,11 @@ function init(u0::Array{T,1}, Ngrid::Int) where {T}
     FeSO4_aq = PreallocationTools.dualcache(zeros(T, Ngrid))
     FeCO3_aq = PreallocationTools.dualcache(zeros(T, Ngrid))
     FeHS_aq = PreallocationTools.dualcache(zeros(T, Ngrid))
-    FeLorg_aq = PreallocationTools.dualcache(zeros(T, Ngrid))
     Fe_ads = PreallocationTools.dualcache(zeros(T, Ngrid))
     TFe_ads_POC = PreallocationTools.dualcache(zeros(T, Ngrid))
     TFe_ads = PreallocationTools.dualcache(zeros(T, Ngrid))
-    Lorg_aq = PreallocationTools.dualcache(zeros(T, Ngrid))
-    Lorg_dis = PreallocationTools.dualcache(zeros(T, Ngrid))
     TFe_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
     TFe_ads_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    Lorg_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
     OH = PreallocationTools.dualcache(zeros(T, Ngrid))
     HCO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
     CO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
@@ -104,15 +96,11 @@ function init(u0::Array{T,1}, Ngrid::Int) where {T}
         FeSO4_aq,
         FeCO3_aq,
         FeHS_aq,
-        FeLorg_aq,
         Fe_ads,
         TFe_ads_POC,
         TFe_ads,
-        Lorg_aq,
-        Lorg_dis,
         TFe_dis_tran,
         TFe_ads_tran,
-        Lorg_dis_tran,
         OH,
         HCO3,
         CO3,

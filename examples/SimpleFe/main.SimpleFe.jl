@@ -1,6 +1,5 @@
 
 using SedTrace
-using JLD2
 
 # model configuration
 modeldirectory = (@__DIR__) * "\\"
@@ -17,12 +16,13 @@ IncludeFiles(modelconfig)
 
 # initial values
 C0 = Param.C0;
-# initalize parameters
+# initialize  parameters
 parm = Param.ParamStruct();
 # initialize cache and ODE function
 OdeFun = Cache.init(C0, parm.Ngrid);
 # initialize Jacobian 
 JacPrototype = JacType(Param.IDdict);
+
 
 # test the ODE function
 TestOdeFun(OdeFun, C0, parm)
@@ -33,7 +33,7 @@ BenchmarkReactran(OdeFun, C0, parm)
 # benchmark the Jacobian performance
 BenchmarkJacobian(JacPrototype, OdeFun, parm)
 # benchmark the preconditioner performance
-BenchmarkPreconditioner(JacPrototype, OdeFun, parm)
+BenchmarkPreconditioner(JacPrototype, OdeFun, parm,:ILU0)
 
 # configure the solver
 solverconfig = SolverConfig(:GMRES, :ILU0, 2)

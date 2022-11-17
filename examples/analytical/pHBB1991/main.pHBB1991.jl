@@ -17,8 +17,6 @@ include("analytical.solution.pHBB1991.jl")
 
 ParamDict = Dict(
     "kOS" => "82.",
-    # "a"=>1e4,
-    # "b" => 3.5,
     "gridtran"=>"x-0.05",
     "Ngrid" => 100
 )
@@ -37,18 +35,16 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 # initialize Jacobian 
 JacPrototype = JacType(Param.IDdict);
 
-# TestOdeFun(OdeFun,C0,parm)
-# TestJacobian(JacPrototype,OdeFun,parm)
-# BenchmarkReactran(OdeFun,C0,parm)
-# BenchmarkJacobian(JacPrototype,OdeFun,parm)
-# BenchmarkPreconditioner(JacPrototype,OdeFun,parm)
+TestOdeFun(OdeFun,C0,parm)
+TestJacobian(JacPrototype,OdeFun,parm)
+BenchmarkReactran(OdeFun,C0,parm)
+BenchmarkJacobian(JacPrototype,OdeFun,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
 
 # configure the solver
-solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
 solutionconfig = SolutionConfig(
     C0,
-    # solution.sol[end],
     (0.0, 3000.0),
     reltol = 1e-6,
     abstol = 1e-18,
@@ -56,6 +52,7 @@ solutionconfig = SolutionConfig(
     callback = TerminateSteadyState(1e-18, 1e-6, DiffEqCallbacks.allDerivPass),
 );
 
+solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
 solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
@@ -73,8 +70,6 @@ modelconfig = ModelConfig(modeldirectory, modelfile, modelname)
 
 ParamDict = Dict(
     "kOS" => "82.",
-    # "a"=>1e4,
-    # "b" => 3.5,
     "gridtran"=>"x-0.05",
     "Ngrid" => 200
 )
@@ -124,7 +119,6 @@ ParamDict = Dict(
     "kOS" => "82.",
     "a"=>1e4,
     "b" => 3.5,
-    # "gridtran"=>"x-0.05",
     "Ngrid" => 100
 )
 

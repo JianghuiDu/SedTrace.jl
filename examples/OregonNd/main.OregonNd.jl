@@ -52,13 +52,14 @@ EnableList = Dict(
 )
 
 ParamDict = Dict(
-    "Basalt0" => 1,
-    "a_lith0" =>  1e5,
-    "rNdSi_lith" =>1.9e-5
+    "Basalt0" => 2,
+    "a_lith0" =>  1e1,
+    "rNdSi_lith" =>1.9e-5,
+    "Ngrid" => 300
 )
 
 
-# @time generate_parameter_template(modelconfig,EnableList=EnableList)
+@time generate_parameter_template(modelconfig,EnableList=EnableList)
 
 
 @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
@@ -75,31 +76,33 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 # initialize Jacobian 
 JacPrototype = JacType(SedTrace.Param.IDdict);
 
-# # test the ODE function
-# TestOdeFun(OdeFun, C0, parm)
-# # test if the Jacobian is correct
-# TestJacobian(JacPrototype, OdeFun, parm)
-# # benchmark the ODE function performance
-# BenchmarkReactran(OdeFun, C0, parm)
-# # benchmark the Jacobian performance
-# BenchmarkJacobian(JacPrototype, OdeFun, parm)
-# # benchmark the preconditioner performance
-# BenchmarkPreconditioner(JacPrototype, OdeFun, parm)
+# test the ODE function
+TestOdeFun(OdeFun, C0, parm)
+# test if the Jacobian is correct
+TestJacobian(JacPrototype, OdeFun, parm)
+# benchmark the ODE function performance
+BenchmarkReactran(OdeFun, C0, parm)
+# benchmark the Jacobian performance
+BenchmarkJacobian(JacPrototype, OdeFun, parm)
+# benchmark the preconditioner performance
+BenchmarkPreconditioner(JacPrototype, OdeFun, parm,:ILU0)
 
 # configure the solver
-solverconfig = SolverConfig(:FGMRES, :ILU0, 2)
 
-# solution = load("sol.$modelname.jld2", "sol");
+# load previous model output as the initial values
+sol = load(modeldirectory*"sol.$modelname.jld2", "sol");
 # configure the solution
 solutionconfig = SolutionConfig(
-    C0,
-    # solution,
+    # C0,
+    sol,
     (0.0, 1E6),
     reltol = 1e-6,
     abstol = 1e-18,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );
+
+solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
 # run the model
 @time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
@@ -116,42 +119,3 @@ generate_output(
 )
 
 jldsave("sol.$modelname.jld2"; sol = solution.sol[end])
-
-
-ParamDict = Dict(
-    "Basalt0" => 2,
-    "a_lith0" =>  1e1,
-    "rNdSi_lith" =>1.9e-5
-)
-
-
-@time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
-
-IncludeFiles(modelconfig)
-
-parm = Param.ParamStruct();
-OdeFun = Cache.init(C0, parm.Ngrid);
-
-solutionconfig = SolutionConfig(
-    solution.sol[end],
-    (0.0, 1E6),
-    reltol = 1e-6,
-    abstol = 1e-18,
-    saveat = 1000.0,
-    callback = TerminateSteadyState(1e-16, 1e-6),
-);
-
-# run the model
-@time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
-
-
-generate_output(
-    modelconfig,
-    solution,
-    site = "HH3000",
-    EnableList = EnableList,
-    showplt = true,
-)
-
-jldsave("sol.$modelname.jld2"; sol = solution.sol[end])
-

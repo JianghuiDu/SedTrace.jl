@@ -10,7 +10,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     HID,
     TCO2ID,
     TH2SID,
-    LorgID,
     AmPOC,
     AmFeOOH,
     AmFeS,
@@ -24,7 +23,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     AmHS,
     AmTFe_dis,
     AmTFe_ads,
-    AmLorg_dis,
     BcAmPOC,
     BcCmPOC,
     BcAmFeOOH,
@@ -52,8 +50,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BcCmTFe_dis,
     BcAmTFe_ads,
     BcCmTFe_ads,
-    BcAmLorg_dis,
-    BcCmLorg_dis,
     alpha,
     SO4BW,
     H0,
@@ -64,7 +60,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     H2S0,
     HS0,
     TFe_dis0,
-    Lorg_dis0,
     dstopw,
     KH2O,
     KCO2,
@@ -88,15 +83,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
     FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
     FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
-    FeLorg_aq = PreallocationTools.get_tmp(f.FeLorg_aq, C)
     Fe_ads = PreallocationTools.get_tmp(f.Fe_ads, C)
     TFe_ads_POC = PreallocationTools.get_tmp(f.TFe_ads_POC, C)
     TFe_ads = PreallocationTools.get_tmp(f.TFe_ads, C)
-    Lorg_aq = PreallocationTools.get_tmp(f.Lorg_aq, C)
-    Lorg_dis = PreallocationTools.get_tmp(f.Lorg_dis, C)
     TFe_dis_tran = PreallocationTools.get_tmp(f.TFe_dis_tran, C)
     TFe_ads_tran = PreallocationTools.get_tmp(f.TFe_ads_tran, C)
-    Lorg_dis_tran = PreallocationTools.get_tmp(f.Lorg_dis_tran, C)
     OH = PreallocationTools.get_tmp(f.OH, C)
     HCO3 = PreallocationTools.get_tmp(f.HCO3, C)
     CO3 = PreallocationTools.get_tmp(f.CO3, C)
@@ -140,7 +131,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     H = @view C[HID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
-    Lorg = @view C[LorgID]
     dPOC = @view dC[POCID]
     dFeOOH = @view dC[FeOOHID]
     dFeS = @view dC[FeSID]
@@ -149,7 +139,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dH = @view dC[HID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
-    dLorg = @view dC[LorgID]
     #---------------------------------------------------------------------
     #  Transport of solid and dissolved substances
     #---------------------------------------------------------------------
@@ -232,47 +221,33 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Concentrations of adsorbed/dissolved species
     @.. TFe_dis = TFe / (KFe_ads ⊗ POC ⊗ dstopw ⊕ 1)
     @.. Fe_aq =
-        1.0e-10 ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
+        3.98107170553497e-6 ⊗ TFe_dis / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
     @.. FeCl_aq =
-        7.585775750291838e-11 ⊗ Cl ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
+        3.019951720402014e-6 ⊗ Cl ⊗ TFe_dis / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
     @.. FeSO4_aq =
-        9.120108393559097e-10 ⊗ SO4 ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
+        3.630780547701011e-5 ⊗ SO4 ⊗ TFe_dis / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
     @.. FeCO3_aq =
-        4.466835921509631e-7 ⊗ CO3 ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
+        0.01778279410038921 ⊗ CO3 ⊗ TFe_dis / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
     @.. FeHS_aq =
-        2.511886431509582e-5 ⊗ HS ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
-        )
-    @.. FeLorg_aq =
-        1.0 ⊗ Lorg_aq ⊗ TFe_dis / (
-            4.466835921509631e-7 ⊗ CO3 ⊕ 7.585775750291838e-11 ⊗ Cl ⊕
-            2.511886431509582e-5 ⊗ HS ⊕ 1.0 ⊗ Lorg_aq ⊕
-            9.120108393559097e-10 ⊗ SO4 ⊕ 1.0e-10
+        1.0 ⊗ HS ⊗ TFe_dis / (
+            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
+            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )
     @.. Fe_ads = KFe_ads ⊗ POC ⊗ TFe_dis
     @.. TFe_ads_POC = Fe_ads
     @.. TFe_ads = Fe_ads
-    @.. Lorg_dis = Lorg
-    @.. Lorg_aq = 1.0e-10 ⊗ Lorg_dis / (1.0 ⊗ Fe_aq ⊕ 1.0e-10)
-    @.. FeLorg_aq = 1.0 ⊗ Fe_aq ⊗ Lorg_dis / (1.0 ⊗ Fe_aq ⊕ 1.0e-10)
     #  Transport of adsorbed/dissolved species
     mul!(TFe_dis_tran, AmTFe_dis, TFe_dis)
     TFe_dis_tran[1] += BcAmTFe_dis[1] ⊗ TFe_dis[1] ⊕ BcCmTFe_dis[1]
@@ -282,12 +257,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     TFe_ads_tran[Ngrid] += BcAmTFe_ads[2] ⊗ TFe_ads[Ngrid] ⊕ BcCmTFe_ads[2]
     @.. dTFe = TFe_dis_tran ⊗ 1 ⊕ TFe_ads_tran ⊗ dstopw
     @.. dTFe += alpha ⊗ (TFe_dis0 - TFe_dis)
-
-    mul!(Lorg_dis_tran, AmLorg_dis, Lorg_dis)
-    Lorg_dis_tran[1] += BcAmLorg_dis[1] ⊗ Lorg_dis[1] ⊕ BcCmLorg_dis[1]
-    Lorg_dis_tran[Ngrid] += BcAmLorg_dis[2] ⊗ Lorg_dis[Ngrid] ⊕ BcCmLorg_dis[2]
-    @.. dLorg = Lorg_dis_tran ⊗ 1
-    @.. dLorg += alpha ⊗ (Lorg_dis0 - Lorg_dis)
 
     #---------------------------------------------------------------------
     #  Reaction code

@@ -121,6 +121,8 @@ mutable struct Reactran{T}
     Omega_RFeS_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RCaCO3_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RBSi_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Omega_RNdnrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
+    Omega_RNdrPO4_pre::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     Omega_RBasalt_dis::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RO2POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     RNO2POC::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -318,6 +320,8 @@ function init(u0::Array{T,1}, Ngrid::Int) where {T}
     Omega_RFeS_pre = PreallocationTools.dualcache(zeros(T, Ngrid))
     Omega_RCaCO3_dis = PreallocationTools.dualcache(zeros(T, Ngrid))
     Omega_RBSi_dis = PreallocationTools.dualcache(zeros(T, Ngrid))
+    Omega_RNdnrPO4_pre = PreallocationTools.dualcache(zeros(T, Ngrid))
+    Omega_RNdrPO4_pre = PreallocationTools.dualcache(zeros(T, Ngrid))
     Omega_RBasalt_dis = PreallocationTools.dualcache(zeros(T, Ngrid))
     RO2POC = PreallocationTools.dualcache(zeros(T, Ngrid))
     RNO2POC = PreallocationTools.dualcache(zeros(T, Ngrid))
@@ -514,6 +518,8 @@ function init(u0::Array{T,1}, Ngrid::Int) where {T}
         Omega_RFeS_pre,
         Omega_RCaCO3_dis,
         Omega_RBSi_dis,
+        Omega_RNdnrPO4_pre,
+        Omega_RNdrPO4_pre,
         Omega_RBasalt_dis,
         RO2POC,
         RNO2POC,

@@ -237,6 +237,7 @@ include(
     KspFeS::T = KspFeS
     KspCaCO3_dis::T = KspCaCO3_dis
     H4SiO4_dis_sat::T = H4SiO4_dis_sat
+    KspNdPO4::T = KspNdPO4
     KspBasalt::T = KspBasalt
     rNC::T = rNC
     rPC::T = rPC
@@ -277,7 +278,6 @@ include(
     DNdMn::T = DNdMn
     DNdFe::T = DNdFe
     kNdPO4_pre::T = kNdPO4_pre
-    KspNdPO4::T = KspNdPO4
     kIllite::T = kIllite
     KspIllite::T = KspIllite
     kBasalt::T = kBasalt

@@ -21,9 +21,9 @@ sw_dens = 1.0287324258804407 # g cm^-3 # seawater density
 # grid parameters
 #----------------------------------------------
 L = 50.0 # cm # model sediment section thickness
-Ngrid = 100 # integer # number of model grid
+Ngrid = 500 # integer # number of model grid
 pgrid = L / 5 # cm # constant in gridtran, attenuation scale
-Nmat = 3200 # integer # Jacobian dimension
+Nmat = 16000 # integer # Jacobian dimension
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
 xᵥ = broadcast(x -> L * (exp(x * pgrid / L) - 1) / (exp(pgrid) - 1), ξ) # cm # non-uniform grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
@@ -83,7 +83,7 @@ Cl = 0.565772678 # mmol cm-3 # seawater Cl
 DTMn_dis = 1.1809021810434676E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTFe_dis = 1.2122535663809046E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTNH4_dis = 3.4531311564520092E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DO2 = 3.9924802457271630E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DO2 = 4.3137518591580283E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DNO3 = 3.4158080786693472E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCH4 = 2.7551413265968421E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DNO2 = 3.5695791591339196E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -101,8 +101,8 @@ DH = 1.8564498889096735E+03 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diff
 DOH = 9.3665996003371845E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHCO3 = 1.9213920442515075E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCO3 = 1.5899631135414575E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DCO2 = 3.1675876329736150E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DH2S = 2.2437079066896450E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DCO2 = 3.4007363037153704E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DH2S = 3.4645489735648920E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHS = 3.5128480809042725E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH3BO3 = 1.9632444183534389E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH4BO4 = 1.7178388660592589E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -113,7 +113,7 @@ DF = 2.3901699012017593E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diff
 # solute mass transfer velocities
 #----------------------------------------------
 delta = 0.05 # cm # thickness of the diffusive boundary layer
-betaO2 = 7.9849604914543261E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaO2 = 8.6275037183160566E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO3 = 6.8316161573386944E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCH4 = 5.5102826531936835E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO2 = 7.1391583182678387E+03 # cm yr^-1 # solute mass transfer velocity across SWI
@@ -129,8 +129,8 @@ betaH = 3.7128997778193465E+04 # cm yr^-1 # solute mass transfer velocity across
 betaOH = 1.8733199200674368E+04 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHCO3 = 3.8427840885030150E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCO3 = 3.1799262270829149E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaCO2 = 6.3351752659472295E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaH2S = 4.4874158133792898E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaCO2 = 6.8014726074307400E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaH2S = 6.9290979471297833E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHS = 7.0256961618085443E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH3BO3 = 3.9264888367068775E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH4BO4 = 3.4356777321185177E+03 # cm yr^-1 # solute mass transfer velocity across SWI
@@ -142,7 +142,7 @@ betaF = 4.7803398024035187E+03 # cm yr^-1 # solute mass transfer velocity across
 #----------------------------------------------
 FPOC0 = 0.31 # mmol cm^-2 yr^-1 # Flux of POC at the  TOP of sediment column
 FMnO20 = 0.005 # mmol cm^-2 yr^-1 # Flux of MnO2 at the  TOP of sediment column
-FFeOOH0 = 0.0235 # mmol cm^-2 yr^-1 # Flux of FeOOH at the  TOP of sediment column
+FFeOOH0 = 0.0242 # mmol cm^-2 yr^-1 # Flux of FeOOH at the  TOP of sediment column
 FFeS0 = 2.22044604925031e-16 # mmol cm^-2 yr^-1 # Flux of FeS at the  TOP of sediment column
 FFeS20 = 0.002 # mmol cm^-2 yr^-1 # Flux of FeS2 at the  TOP of sediment column
 FCaCO30 = 0.055 # mmol cm^-2 yr^-1 # Flux of CaCO3 at the  TOP of sediment column

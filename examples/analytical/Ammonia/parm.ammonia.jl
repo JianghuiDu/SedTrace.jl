@@ -82,18 +82,16 @@ BcTNH4_ads = ((1.0, 0.0, TNH4_ads0), (0.0, 1.0, 0.0)) #  # Boundary condition of
 #----------------------------------------------
 # Boundary transport matrix
 #----------------------------------------------
-BcAmN_org, BcBmN_org, BcCmN_org = fvcf_bc(phis, Ds, us, dx, BcN_org, Ngrid) #  # Boundary transport matrix of N_org
-BcAmTNH4_dis, BcBmTNH4_dis, BcCmTNH4_dis =
-    fvcf_bc(phif, DTNH4_dis, uf, dx, BcTNH4_dis, Ngrid) #  # Boundary transport matrix of TNH4_dis
-BcAmTNH4_ads, BcBmTNH4_ads, BcCmTNH4_ads =
-    fvcf_bc(phis, Ds, us, dx, BcTNH4_ads, Ngrid) #  # Boundary transport matrix of TNH4_ads
+BcAmN_org, BcCmN_org = fvcf_bc(phis, Ds, us, dx, BcN_org, Ngrid) #  # Boundary transport matrix of N_org
+BcAmTNH4_dis, BcCmTNH4_dis = fvcf_bc(phif, DTNH4_dis, uf, dx, BcTNH4_dis, Ngrid) #  # Boundary transport matrix of TNH4_dis
+BcAmTNH4_ads, BcCmTNH4_ads = fvcf_bc(phis, Ds, us, dx, BcTNH4_ads, Ngrid) #  # Boundary transport matrix of TNH4_ads
 
 #----------------------------------------------
 # Interior transport matrix
 #----------------------------------------------
-AmN_org, BmN_org = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of N_org
-AmTNH4_dis, BmTNH4_dis = fvcf(phif, DTNH4_dis, uf, dx, Ngrid) #  # Interior transport matrix of TNH4_dis
-AmTNH4_ads, BmTNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads
+AmN_org = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of N_org
+AmTNH4_dis = fvcf(phif, DTNH4_dis, uf, dx, Ngrid) #  # Interior transport matrix of TNH4_dis
+AmTNH4_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TNH4_ads
 
 #----------------------------------------------
 # Reaction parameters

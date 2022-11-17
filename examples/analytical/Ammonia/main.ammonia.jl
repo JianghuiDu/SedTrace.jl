@@ -1,6 +1,5 @@
 
 using SedTrace
-using JLD2
 
 modeldirectory = (@__DIR__)*"\\"
 modelfile = "model_config.ammonia.xlsx" 
@@ -32,7 +31,7 @@ TestOdeFun(OdeFun,C0,parm)
 TestJacobian(JacPrototype,OdeFun,parm)
 BenchmarkReactran(OdeFun,C0,parm)
 BenchmarkJacobian(JacPrototype,OdeFun,parm)
-BenchmarkPreconditioner(JacPrototype,OdeFun,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
 
 # configure the solver
 solverconfig = SolverConfig(:GMRES, :ILU0, 2)

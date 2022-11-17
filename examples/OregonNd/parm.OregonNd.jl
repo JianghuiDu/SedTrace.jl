@@ -41,7 +41,7 @@ pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sedi
 dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore water volume unit
 
 #----------------------------------------------
-# burial parameters
+# phase velocity parameters
 #----------------------------------------------
 Fsed = 0.01014 # g cm^-2 yr^-1 # total sediment flux
 w_Inf = Fsed / ds_rho / (1 - phi_Inf) # cm yr^-1 # solid sediment burial velocity at infinite depth
@@ -60,7 +60,7 @@ Ds = broadcast(x -> Dbt0 * erfc((x - xbt) / 1) / 2, x) # cm^2 yr^-1 # Bioturbati
 #----------------------------------------------
 Dbir0 = 28.42212793142007 # yr^-1 # bioirrigation constant
 xbir = 2.0 # cm # attentuation scale of bioirrigation
-alpha = broadcast(x -> Dbir0 * exp(-x / xbir), x) # cm^2 yr^-1 # Bioirrigation coefficient
+alpha = broadcast(x -> Dbir0 * exp(-x / xbir), x) # yr^-1 # Bioirrigation coefficient
 
 #----------------------------------------------
 # speciation parameters
@@ -77,7 +77,7 @@ Cl = 0.565772678 # mmol cm^-3 # speciation constant
 #----------------------------------------------
 # solute diffusivity
 #----------------------------------------------
-DO2 = 3.6643881431380163E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DO2 = 4.0267424183436583E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DNO3 = 3.1390297096278300E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTMn_dis = 1.0660970890036131E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DTFe_dis = 1.1027537224364021E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -93,8 +93,8 @@ DH4SiO4 = 1.6311069866893683E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment
 DH3SiO4 = 1.6311069866893683E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHCO3 = 1.7136976129828849E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DCO3 = 1.4442713572518861E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DCO2 = 2.9072831548863599E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
-DH2S = 2.0593255680445054E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DCO2 = 3.1719111361915839E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
+DH2S = 3.1798409506569561E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DHS = 3.3436959129609028E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH3BO3 = 1.8019098720389422E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
 DH4BO4 = 1.5766711380340743E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment diffusion coefficient
@@ -109,7 +109,7 @@ DOH = 8.5800959988348086E+02 ./ (1.0 .- 2log.(phif)) # cm^2 yr^-1 # Sediment dif
 # solute mass transfer velocities
 #----------------------------------------------
 delta = 0.05 # cm # thickness of the diffusive boundary layer
-betaO2 = 7.3287762862760319E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaO2 = 8.0534848366873166E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO3 = 6.2780594192556600E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCH4 = 5.0574613215210629E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaNO2 = 6.6971669281705481E+03 # cm yr^-1 # solute mass transfer velocity across SWI
@@ -120,8 +120,8 @@ betaH4SiO4 = 3.2622139733787367E+03 # cm yr^-1 # solute mass transfer velocity a
 betaH3SiO4 = 3.2622139733787367E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHCO3 = 3.4273952259657699E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaCO3 = 2.8885427145037720E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaCO2 = 5.8145663097727193E+03 # cm yr^-1 # solute mass transfer velocity across SWI
-betaH2S = 4.1186511360890108E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaCO2 = 6.3438222723831677E+03 # cm yr^-1 # solute mass transfer velocity across SWI
+betaH2S = 6.3596819013139120E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaHS = 6.6873918259218053E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH3BO3 = 3.6038197440778845E+03 # cm yr^-1 # solute mass transfer velocity across SWI
 betaH4BO4 = 3.1533422760681483E+03 # cm yr^-1 # solute mass transfer velocity across SWI
