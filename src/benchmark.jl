@@ -34,12 +34,12 @@ function BenchmarkJacobian(JacPrototype,OdeFun,parm)
     BenchmarkTools.@benchmark $jacfun($jac,$u0,$parm,0)
 end
 
-function BenchmarkPreconditioner(JacPrototype,OdeFun,parm,PrecType=:ILU0)
+function BenchmarkPreconditioner(JacPrototype,OdeFun,parm,PrecType)
     jac = similar(JacPrototype)
     jacfun = SedTrace.generate_jacobian(OdeFun,jac,parm)
 
     p_prec = SedTrace.generate_preconditioner(PrecType, JacPrototype)
-    psetup = SedTrace.default_psetup(p_prec, JacPrototype, jacfun)
+    psetup = SedTrace.default_psetup(p_prec, JacPrototype, jacfun,PrecType)
     prec = SedTrace.default_prec(p_prec)
 
     z = rand(size(JacPrototype,1))
