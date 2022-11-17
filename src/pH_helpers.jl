@@ -6,8 +6,8 @@ struct EquilibriumInvariant
     expr::Vector{String} # expression to compute species concentration
     coef::Vector{String} # coefficient of species in TA definition
     dTAdEI::String # expression to compute dTA/dEIs
-    dTAdH::String # expression to compute dTA/dH
-    diss_const::Vector{String} # dissociation constants
+    dTAdH::String # expression to compute this EI’s contribution to dTA/dH
+    diss_const::Vector{String} # acid dissociation constants 
 end
 
 list_summed_species =
