@@ -1,45 +1,40 @@
 module SedTrace
 
 using Reexport
-using SciMLBase,OrdinaryDiffEq
-using Sundials
+using SciMLBase,OrdinaryDiffEq,DiffEqOperators, Sundials,ODEInterfaceDiffEq,LSODA
 using Dierckx
-@reexport using BenchmarkTools
+using Krylov,LinearSolve
+using ILUZero,IncompleteLU,AlgebraicMultigrid,Preconditioners
+Base.eltype(::IncompleteLU.ILUFactorization{Tv,Ti}) where {Tv,Ti} = Tv
+Base.eltype(::AlgebraicMultigrid.Preconditioner) = Float64
 
+using BandedMatrices
+@reexport using DiffEqCallbacks
+@reexport using ForwardDiff
+
+@reexport using BenchmarkTools
 @reexport using SparseDiffTools
 @reexport using FastBroadcast
 @reexport using PreallocationTools
-
 @reexport using SparseArrays
-# @reexport using BandedMatrices
-@reexport import LinearAlgebra:Tridiagonal,mul!,ldiv!
-using ILUZero
+@reexport import LinearAlgebra:Tridiagonal,mul!,ldiv!,I
 
 
-@reexport using Chain
 using DataFrames
 using DataFramesMeta
 @reexport using XLSX
+@reexport using Chain
 import Printf:@sprintf
 import JuliaFormatter:format_file
-# import DataStructures:OrderedDict
+@reexport using SpecialFunctions
 
 @reexport import Plots:plot,contour,plot!,grid,gr,savefig
 @reexport import Plots.PlotMeasures:mm
 @reexport import StatsPlots:@df
 
-# import SymPy:simplify,solve,nsimplify,sympify,symbols
 import SymPy
 
-@reexport using DiffEqCallbacks
-# using DiffEqOperators
-# using Preconditioners
-# using FiniteDiff
-@reexport using ForwardDiff
-@reexport using SpecialFunctions
-
 using Parameters, UnPack, OrderedCollections
-
 using JLD2, Interpolations
 
 # heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
