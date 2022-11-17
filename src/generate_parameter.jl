@@ -118,7 +118,29 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
             "dimensionless",
             "conversion from solid sediment to pore water volume unit",
         ],
-    )
+    )    
+    # push!(
+    #     porosityParam,
+    #     [
+    #         "const",
+    #         "phif0",
+    #         "(x->$phi_fun)(0)",
+    #         "dimensionless",
+    #         "fluid volume fraction at x = 0",
+    #     ],
+    #     promote = true,
+    # )
+    # push!(
+    #     porosityParam,
+    #     [
+    #         "const",
+    #         "phis0",
+    #         "1 - phif0",
+    #         "dimensionless",
+    #         "solid volume fraction at x = 0",
+    #     ],
+    #     promote = true,
+    # )
     subset!(porosityParam, :parameter => x -> x .!= "phi")
 
 
@@ -157,6 +179,26 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
             "solid sediment burial velocity",
         ],
     )
+    # push!(
+    #     burialParam,
+    #     [
+    #         "const",
+    #         "uf0",
+    #         "phi_Inf * w_Inf / phif0",
+    #         "cm yr^-1",
+    #         "pore water burial velocity",
+    #     ],
+    # )
+    # push!(
+    #     burialParam,
+    #     [
+    #         "const",
+    #         "us0",
+    #         "Fsed / ds_rho/ phis0",
+    #         "cm yr^-1",
+    #         "solid sediment burial velocity",
+    #     ],
+    # )
 
 
 
@@ -175,7 +217,18 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
         ],
         promote = true,
     )
-    subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
+    # push!(
+    #     bioturbationParam,
+    #     [
+    #         "const",
+    #         "Ds0",
+    #         "(x->$Dbt_fun)(0)",
+    #         "cm^2 yr^-1",
+    #         "Bioturbation coefficient at x = 0",
+    #     ],
+    #     promote = true,
+    # )
+subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
 
 
 
@@ -577,7 +630,8 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
                 tranBCParam,
                 [
                     "const",
-                    "BcAm$(i.species_name), BcBm$(i.species_name), BcCm$(i.species_name)",
+                    # "BcAm$(i.species_name), BcBm$(i.species_name), BcCm$(i.species_name)",
+                    "BcAm$(i.species_name), BcCm$(i.species_name)",
                     "fvcf_bc(phis,Ds,us,dx,Bc$(i.species_name),Ngrid)",
                     "",
                     "Boundary transport matrix of $(i.species_name)",
@@ -587,7 +641,8 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
                 tranIntParam,
                 [
                     "const",
-                    "Am$(i.species_name), Bm$(i.species_name)",
+                    # "Am$(i.species_name), Bm$(i.species_name)",
+                    "Am$(i.species_name)",
                     "fvcf(phis,Ds,us,dx,Ngrid)",
                     "",
                     "Interior transport matrix of $(i.species_name)",
@@ -598,7 +653,8 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
                 tranBCParam,
                 [
                     "const",
-                    "BcAm$(i.species_name), BcBm$(i.species_name), BcCm$(i.species_name)",
+                    # "BcAm$(i.species_name), BcBm$(i.species_name), BcCm$(i.species_name)",
+                    "BcAm$(i.species_name), BcCm$(i.species_name)",
                     "fvcf_bc(phif,D$(i.species_name),uf,dx,Bc$(i.species_name),Ngrid)",
                     "",
                     "Boundary transport matrix of $(i.species_name)",
@@ -608,7 +664,8 @@ function parameter_code(param_model, substances, adsorption, diffusion,assemble)
                 tranIntParam,
                 [
                     "const",
-                    "Am$(i.species_name), Bm$(i.species_name)",
+                    # "Am$(i.species_name), Bm$(i.species_name)",
+                    "Am$(i.species_name)",
                     "fvcf(phif,D$(i.species_name),uf,dx,Ngrid)",
                     "",
                     "Interior transport matrix of $(i.species_name)",
