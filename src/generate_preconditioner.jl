@@ -1,49 +1,7 @@
-# struct TridiagonalLUCache{T}
-#     LU::Tridiagonal{T,Vector{T}}# L: LU.dl & 1, U: lu.d & lu.du
-#     cache::Array{T,1}
-# end
-
-
-# function factorize!(lu::TridiagonalLUCache, trimat::Tridiagonal)
-#     lu.LU.d[1] = trimat.d[1]
-#     for i = 2:Nmat
-#         dll = trimat.dl[i-1] / lu.LU.d[i-1]
-#         lu.LU.d[i] = trimat.d[i] - dll * trimat.du[i-1]
-#         lu.LU.dl[i-1] = dll
-#     end
-#     lu.LU.du .= trimat.du
-# end
-
-
-
-# function LinearAlgebra.ldiv!(x, A::TridiagonalLUCache, y)
-#     A.cache[1] = y[1]
-#     for i = 2:Nmat
-#         A.cache[i] = y[i] - A.LU.dl[i-1] * A.cache[i-1]
-#     end
-#     x[Nmat] = A.cache[Nmat] / A.LU.d[Nmat]
-#     for i = Nmat-1:-1:1
-#         x[i] = (A.cache[i] - A.LU.du[i] * x[i+1]) / A.LU.d[i]
-#     end
-# end
-
-
-# function sp2tridiag!(trimat, spmat, gamma)
-#     for j = 1:Nmat
-#         if (j + 1 <= Nmat)
-#             trimat.dl[j] = -gamma * spmat[j+1, j]
-#         end
-#         trimat.d[j] = 1 - gamma * spmat[j, j]
-#         if (j >= 2)
-#             trimat.du[j-1] = -gamma * spmat[j-1, j]
-#         end
-#     end
-# end
-
 function J2M!(spmat::SparseMatrixCSC, gamma) #M=I-gamma*J
     rows = rowvals(spmat)
     vals = nonzeros(spmat)
-    Nmat = size(spmat,1)
+    Nmat = size(spmat, 1)
     @inbounds for j = 1:Nmat
         @inbounds for i in nzrange(spmat, j)
             id = rows[i] == j ? 1 : 0
@@ -52,22 +10,41 @@ function J2M!(spmat::SparseMatrixCSC, gamma) #M=I-gamma*J
     end
 end
 
-
-function default_prec(p_prec)
-    return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec, r)
+function generate_preconditioner(PrecType::Symbol, p_sparse::SparseMatrixCSC)
+    if PrecType == :NO
+        return nothing
+    elseif PrecType == :ILU0
+        return ilu0(p_sparse)
+    elseif PrecType == :ILU
+        prectmp = ilu(p_sparse, τ = 0.5)
+        return Ref(prectmp)
+    elseif PrecType == :AMG
+        prectmp = AlgebraicMultigrid.aspreconditioner(
+            AlgebraicMultigrid.ruge_stuben(
+                p_sparse,
+                presmoother = AlgebraicMultigrid.Jacobi(rand(size(p_sparse, 1))),
+                postsmoother = AlgebraicMultigrid.Jacobi(rand(size(p_sparse, 1))),
+            ),
+        )
+        return Ref(prectmp)
+    else
+        throw(
+            error(
+                "Preconditioner of type $PrecType is not allowed! Choose among nothing, ILU, ILU0 or AMD!",
+            ),
+        )
+    end
 end
 
-# function default_psetup(p_prec::TridiagonalLUCache)
-#     return function (p, t, u, du, jok, jcurPtr, gamma)
-#         JacFun(p_sparse, u, p, t)
-#         sp2tridiag!(p_trimat, p_sparse, gamma)
-#         factorize!(p_prec, p_trimat)
-#         jcurPtr[] = false
-#     end
-# end
 
-function default_psetup(p_prec::ILUZero.ILU0Precon,p_sparse::SparseMatrixCSC,JacFun::Function)
-    return function (p, t, u, du, jok, jcurPtr, gamma)
+
+function default_psetup(
+    p_prec::ILUZero.ILU0Precon,
+    p_sparse::SparseMatrixCSC,
+    JacFun::Function,
+    PrecType::Symbol,
+)
+    return function psetuilu0(p, t, u, du, jok, jcurPtr, gamma)
         if jok
             jcurPtr[] = true
             JacFun(p_sparse, u, p, t)
@@ -77,95 +54,164 @@ function default_psetup(p_prec::ILUZero.ILU0Precon,p_sparse::SparseMatrixCSC,Jac
     end
 end
 
-# function default_psetup(p_prec::Preconditioners.AMGPreconditioner)
-#     return function (p, t, u, du, jok, jcurPtr, gamma)
-#         JacFun(p_sparse, u, p, t)
-#         J2M!(p_sparse, gamma)
-#         UpdatePreconditioner!(p_prec, p_sparse)
-#         jcurPtr[] = false
-#     end
+# function default_psetup(
+#     p_prec::Preconditioners.CholeskyPreconditioner,
+#     p_sparse::SparseMatrixCSC,
+#     JacFun::Function,
+#     PrecType::Symbol,
+# )
+#         return function psetupilu(p, t, u, du, jok, jcurPtr, gamma)
+#             if jok
+#                 jcurPtr[] = true
+#                 JacFun(p_sparse, u, p, t)
+#                 J2M!(p_sparse, gamma)
+#                 # p_prec[] = ilu(p_sparse, τ = 0.5)
+#                 Preconditioners.UpdatePreconditioner!(p_prec,p_sparse)
+#             end
+#         end
 # end
 
-function generate_preconditioner(PrecType::Symbol, p_sparse::SparseMatrixCSC)
-    if PrecType == :NO
-        return nothing
-    elseif PrecType == :TRD
-        return TridiagonalLUCache(
-            Tridiagonal(ones(Nmat - 1), ones(Nmat), ones(Nmat - 1)),
-            zeros(Nmat),
-        )
-    elseif PrecType == :ILU0
-        return ilu0(p_sparse)
-    elseif PrecType == :AMD
-        return AMGPreconditioner{RugeStuben}(p_sparse)
-    else
-        throw(
-            error(
-                "Preconditioner of type $PrecType is not allowed! Choose among nothing, TRD, ILU0 or AMD!",
-            ),
-        )
-    end
-end
-
-
-                  
-
-# p_prec_ILU0 = ilu0(p_sparse);
-# prec = default_prec(p_prec_ILU0)
-# psetup = default_psetup(p_prec_ILU0)
-
-# p_sparse = jacptype();
-# p_trimat = Tridiagonal(ones(Nmat - 1), ones(Nmat), ones(Nmat - 1));
-
-
- function SciMLprecSetup(p_sparse::SparseMatrixCSC)
-    return function SciMLPrec(W,du,u,p,t,newW,Plprev,Prprev,solverdata)
-        if newW === nothing 
-        Plprev = ilu0(p_sparse)
-        elseif newW
-        ilu0!(Plprev,convert(AbstractMatrix,W))
+function default_psetup(
+    p_prec::Base.RefValue,
+    p_sparse::SparseMatrixCSC,
+    JacFun::Function,
+    PrecType::Symbol,
+)
+    if PrecType == :AMG
+        return function psetupamg(p, t, u, du, jok, jcurPtr, gamma)
+            if jok
+                jcurPtr[] = true
+                JacFun(p_sparse, u, p, t)
+                J2M!(p_sparse, gamma)
+                p_prec[] = AlgebraicMultigrid.aspreconditioner(
+                    AlgebraicMultigrid.ruge_stuben(
+                        p_sparse,
+                        presmoother = AlgebraicMultigrid.Jacobi(rand(size(p_sparse, 1))),
+                        postsmoother = AlgebraicMultigrid.Jacobi(rand(size(p_sparse, 1))),
+                    ),
+                )
+            end
         end
-        Plprev,nothing
+    elseif PrecType == :ILU
+        return function psetupilu(p, t, u, du, jok, jcurPtr, gamma)
+            if jok
+                jcurPtr[] = true
+                JacFun(p_sparse, u, p, t)
+                J2M!(p_sparse, gamma)
+                p_prec[] = ilu(p_sparse, τ = 0.5)
+            end
+        end
     end
 end
-            
-
-nothing
 
 
-# @benchmark JacFun($p_sparse, $C0, nothing, 0)
-# @benchmark J2M!($p_sparse, 0.1)
-# @benchmark UpdatePreconditioner!(p_prec_AMG, p_sparse)
+function default_prec(p_prec::ILUZero.ILU0Precon)
+    return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec, r)
+end
+function default_prec(p_prec::IncompleteLU.ILUFactorization)
+    return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec, r)
+end
+function default_prec(p_prec_cache::Base.RefValue)
+    return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec_cache[], r)
+end
+
+function generate_preconditioner2(
+    PrecType::Symbol,
+    PrecSide::Int,
+    p_sparse::SparseMatrixCSC,
+)
+    if PrecType == :ILU
+        if PrecSide == 1
+            return function incompletelu1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
+                else
+                    Pl = Plprev
+                end
+                Pl, nothing
+            end
+        elseif PrecSide == 2
+            return function incompletelu2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
+                else
+                    Pl = Prprev
+                end
+                nothing, Pl
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
+    elseif PrecType == :AMG
+        if PrecSide == 1
+            return function algebraicmultigrid1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    A = convert(AbstractMatrix, W)
+                    Pl = AlgebraicMultigrid.aspreconditioner(
+                        AlgebraicMultigrid.ruge_stuben(
+                            A,
+                            presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                            postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                        ),
+                    )
+                else
+                    Pl = Plprev
+                end
+                Pl,nothing
+            end
+        elseif PrecSide == 2
+            return function algebraicmultigrid2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    A = convert(AbstractMatrix, W)
+                    Pl = AlgebraicMultigrid.aspreconditioner(
+                        AlgebraicMultigrid.ruge_stuben(
+                            A,
+                            presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                            postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                        ),
+                    )
+                else
+                    Pl = Prprev
+                end
+                nothing, Pl
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
+
+    elseif PrecType == :ILU0
+        if PrecSide == 1
+            return function ilu0pre1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing
+                    return (ilu0(convert(AbstractMatrix, W)),nothing)
+                elseif newW
+                    ilu0!(Plprev, convert(AbstractMatrix, W))
+                    return (Plprev, nothing)
+                else
+                    return (Plprev, nothing)
+                end
+            end
+        elseif PrecSide == 2
+            return function ilu0pre2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing
+                    return (nothing, ilu0(convert(AbstractMatrix, W)))
+                elseif newW
+                    ilu0!(Prprev, convert(AbstractMatrix, W))
+                    return (nothing, Prprev)
+                else
+                    return (nothing, Prprev)
+                end
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
 
 
-# C0 = C_uni;
-# dC0 = similar(C0);
-# z = ones(Nmat);
-# r = rand(Nmat);
-
-# @benchmark psetup(nothing, 0, $C0, $dC0, false, false, 0.1)
-# @benchmark default_prec($z,$r,nothing,0,$C0,$dC0,0.1,0,1)
-
-# # psp = jacptype()
-# # JacFun(psp,C0,nothing,0)
-# # J2M!(psp,gamma)
-# # p_prec = IncompleteLU.ilu(psp;τ=1e-5)
-# # C0 = C_uni;
-# # dC0 = similar(C0);
-# # z = ones(Nmat);
-# # r = rand(Nmat);
-
-# # @benchmark default_presetup(nothing,0,$C0,$dC0,false,false,0.1)
-# # @benchmark default_prec($z,$r,nothing,0,$C0,$dC0,0.1,0,1)
-
-# pconc = AMGPreconditioner{RugeStuben}(p_sparse)
-# # UpdatePreconditioner!(pconc, p_sparse)
-
-# using ILUZero
-# LU = ilu0(p_sparse)
-# ilu0!(LU, p_sparse)
-
-
-# @benchmark J2M!($p_sparse, 0.1)
-# @benchmark ilu0!($p_prec, $p_sparse)
-# @benchmark UpdatePreconditioner!($p_prec, $p_sparse)
+    end
+end
