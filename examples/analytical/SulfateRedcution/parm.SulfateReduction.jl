@@ -76,14 +76,14 @@ BcSO4 = ((1.0, 0.0, SO40), (1.0, 0.0, SO4L)) #  # Boundary condition of SO4
 #----------------------------------------------
 # Boundary transport matrix
 #----------------------------------------------
-BcAmPOC, BcBmPOC, BcCmPOC = fvcf_bc(phis, Ds, us, dx, BcPOC, Ngrid) #  # Boundary transport matrix of POC
-BcAmSO4, BcBmSO4, BcCmSO4 = fvcf_bc(phif, DSO4, uf, dx, BcSO4, Ngrid) #  # Boundary transport matrix of SO4
+BcAmPOC, BcCmPOC = fvcf_bc(phis, Ds, us, dx, BcPOC, Ngrid) #  # Boundary transport matrix of POC
+BcAmSO4, BcCmSO4 = fvcf_bc(phif, DSO4, uf, dx, BcSO4, Ngrid) #  # Boundary transport matrix of SO4
 
 #----------------------------------------------
 # Interior transport matrix
 #----------------------------------------------
-AmPOC, BmPOC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of POC
-AmSO4, BmSO4 = fvcf(phif, DSO4, uf, dx, Ngrid) #  # Interior transport matrix of SO4
+AmPOC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of POC
+AmSO4 = fvcf(phif, DSO4, uf, dx, Ngrid) #  # Interior transport matrix of SO4
 
 #----------------------------------------------
 # Reaction parameters

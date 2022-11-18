@@ -30,7 +30,7 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 #----------------------------------------------
 # porosity parameters
 #----------------------------------------------
-phi_Inf = 0.8 # dimensionless # porosity at burial depth
+phi_Inf = 0.8 # dimensionless # porosity at infinite depth
 phif = broadcast(x -> 0.8, x) # dimensionless # fluid volume fraction
 phis = 1.0 .- phif # dimensionless # solid volume fraction
 pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit

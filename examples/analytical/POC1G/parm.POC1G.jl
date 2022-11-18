@@ -67,12 +67,12 @@ BcPOC = ((1.0, 0.0, POC0), (0.0, 1.0, 0.0)) #  # Boundary condition of POC
 #----------------------------------------------
 # Boundary transport matrix
 #----------------------------------------------
-BcAmPOC, BcBmPOC, BcCmPOC = fvcf_bc(phis, Ds, us, dx, BcPOC, Ngrid) #  # Boundary transport matrix of POC
+BcAmPOC, BcCmPOC = fvcf_bc(phis, Ds, us, dx, BcPOC, Ngrid) #  # Boundary transport matrix of POC
 
 #----------------------------------------------
 # Interior transport matrix
 #----------------------------------------------
-AmPOC, BmPOC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of POC
+AmPOC = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of POC
 
 #----------------------------------------------
 # Reaction parameters

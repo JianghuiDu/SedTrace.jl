@@ -158,9 +158,9 @@ KH3BO3 = 1.4738876294440457E-09 #  # TH3BO3 1th dissociation constant
 #----------------------------------------------
 # Reaction parameters
 #----------------------------------------------
-a = 10000.0 # cm # missing
-x0 = 0.005 # cm # missing
-kOS = 82.0 # mmol cm^-3yr^-1 # missing
+a = 10000.0 # cm # parameter controlling the narrowness of the interface
+x0 = 0.005 # cm # location of the bacterial mat
+kOS = 82.0 # mmol cm^-3yr^-1 # rate constant of H2S oxidation by O2
 
 #----------------------------------------------
 # Inital values

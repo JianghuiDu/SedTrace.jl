@@ -97,7 +97,7 @@ solutionconfig = SolutionConfig(
     sol,
     (0.0, 1E6),
     reltol = 1e-6,
-    abstol = 1e-18,
+    abstol = 1e-20,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );
@@ -118,4 +118,4 @@ generate_output(
     showplt = true,
 )
 
-jldsave("sol.$modelname.jld2"; sol = solution.sol[end])
+jldsave(modeldirectory*"sol.$modelname.jld2"; sol = solution.sol[end])

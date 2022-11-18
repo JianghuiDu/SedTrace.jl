@@ -1,6 +1,5 @@
 
 using SedTrace
-using JLD2
 
 modeldirectory = (@__DIR__) * "\\"
 modelfile = "model_config.pHBB1991.xlsx"
@@ -39,7 +38,7 @@ TestOdeFun(OdeFun,C0,parm)
 TestJacobian(JacPrototype,OdeFun,parm)
 BenchmarkReactran(OdeFun,C0,parm)
 BenchmarkJacobian(JacPrototype,OdeFun,parm)
-BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
+BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU)
 
 # configure the solver
 
@@ -52,7 +51,7 @@ solutionconfig = SolutionConfig(
     callback = TerminateSteadyState(1e-18, 1e-6, DiffEqCallbacks.allDerivPass),
 );
 
-solverconfig = SolverConfig(:GMRES, :ILU0, 2)
+solverconfig = SolverConfig(:GMRES, :ILU, 2)
 
 solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 

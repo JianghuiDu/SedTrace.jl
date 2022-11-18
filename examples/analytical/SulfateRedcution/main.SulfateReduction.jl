@@ -1,6 +1,5 @@
 
 using SedTrace
-using JLD2
 
 modeldirectory = (@__DIR__)*"\\"
 modelfile = "model_config.SulfateReduction.xlsx" 

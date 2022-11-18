@@ -48,20 +48,20 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 # initialize Jacobian 
 JacPrototype = JacType(Param.IDdict);
 
-# TestOdeFun(OdeFun,C0,parm)
-# TestJacobian(JacPrototype,OdeFun,parm)
-# BenchmarkReactran(OdeFun,C0,parm)
-# BenchmarkJacobian(JacPrototype,OdeFun,parm)
-# BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
+TestOdeFun(OdeFun,C0,parm)
+TestJacobian(JacPrototype,OdeFun,parm)
+BenchmarkReactran(OdeFun,C0,parm)
+BenchmarkJacobian(JacPrototype,OdeFun,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
 
 # configure the solver
 
-# sol = load(modeldirectory*"sol.SBB.jld2","sol");
+sol = load(modeldirectory*"sol.SBB_case1.jld2","sol");
 
 solutionconfig = SolutionConfig(
     # C0,
-    # sol,
-    solution.sol[end],
+    sol,
+    # solution.sol[end],
     (0.0, 1000.0),
     reltol = 1e-6,
     abstol = 1e-18,
@@ -151,54 +151,4 @@ generate_output(
 
 jldsave(modeldirectory*"sol.$modelname.jld2"; sol = solution.sol[end])
 
-
-
-
-
-# TCO2 = SedTrace.EquilibriumInvariant("TCO2")
-# THSO4 = SedTrace.EquilibriumInvariant("THSO4")
-# THF = SedTrace.EquilibriumInvariant("THF")
-# TH3PO4 = SedTrace.EquilibriumInvariant("TH3PO4")
-# TH2S = SedTrace.EquilibriumInvariant("TH2S")
-# TH3BO3 = SedTrace.EquilibriumInvariant("TH3BO3")
-# H = SedTrace.EquilibriumInvariant("H")
-
-# EIs = [TCO2,THSO4,THF,TH3PO4,TH2S,TH3BO3,H]
-# using DataFrames,Chain,DataFramesMeta,SymPy
-# parsing = @chain begin
-#     XLSX.readxlsx(modeldirectory*"model_parsing_diagnostics.SBB.xlsx")
-#     XLSX.gettable(_["species_in_model"])
-#     DataFrame
-# end
-
-# stoic = DataFrame(label = String[],species_eq=String[],stoichiometry=String[],reaction_type=String[],type=String[])
-# for i in EIs
-#     for j in eachindex(i.species)
-#         df = @subset(parsing,:species_eq.==i.species[j])
-#         @select!(df,:label,:species_eq,:stoichiometry,:reaction_type)
-#         df_TA = @transform(df,:stoichiometry = i.coef[j] .*"*(".* :stoichiometry .* ")" )
-#         append!(stoic,@transform(df_TA,:type="TA"))
-#         if i.name != "H"
-#             df_EI = @transform(df,:stoichiometry = "-(".* :stoichiometry .* ")" .* "*dTA_d$(i.name)" )
-#             append!(stoic,@transform(df_EI,:type=i.name))
-#         end
-#     end
-# end
-
-# @transform!(stoic,:stoichiometry = :stoichiometry .* ifelse.(:reaction_type .== "solid","*dstopw",""))
-# pH_rates = @chain begin
-#     groupby(stoic,:label)
-#     combine(:stoichiometry => x->join(x,"+"),renamecols=false)
-#     transform!(:stoichiometry => (x -> string.(SymPy.simplify.(SymPy.sympify.(x)))),renamecols=false)
-# end
-
-
-# XLSX.writetable(
-#     modeldirectory*"pH_rate.xlsx",
-#     overwrite = true,
-#     pH_rate = (
-#         collect(DataFrames.eachcol(pH_rates)),
-#         DataFrames.names(pH_rates),
-#     ),
-# )
 
