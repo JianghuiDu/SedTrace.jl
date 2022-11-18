@@ -1,14 +1,17 @@
 module SedTrace
 
 using Reexport
-using SciMLBase,OrdinaryDiffEq,DiffEqOperators, Sundials,ODEInterfaceDiffEq,LSODA
+using SciMLBase,OrdinaryDiffEq,Sundials
+using DiffEqOperators
+# using ODEInterfaceDiffEq,LSODA
 using Dierckx
-using Krylov,LinearSolve
-using ILUZero,IncompleteLU,AlgebraicMultigrid,Preconditioners
-Base.eltype(::IncompleteLU.ILUFactorization{Tv,Ti}) where {Tv,Ti} = Tv
-Base.eltype(::AlgebraicMultigrid.Preconditioner) = Float64
+# using Krylov,LinearSolve
+using ILUZero,IncompleteLU
+# using AlgebraicMultigrid,Preconditioners
+# Base.eltype(::IncompleteLU.ILUFactorization{Tv,Ti}) where {Tv,Ti} = Tv
+# Base.eltype(::AlgebraicMultigrid.Preconditioner) = Float64
 
-using BandedMatrices
+# using BandedMatrices
 @reexport using DiffEqCallbacks
 @reexport using ForwardDiff
 

@@ -1,14 +1,14 @@
 function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,solutionconfig::SolutionConfig,parm)
 
 
-    if solverconfig.linsolve in [:Band, :LapackBand]
-        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        return CVODE_BDF(
-                linear_solver = solverconfig.linsolve,
-                jac_upper = Upbdwth,
-                jac_lower = Lwbdwth,
-            )
-    end
+    # if solverconfig.linsolve in [:Band, :LapackBand]
+    #     Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+    #     return CVODE_BDF(
+    #             linear_solver = solverconfig.linsolve,
+    #             jac_upper = Upbdwth,
+    #             jac_lower = Lwbdwth,
+    #         )
+    # end
 
     if solverconfig.linsolve == :KLU
         return CVODE_BDF(linear_solver = :KLU)
@@ -31,166 +31,166 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
 
     end
 
-    if solverconfig.linsolve == :FBDF
-        if solverconfig.Precondition == :NO
-            return FBDF(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return FBDF(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
+    # if solverconfig.linsolve == :FBDF
+    #     if solverconfig.Precondition == :NO
+    #         return FBDF(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return FBDF(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
 
-    if solverconfig.linsolve == :ABDF2 
-        if solverconfig.Precondition == :NO
-            return ABDF2(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return ABDF2(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
-
-
-    if solverconfig.linsolve == :QNDF
-        if solverconfig.Precondition == :NO
-            return QNDF(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return QNDF(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
-
-    
-    if solverconfig.linsolve == :QBDF
-        if solverconfig.Precondition == :NO
-            return QBDF(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return QBDF(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
+    # if solverconfig.linsolve == :ABDF2 
+    #     if solverconfig.Precondition == :NO
+    #         return ABDF2(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return ABDF2(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
 
 
-    if solverconfig.linsolve == :KenCarp47
-        if solverconfig.Precondition == :NO
-            return KenCarp47(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return KenCarp47(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
+    # if solverconfig.linsolve == :QNDF
+    #     if solverconfig.Precondition == :NO
+    #         return QNDF(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return QNDF(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
 
     
-    if solverconfig.linsolve == :TRBDF2
-        if solverconfig.Precondition == :NO
-            return TRBDF2(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return TRBDF2(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
+    # if solverconfig.linsolve == :QBDF
+    #     if solverconfig.Precondition == :NO
+    #         return QBDF(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return QBDF(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
 
-    if solverconfig.linsolve == :Rodas5
-        if solverconfig.Precondition == :NO
-            return Rodas5(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return Rodas5(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
 
-    if solverconfig.linsolve == :Rodas4P
-        if solverconfig.Precondition == :NO
-            return Rodas4P(
-                autodiff = true,
-                linsolve=KLUFactorization()
-            )
-        else     
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
-        prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
-        return Rodas4P(
-            autodiff = true,
-            linsolve=KrylovJL_GMRES(),
-            precs=prec,
-            concrete_jac=true,
-        )
-        end
-    end
+    # if solverconfig.linsolve == :KenCarp47
+    #     if solverconfig.Precondition == :NO
+    #         return KenCarp47(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return KenCarp47(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
 
-    if solverconfig.linsolve == :radau
-        Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        return radau(jac_upper=Upbdwth,jac_lower=Lwbdwth)
-    end
+    
+    # if solverconfig.linsolve == :TRBDF2
+    #     if solverconfig.Precondition == :NO
+    #         return TRBDF2(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return TRBDF2(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
+
+    # if solverconfig.linsolve == :Rodas5
+    #     if solverconfig.Precondition == :NO
+    #         return Rodas5(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return Rodas5(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
+
+    # if solverconfig.linsolve == :Rodas4P
+    #     if solverconfig.Precondition == :NO
+    #         return Rodas4P(
+    #             autodiff = true,
+    #             linsolve=KLUFactorization()
+    #         )
+    #     else     
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+    #     JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+    #     prec = generate_preconditioner2(solverconfig.Precondition,solverconfig.PrecSide, JacPrototype)
+    #     return Rodas4P(
+    #         autodiff = true,
+    #         linsolve=KrylovJL_GMRES(),
+    #         precs=prec,
+    #         concrete_jac=true,
+    #     )
+    #     end
+    # end
+
+    # if solverconfig.linsolve == :radau
+    #     Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+    #     return radau(jac_upper=Upbdwth,jac_lower=Lwbdwth)
+    # end
 
 
 end
@@ -210,18 +210,21 @@ colorvec = matrix_colors(JacPrototype)
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR,:BCG]
         # return  ODEFunction{true,true}(OdeFun,colorvec=colorvec,jac_prototype = JacVec(OdeFun, ones(size(JacPrototype,1))))
-        JVP = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0)
+        JVP = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0,autodiff =true)
         JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac  = JacFun)
+        # JVP = JacVec(OdeFun,ones(size(JacPrototype,1)))
+        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac = JacFun)
+        # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun)
+        # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JVP)
 
     end
 
-    if solverconfig.linsolve in [:FBDF,:QNDF,:QBDF,:KenCarp47,:TRBDF2,:Rodas5,:Rodas4P,:ABDF2]
-        JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        # jv = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0)
-        # jvp = (Jv,v,u,p,t)-> mul!(Jv,jv(OdeFun,u,p,t),v)
-        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,jac_prototype=JacPrototype,jac=JacFun)
-    end
+    # if solverconfig.linsolve in [:FBDF,:QNDF,:QBDF,:KenCarp47,:TRBDF2,:Rodas5,:Rodas4P,:ABDF2]
+    #     JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
+    #     # jv = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0)
+    #     # jvp = (Jv,v,u,p,t)-> mul!(Jv,jv(OdeFun,u,p,t),v)
+    #     return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,jac_prototype=JacPrototype,jac=JacFun)
+    # end
 
 end
 
