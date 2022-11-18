@@ -87,7 +87,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
         newdf()
         push!(
             _,
-            ["function", "phi", "", "dimensionless", "porosity as a function of depth"],
+            ["function", "phi", "", "dimensionless", "porosity"],
         )
         push!(_, ["const", "phi_Inf", "", "dimensionless", "porosity at infinite depth"])
         @transform!(:class = "porosity")
@@ -109,7 +109,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                 "Dbt",
                 "",
                 "cm^2/yr",
-                "bioburbation coefficient as a function of depth",
+                "bioturbation coefficient",
             ],
         )
         @transform!(:class = "bioturbation")
@@ -126,7 +126,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                 "Dbir",
                 "",
                 "yr^-1",
-                "bioirrigation coefficient as a function of depth",
+                "bioirrigation coefficient",
             ],
         )
         @transform!(:class = "bioirrigation")
@@ -155,7 +155,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                     "FAge0",
                     "",
                     "cm",
-                    "Flux of age at the  TOP of sediment column",
+                    "Flux of age at the  TOP",
                 ],
             )
         elseif bc_type == "dirichlet"
@@ -168,7 +168,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                     "year",
                     "Age at the " *
                     (top ? "TOP" : "BOTTOM") *
-                    " of sediment column",
+                    "",
                 ],
             )
         end
@@ -183,7 +183,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                         "F" * substance * "0",
                         "",
                         "mmol cm^-2 yr^-1",
-                        "Flux of " * substance * " at the  TOP of sediment column",
+                        "Flux of " * substance * " at the  TOP",
                     ],
                 )
             elseif substance_type in ["dissolved", "dissolved_pH"]
@@ -210,7 +210,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
                     (substance == "H" ? "pH" : "Concentration of " * substance) *
                     " at the " *
                     (top ? "TOP" : "BOTTOM") *
-                    " of sediment column",
+                    "",
                 ],
             )
         end
