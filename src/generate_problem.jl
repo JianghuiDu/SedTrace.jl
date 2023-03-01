@@ -210,10 +210,12 @@ colorvec = matrix_colors(JacPrototype)
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR,:BCG]
         # return  ODEFunction{true,true}(OdeFun,colorvec=colorvec,jac_prototype = JacVec(OdeFun, ones(size(JacPrototype,1))))
-        JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        # JVP = JacVec(OdeFun,ones(size(JacPrototype,1)))
-        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac = JacFun)
+        # JVP = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0,autodiff =true)
+        # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
         JVP = JacVec(OdeFun,ones(size(JacPrototype,1)))
+        # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac = JacFun)
+        # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JacPrototype,jac = JacFun)
+        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP)
         # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun)
         # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JVP)
 
