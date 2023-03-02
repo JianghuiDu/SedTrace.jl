@@ -1,5 +1,5 @@
 # SedTrace
-*A Julia code generator for diagenetic models.*
+*A Julia code generator for marine sediment diagenetic models.*
 
 | **Documentation**                            | **Build Status**                                                                                |
 |:----------------------------------------:|:-----------------------:|
@@ -25,4 +25,5 @@ pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 ## Project Status
 
 The manuscript describing this package is under review at [<strong><em>Geoscientific Model Development</em></strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
+
 The released versions that can be cited (doi:10.5281/zenodo.7225861) is available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7335341#.ZACjRybMKPo).
