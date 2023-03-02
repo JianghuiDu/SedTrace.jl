@@ -2,19 +2,43 @@ using SedTrace
 using Test
 
 @testset "SedTrace.jl" begin
-    modeldirectory = (@__DIR__)*"\\"
-    modelfile = "model_config.ammonia.xlsx" 
-    modelname = "ammonia"
+    modeldirectory = (@__DIR__)*"/POC1G/"
+    modelfile = "model_config.POC1G.xlsx" 
+    modelname = "POC1G"
     
     modelconfig = ModelConfig(
         modeldirectory,
         modelfile,
         modelname,
     )
+    if isfile(modeldirectory*"model_parameter_template.POC1G.xlsx")
+        rm(modeldirectory*"model_parameter_template.POC1G.xlsx",force=true)
+    end
+    if isfile(modeldirectory*"model_parsing_diagnostics.POC1G.xlsx")
+        rm(modeldirectory*"model_parsing_diagnostics.POC1G.xlsx",force=true)
+    end
+    if isfile(modeldirectory*"model_output.POC1G.xlsx")
+        rm(modeldirectory*"model_output.POC1G.xlsx",force=true)
+    end
+    if isfile(modeldirectory*"parm.POC1G.jl")
+        rm(modeldirectory*"parm.POC1G.jl",force=true)
+    end
+    if isfile(modeldirectory*"parm.struct.POC1G.jl")
+        rm(modeldirectory*"parm.struct.POC1G.jl",force=true)
+    end
+    if isfile(modeldirectory*"cache.POC1G.jl")
+        rm(modeldirectory*"cache.POC1G.jl",force=true)
+    end
+    if isfile(modeldirectory*"jactype.POC1G.jl")
+        rm(modeldirectory*"jactype.POC1G.jl",force=true)
+    end
+    if isfile(modeldirectory*"reactran.POC1G.jl")
+        rm(modeldirectory*"reactran.POC1G.jl",force=true)
+    end
+
+    generate_parameter_template(modelconfig)
     
-    @time generate_parameter_template(modelconfig)
-    
-    @time generate_code(modelconfig)
+    generate_code(modelconfig)
     
     IncludeFiles(modelconfig)
     
@@ -52,13 +76,13 @@ using Test
     
     solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
     
-    gr(; size = (400, 800))
+    # gr(; size = (400, 800))
     
     generate_output(
         modelconfig,
         solution,
         site = "analytical",
-        showplt = true,
+        showplt = false,
     )
     
 end
