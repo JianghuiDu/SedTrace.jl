@@ -12,7 +12,7 @@
 
 ## Installation
 
-SedTrace is not registered with the Julia package manager. You need to install it directly from the GitHub repository. Your Julia version should be 1.8 or above. From the Julia REPL, type ] to enter the Pkg REPL mode and run
+SedTrace is not registered with the Julia package manager. You need to install it directly from the GitHub repository. Your Julia version should be 1.8 or above. From the Julia REPL, type `]` to enter the Pkg REPL mode and run
 
 ```
 pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
