@@ -24,6 +24,6 @@ pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 
 ## Project Status
 
-The manuscript describing this package is under review at [<strong><em>Geoscientific Model Development</em></strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
+The manuscript describing this package is under review at [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
 
 The released versions with a citation link is available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7335341#.ZACjRybMKPo).
