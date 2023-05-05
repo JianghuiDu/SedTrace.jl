@@ -1,5 +1,5 @@
 # SedTrace
-*A Julia code generator for diagenetic models.*
+*A Julia code generator for marine sediment diagenetic models.*
 
 | **Documentation**                            | **Build Status**                                                                                |
 |:----------------------------------------:|:-----------------------:|
@@ -12,17 +12,10 @@
 
 ## Installation
 
-The package can be installed with the Julia package manager.
-From the Julia REPL, type `]` to enter the Pkg REPL mode and run:
+SedTrace is not registered with the Julia package manager. You need to install it directly from the GitHub repository. Your Julia version should be 1.8 or above. From the Julia REPL, type `]` to enter the Pkg REPL mode and run
 
 ```
-pkg> add SedTrace
-```
-
-Or, equivalently, via the `Pkg` API:
-
-```julia
-julia> import Pkg; Pkg.add("SedTrace")
+pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 ```
 
 ## Documentation
@@ -31,4 +24,6 @@ julia> import Pkg; Pkg.add("SedTrace")
 
 ## Project Status
 
-The package is still a work in progress.
+The manuscript describing this package is under review at [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
+
+The released versions with citable doi links are available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7225861).
