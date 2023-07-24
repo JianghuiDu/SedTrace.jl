@@ -50,7 +50,7 @@ addprocs(8)
     end
 end
 
-SAL = 0:0.5:40
+SAL = 0:0.5:37
 TEM = 0:0.5:40
 PRE = 0:75:6000
 
@@ -90,3 +90,7 @@ end
 
 K_diss = (KH2O,KH3BO3,KCO2,KHCO3,KHF,KHSO4,KH2S,KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4);
 jldsave("dissociation_constants.jld2";K_diss)
+using DelimitedFiles
+open("dissociation_constants.txt", "w") do io
+    writedlm(io, K_diss)
+end
