@@ -1,6 +1,6 @@
 module Cache
 using PreallocationTools, ForwardDiff
-mutable struct Reactran{T}
+struct Reactran{T}
     NH4_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TNH4_ads_nsf::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     TNH4_ads::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -13,15 +13,15 @@ mutable struct Reactran{T}
 end
 
 function init(u0::Array{T,1}, Ngrid::Int) where {T}
-    NH4_ads = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TNH4_ads_nsf = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TNH4_ads = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TNH4_dis = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TNH4_dis_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TNH4_ads_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    Rremin = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_N_org = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_TNH4 = PreallocationTools.dualcache(zeros(T, Ngrid))
+    NH4_ads = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TNH4_ads_nsf = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TNH4_ads = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TNH4_dis = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TNH4_dis_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TNH4_ads_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    Rremin = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_N_org = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_TNH4 = PreallocationTools.DiffCache(zeros(T, Ngrid))
 
     cache = Reactran(
         NH4_ads,

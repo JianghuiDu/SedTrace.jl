@@ -16,19 +16,19 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     SMohID,
     LMolID,
     LMohID,
-    TMnID,
-    TFeID,
-    TNH4ID,
     O2ID,
     NO3ID,
     CH4ID,
     NO2ID,
     CaID,
+    H4SiO4ID,
+    TMnID,
+    TFeID,
+    TNH4ID,
     MolID,
     MohID,
     TH3PO4ID,
     THSO4ID,
-    H4SiO4ID,
     HID,
     TCO2ID,
     TH2SID,
@@ -267,35 +267,29 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
-    Mn = PreallocationTools.get_tmp(f.Mn, C)
     TMn_dis = PreallocationTools.get_tmp(f.TMn_dis, C)
+    Mn = PreallocationTools.get_tmp(f.Mn, C)
     Mn_ads = PreallocationTools.get_tmp(f.Mn_ads, C)
     TMn_ads_nsf = PreallocationTools.get_tmp(f.TMn_ads_nsf, C)
     TMn_ads = PreallocationTools.get_tmp(f.TMn_ads, C)
-    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     TFe_dis = PreallocationTools.get_tmp(f.TFe_dis, C)
-    FeCl_aq = PreallocationTools.get_tmp(f.FeCl_aq, C)
-    FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
-    FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
-    Fe_CO3_OH_aq = PreallocationTools.get_tmp(f.Fe_CO3_OH_aq, C)
-    FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
-    FeS_aq = PreallocationTools.get_tmp(f.FeS_aq, C)
+    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     Fe_ads = PreallocationTools.get_tmp(f.Fe_ads, C)
     TFe_ads_nsf = PreallocationTools.get_tmp(f.TFe_ads_nsf, C)
     TFe_ads = PreallocationTools.get_tmp(f.TFe_ads, C)
-    NH4 = PreallocationTools.get_tmp(f.NH4, C)
     TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
+    NH4 = PreallocationTools.get_tmp(f.NH4, C)
     NH4_ads = PreallocationTools.get_tmp(f.NH4_ads, C)
     TNH4_ads_nsf = PreallocationTools.get_tmp(f.TNH4_ads_nsf, C)
     TNH4_ads = PreallocationTools.get_tmp(f.TNH4_ads, C)
-    MolO4_aq = PreallocationTools.get_tmp(f.MolO4_aq, C)
     Mol_dis = PreallocationTools.get_tmp(f.Mol_dis, C)
+    MolO4_aq = PreallocationTools.get_tmp(f.MolO4_aq, C)
     MolO3S_aq = PreallocationTools.get_tmp(f.MolO3S_aq, C)
     MolO2S2_aq = PreallocationTools.get_tmp(f.MolO2S2_aq, C)
     MolOS3_aq = PreallocationTools.get_tmp(f.MolOS3_aq, C)
     MolS4_aq = PreallocationTools.get_tmp(f.MolS4_aq, C)
-    MohO4_aq = PreallocationTools.get_tmp(f.MohO4_aq, C)
     Moh_dis = PreallocationTools.get_tmp(f.Moh_dis, C)
+    MohO4_aq = PreallocationTools.get_tmp(f.MohO4_aq, C)
     MohO3S_aq = PreallocationTools.get_tmp(f.MohO3S_aq, C)
     MohO2S2_aq = PreallocationTools.get_tmp(f.MohO2S2_aq, C)
     MohOS3_aq = PreallocationTools.get_tmp(f.MohOS3_aq, C)
@@ -446,19 +440,19 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     SMoh = @view C[SMohID]
     LMol = @view C[LMolID]
     LMoh = @view C[LMohID]
-    TMn = @view C[TMnID]
-    TFe = @view C[TFeID]
-    TNH4 = @view C[TNH4ID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
     CH4 = @view C[CH4ID]
     NO2 = @view C[NO2ID]
     Ca = @view C[CaID]
+    H4SiO4 = @view C[H4SiO4ID]
+    TMn = @view C[TMnID]
+    TFe = @view C[TFeID]
+    TNH4 = @view C[TNH4ID]
     Mol = @view C[MolID]
     Moh = @view C[MohID]
     TH3PO4 = @view C[TH3PO4ID]
     THSO4 = @view C[THSO4ID]
-    H4SiO4 = @view C[H4SiO4ID]
     H = @view C[HID]
     TCO2 = @view C[TCO2ID]
     TH2S = @view C[TH2SID]
@@ -478,19 +472,19 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dSMoh = @view dC[SMohID]
     dLMol = @view dC[LMolID]
     dLMoh = @view dC[LMohID]
-    dTMn = @view dC[TMnID]
-    dTFe = @view dC[TFeID]
-    dTNH4 = @view dC[TNH4ID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
     dCH4 = @view dC[CH4ID]
     dNO2 = @view dC[NO2ID]
     dCa = @view dC[CaID]
+    dH4SiO4 = @view dC[H4SiO4ID]
+    dTMn = @view dC[TMnID]
+    dTFe = @view dC[TFeID]
+    dTNH4 = @view dC[TNH4ID]
     dMol = @view dC[MolID]
     dMoh = @view dC[MohID]
     dTH3PO4 = @view dC[TH3PO4ID]
     dTHSO4 = @view dC[THSO4ID]
-    dH4SiO4 = @view dC[H4SiO4ID]
     dH = @view dC[HID]
     dTCO2 = @view dC[TCO2ID]
     dTH2S = @view dC[TH2SID]
@@ -723,6 +717,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Concentrations of adsorbed/dissolved species
     @.. TMn_dis = TMn / (KMn_ads ⊗ dstopw ⊕ 1)
+    @.. Mn = TMn_dis
     @.. Mn_ads = KMn_ads ⊗ TMn_dis
     @.. TMn_ads_nsf = Mn_ads
     @.. TMn_ads = Mn_ads
@@ -734,52 +729,11 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
             1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
             7.943282347242806e-12 ⊗ HS
         )
-    @.. FeCl_aq =
-        9.549925860214353e-10 ⊗ Cl ⊗ H ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
-    @.. FeSO4_aq =
-        1.148153621496882e-8 ⊗ H ⊗ SO4 ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
-    @.. FeCO3_aq =
-        5.623413251903486e-6 ⊗ CO3 ⊗ H ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
-    @.. Fe_CO3_OH_aq =
-        1.0 ⊗ CO3 ⊗ H ⊗ OH ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
-    @.. FeHS_aq =
-        0.0003162277660168379 ⊗ H ⊗ HS ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
-    @.. FeS_aq =
-        7.943282347242806e-12 ⊗ HS ⊗ TFe_dis / (
-            1.0 ⊗ CO3 ⊗ H ⊗ OH ⊕ 5.623413251903486e-6 ⊗ CO3 ⊗ H ⊕
-            9.549925860214353e-10 ⊗ Cl ⊗ H ⊕ 0.0003162277660168379 ⊗ H ⊗ HS ⊕
-            1.148153621496882e-8 ⊗ H ⊗ SO4 ⊕ 1.258925411794166e-9 ⊗ H ⊕
-            7.943282347242806e-12 ⊗ HS
-        )
     @.. Fe_ads = KFe_ads ⊗ TFe_dis
     @.. TFe_ads_nsf = Fe_ads
     @.. TFe_ads = Fe_ads
     @.. TNH4_dis = TNH4 / (KNH4_ads ⊗ dstopw ⊕ 1)
+    @.. NH4 = TNH4_dis
     @.. NH4_ads = KNH4_ads ⊗ TNH4_dis
     @.. TNH4_ads_nsf = NH4_ads
     @.. TNH4_ads = NH4_ads
@@ -1080,19 +1034,19 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dBSi += S_BSi
     @.. dSMol += S_SMol
     @.. dSMoh += S_SMoh
-    @.. dTMn += S_TMn
-    @.. dTFe += S_TFe
-    @.. dTNH4 += S_TNH4
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
+    @.. dH4SiO4 += S_H4SiO4
+    @.. dTMn += S_TMn
+    @.. dTFe += S_TFe
+    @.. dTNH4 += S_TNH4
     @.. dMol += S_Mol
     @.. dMoh += S_Moh
     @.. dTH3PO4 += S_TH3PO4
     @.. dTHSO4 += S_THSO4
-    @.. dH4SiO4 += S_H4SiO4
     @.. dH += S_H
     @.. dTCO2 += S_TCO2
     @.. dTH2S += S_TH2S

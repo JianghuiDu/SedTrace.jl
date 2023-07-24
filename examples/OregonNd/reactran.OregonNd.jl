@@ -20,14 +20,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     BasaltID,
     O2ID,
     NO3ID,
-    TMnID,
-    TFeID,
     CH4ID,
     NO2ID,
     CaID,
+    SO4ID,
+    TMnID,
+    TFeID,
     AlID,
     TNH4ID,
-    SO4ID,
     TNdnrID,
     TNdrID,
     TH4SiO4ID,
@@ -278,70 +278,36 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
-    Mn_aq = PreallocationTools.get_tmp(f.Mn_aq, C)
     TMn_dis = PreallocationTools.get_tmp(f.TMn_dis, C)
-    Mn_OH_aq = PreallocationTools.get_tmp(f.Mn_OH_aq, C)
-    Mn_OH_2_aq = PreallocationTools.get_tmp(f.Mn_OH_2_aq, C)
-    MnHCO3_aq = PreallocationTools.get_tmp(f.MnHCO3_aq, C)
-    MnCO3_aq = PreallocationTools.get_tmp(f.MnCO3_aq, C)
-    MnSO4_aq = PreallocationTools.get_tmp(f.MnSO4_aq, C)
-    MnCl_aq = PreallocationTools.get_tmp(f.MnCl_aq, C)
+    Mn_aq = PreallocationTools.get_tmp(f.Mn_aq, C)
     Mn_ads_Mn = PreallocationTools.get_tmp(f.Mn_ads_Mn, C)
     Mn_ads_Fe = PreallocationTools.get_tmp(f.Mn_ads_Fe, C)
     TMn_ads_MnO2 = PreallocationTools.get_tmp(f.TMn_ads_MnO2, C)
     TMn_ads_FeOOH = PreallocationTools.get_tmp(f.TMn_ads_FeOOH, C)
     TMn_ads = PreallocationTools.get_tmp(f.TMn_ads, C)
-    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     TFe_dis = PreallocationTools.get_tmp(f.TFe_dis, C)
-    Fe_OH_aq = PreallocationTools.get_tmp(f.Fe_OH_aq, C)
-    Fe_OH_2_aq = PreallocationTools.get_tmp(f.Fe_OH_2_aq, C)
-    FeHCO3_aq = PreallocationTools.get_tmp(f.FeHCO3_aq, C)
-    FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
-    Fe_CO3_2_aq = PreallocationTools.get_tmp(f.Fe_CO3_2_aq, C)
-    FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
-    FeCl_aq = PreallocationTools.get_tmp(f.FeCl_aq, C)
-    FeS_aq = PreallocationTools.get_tmp(f.FeS_aq, C)
+    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     Fe_ads_Mn = PreallocationTools.get_tmp(f.Fe_ads_Mn, C)
     Fe_ads_Fe = PreallocationTools.get_tmp(f.Fe_ads_Fe, C)
     TFe_ads_MnO2 = PreallocationTools.get_tmp(f.TFe_ads_MnO2, C)
     TFe_ads_FeOOH = PreallocationTools.get_tmp(f.TFe_ads_FeOOH, C)
     TFe_ads = PreallocationTools.get_tmp(f.TFe_ads, C)
-    Al_aq = PreallocationTools.get_tmp(f.Al_aq, C)
     Al_dis = PreallocationTools.get_tmp(f.Al_dis, C)
-    Al_OH_aq = PreallocationTools.get_tmp(f.Al_OH_aq, C)
-    Al_OH_2_aq = PreallocationTools.get_tmp(f.Al_OH_2_aq, C)
-    Al_OH_3_aq = PreallocationTools.get_tmp(f.Al_OH_3_aq, C)
-    Al_OH_4_aq = PreallocationTools.get_tmp(f.Al_OH_4_aq, C)
-    NH4 = PreallocationTools.get_tmp(f.NH4, C)
+    Al_aq = PreallocationTools.get_tmp(f.Al_aq, C)
     TNH4_dis = PreallocationTools.get_tmp(f.TNH4_dis, C)
+    NH4 = PreallocationTools.get_tmp(f.NH4, C)
     NH4_ads = PreallocationTools.get_tmp(f.NH4_ads, C)
     TNH4_ads_nsf = PreallocationTools.get_tmp(f.TNH4_ads_nsf, C)
     TNH4_ads = PreallocationTools.get_tmp(f.TNH4_ads, C)
-    Ndnr_aq = PreallocationTools.get_tmp(f.Ndnr_aq, C)
     TNdnr_dis = PreallocationTools.get_tmp(f.TNdnr_dis, C)
-    NdnrCO3_aq = PreallocationTools.get_tmp(f.NdnrCO3_aq, C)
-    Ndnr_CO3_2_aq = PreallocationTools.get_tmp(f.Ndnr_CO3_2_aq, C)
-    NdnrHCO3_aq = PreallocationTools.get_tmp(f.NdnrHCO3_aq, C)
-    NdnrCl_aq = PreallocationTools.get_tmp(f.NdnrCl_aq, C)
-    NdnrSO4_aq = PreallocationTools.get_tmp(f.NdnrSO4_aq, C)
-    NdnrOH_aq = PreallocationTools.get_tmp(f.NdnrOH_aq, C)
-    NdnrH3SiO4_aq = PreallocationTools.get_tmp(f.NdnrH3SiO4_aq, C)
-    Ndnr_H3SiO4_2_aq = PreallocationTools.get_tmp(f.Ndnr_H3SiO4_2_aq, C)
+    Ndnr_aq = PreallocationTools.get_tmp(f.Ndnr_aq, C)
     Ndnr_ads_Mn = PreallocationTools.get_tmp(f.Ndnr_ads_Mn, C)
     Ndnr_ads_Fe = PreallocationTools.get_tmp(f.Ndnr_ads_Fe, C)
     TNdnr_ads_MnO2 = PreallocationTools.get_tmp(f.TNdnr_ads_MnO2, C)
     TNdnr_ads_FeOOH = PreallocationTools.get_tmp(f.TNdnr_ads_FeOOH, C)
     TNdnr_ads = PreallocationTools.get_tmp(f.TNdnr_ads, C)
-    Ndr_aq = PreallocationTools.get_tmp(f.Ndr_aq, C)
     TNdr_dis = PreallocationTools.get_tmp(f.TNdr_dis, C)
-    NdrCO3_aq = PreallocationTools.get_tmp(f.NdrCO3_aq, C)
-    Ndr_CO3_2_aq = PreallocationTools.get_tmp(f.Ndr_CO3_2_aq, C)
-    NdrHCO3_aq = PreallocationTools.get_tmp(f.NdrHCO3_aq, C)
-    NdrCl_aq = PreallocationTools.get_tmp(f.NdrCl_aq, C)
-    NdrSO4_aq = PreallocationTools.get_tmp(f.NdrSO4_aq, C)
-    NdrOH_aq = PreallocationTools.get_tmp(f.NdrOH_aq, C)
-    NdrH3SiO4_aq = PreallocationTools.get_tmp(f.NdrH3SiO4_aq, C)
-    Ndr_H3SiO4_2_aq = PreallocationTools.get_tmp(f.Ndr_H3SiO4_2_aq, C)
+    Ndr_aq = PreallocationTools.get_tmp(f.Ndr_aq, C)
     Ndr_ads_Mn = PreallocationTools.get_tmp(f.Ndr_ads_Mn, C)
     Ndr_ads_Fe = PreallocationTools.get_tmp(f.Ndr_ads_Fe, C)
     TNdr_ads_MnO2 = PreallocationTools.get_tmp(f.TNdr_ads_MnO2, C)
@@ -494,14 +460,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     Basalt = @view C[BasaltID]
     O2 = @view C[O2ID]
     NO3 = @view C[NO3ID]
-    TMn = @view C[TMnID]
-    TFe = @view C[TFeID]
     CH4 = @view C[CH4ID]
     NO2 = @view C[NO2ID]
     Ca = @view C[CaID]
+    SO4 = @view C[SO4ID]
+    TMn = @view C[TMnID]
+    TFe = @view C[TFeID]
     Al = @view C[AlID]
     TNH4 = @view C[TNH4ID]
-    SO4 = @view C[SO4ID]
     TNdnr = @view C[TNdnrID]
     TNdr = @view C[TNdrID]
     TH4SiO4 = @view C[TH4SiO4ID]
@@ -528,14 +494,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     dBasalt = @view dC[BasaltID]
     dO2 = @view dC[O2ID]
     dNO3 = @view dC[NO3ID]
-    dTMn = @view dC[TMnID]
-    dTFe = @view dC[TFeID]
     dCH4 = @view dC[CH4ID]
     dNO2 = @view dC[NO2ID]
     dCa = @view dC[CaID]
+    dSO4 = @view dC[SO4ID]
+    dTMn = @view dC[TMnID]
+    dTFe = @view dC[TFeID]
     dAl = @view dC[AlID]
     dTNH4 = @view dC[TNH4ID]
-    dSO4 = @view dC[SO4ID]
     dTNdnr = @view dC[TNdnrID]
     dTNdr = @view dC[TNdrID]
     dTH4SiO4 = @view dC[TH4SiO4ID]
@@ -774,48 +740,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
             0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
             0.00016127682873042885
         )
-    @.. Mn_OH_aq =
-        0.038706772674900833 ⊗ OH ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
-    @.. Mn_OH_2_aq =
-        1.0 ⊗ OH^2 ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
-    @.. MnHCO3_aq =
-        0.0003606081355498782 ⊗ HCO3 ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
-    @.. MnCO3_aq =
-        0.0067789448502993896 ⊗ CO3 ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
-    @.. MnSO4_aq =
-        0.0011040350157855885 ⊗ SO4 ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
-    @.. MnCl_aq =
-        9.4394261241973181e-5 ⊗ Cl ⊗ TMn_dis / (
-            0.0067789448502993896 ⊗ CO3 ⊕ 9.4394261241973181e-5 ⊗ Cl ⊕
-            0.0003606081355498782 ⊗ HCO3 ⊕ 1.0 ⊗ OH^2 ⊕
-            0.038706772674900833 ⊗ OH ⊕ 0.0011040350157855885 ⊗ SO4 ⊕
-            0.00016127682873042885
-        )
     @.. Mn_ads_Mn = KMn_ads_Mn ⊗ MnO2 ⊗ TMn_dis
     @.. Mn_ads_Fe = KMn_ads_Fe ⊗ FeOOH ⊗ TMn_dis
     @.. TMn_ads_MnO2 = Mn_ads_Mn
@@ -825,70 +749,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         TFe / (FeOOH ⊗ KFe_ads_Fe ⊗ dstopw ⊕ KFe_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
     @.. Fe_aq =
         2.0879303289311948e-6 ⊗ H ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. Fe_OH_aq =
-        0.0099403195550670743 ⊗ H ⊗ OH ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. Fe_OH_2_aq =
-        1.0 ⊗ H ⊗ OH^2 ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. FeHCO3_aq =
-        7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. FeCO3_aq =
-        0.0020160662890120839 ⊗ CO3 ⊗ H ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. Fe_CO3_2_aq =
-        0.08648903884153634 ⊗ CO3^2 ⊗ H ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. FeSO4_aq =
-        1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. FeCl_aq =
-        1.142466716617443e-6 ⊗ Cl ⊗ H ⊗ TFe_dis / (
-            0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
-            1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
-            1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
-            1.3673535186149135e-5 ⊗ H ⊗ SO4 ⊕ 2.0879303289311948e-6 ⊗ H ⊕
-            3.1365432229402516e-9 ⊗ HS
-        )
-    @.. FeS_aq =
-        3.1365432229402516e-9 ⊗ HS ⊗ TFe_dis / (
             0.08648903884153634 ⊗ CO3^2 ⊗ H ⊕ 0.0020160662890120839 ⊗ CO3 ⊗ H ⊕
             1.142466716617443e-6 ⊗ Cl ⊗ H ⊕ 7.9420658795994663e-6 ⊗ H ⊗ HCO3 ⊕
             1.0 ⊗ H ⊗ OH^2 ⊕ 0.0099403195550670743 ⊗ H ⊗ OH ⊕
@@ -907,31 +767,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
             1.818545012275907e-13 ⊗ H^2 ⊕ 5.913794075678346e-19 ⊗ H ⊕
             1.4102686989672256e-26
         )
-    @.. Al_OH_aq =
-        2.3656029049664013e-6 ⊗ Al_dis ⊗ H^3 / (
-            1.0 ⊗ H^4 ⊕ 2.3656029049664013e-6 ⊗ H^3 ⊕
-            1.818545012275907e-13 ⊗ H^2 ⊕ 5.913794075678346e-19 ⊗ H ⊕
-            1.4102686989672256e-26
-        )
-    @.. Al_OH_2_aq =
-        1.818545012275907e-13 ⊗ Al_dis ⊗ H^2 / (
-            1.0 ⊗ H^4 ⊕ 2.3656029049664013e-6 ⊗ H^3 ⊕
-            1.818545012275907e-13 ⊗ H^2 ⊕ 5.913794075678346e-19 ⊗ H ⊕
-            1.4102686989672256e-26
-        )
-    @.. Al_OH_3_aq =
-        5.913794075678346e-19 ⊗ Al_dis ⊗ H / (
-            1.0 ⊗ H^4 ⊕ 2.3656029049664013e-6 ⊗ H^3 ⊕
-            1.818545012275907e-13 ⊗ H^2 ⊕ 5.913794075678346e-19 ⊗ H ⊕
-            1.4102686989672256e-26
-        )
-    @.. Al_OH_4_aq =
-        1.4102686989672256e-26 ⊗ Al_dis / (
-            1.0 ⊗ H^4 ⊕ 2.3656029049664013e-6 ⊗ H^3 ⊕
-            1.818545012275907e-13 ⊗ H^2 ⊕ 5.913794075678346e-19 ⊗ H ⊕
-            1.4102686989672256e-26
-        )
     @.. TNH4_dis = TNH4 / (KNH4_ads ⊗ dstopw ⊕ 1)
+    @.. NH4 = TNH4_dis
     @.. NH4_ads = KNH4_ads ⊗ TNH4_dis
     @.. TNH4_ads_nsf = NH4_ads
     @.. TNH4_ads = NH4_ads
@@ -939,78 +776,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         TNdnr / (FeOOH ⊗ KNd_ads_Fe ⊗ dstopw ⊕ KNd_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
     @.. Ndnr_aq =
         1.5848931924611108e-11 ⊗ H ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrCO3_aq =
-        4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. Ndnr_CO3_2_aq =
-        0.057570705746633922 ⊗ CO3^2 ⊗ H ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrHCO3_aq =
-        1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrCl_aq =
-        5.440449431261466e-12 ⊗ Cl ⊗ H ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrSO4_aq =
-        8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrOH_aq =
-        1.5261884035337975e-20 ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdnrH3SiO4_aq =
-        2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. Ndnr_H3SiO4_2_aq =
-        1.0 ⊗ H ⊗ H3SiO4^2 ⊗ TNdnr_dis / (
             0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
             5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
             2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
@@ -1027,78 +792,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
         TNdr / (FeOOH ⊗ KNd_ads_Fe ⊗ dstopw ⊕ KNd_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
     @.. Ndr_aq =
         1.5848931924611108e-11 ⊗ H ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrCO3_aq =
-        4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. Ndr_CO3_2_aq =
-        0.057570705746633922 ⊗ CO3^2 ⊗ H ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrHCO3_aq =
-        1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrCl_aq =
-        5.440449431261466e-12 ⊗ Cl ⊗ H ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrSO4_aq =
-        8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrOH_aq =
-        1.5261884035337975e-20 ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. NdrH3SiO4_aq =
-        2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
-        )
-    @.. Ndr_H3SiO4_2_aq =
-        1.0 ⊗ H ⊗ H3SiO4^2 ⊗ TNdr_dis / (
             0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
             5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
             2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
@@ -1367,14 +1060,14 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. dBasalt += S_Basalt
     @.. dO2 += S_O2
     @.. dNO3 += S_NO3
-    @.. dTMn += S_TMn
-    @.. dTFe += S_TFe
     @.. dCH4 += S_CH4
     @.. dNO2 += S_NO2
     @.. dCa += S_Ca
+    @.. dSO4 += S_SO4
+    @.. dTMn += S_TMn
+    @.. dTFe += S_TFe
     @.. dAl += S_Al
     @.. dTNH4 += S_TNH4
-    @.. dSO4 += S_SO4
     @.. dTNdnr += S_TNdnr
     @.. dTNdr += S_TNdr
     @.. dTH4SiO4 += S_TH4SiO4

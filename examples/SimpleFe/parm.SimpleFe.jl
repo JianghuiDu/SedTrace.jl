@@ -92,12 +92,12 @@ pH0 = 7.59 # free pH scale # pH at the TOP of sediment column
 TCO20 = 0.002345 # mmol cm^-3 # Concentration of TCO2 at the TOP of sediment column
 TH2S0 = 2.22044604925031e-16 # mmol cm^-3 # Concentration of TH2S at the TOP of sediment column
 H0 = 2.5703957827688646E-08 # mmol cm^-3 # Concentration of H at the TOP of sediment column
-OH0 = 3.0908033358399629E-07 # mmol cm^-3 # Concentration of OH at the TOP of sediment column
+OH0 = 3.0908033358399634E-07 # mmol cm^-3 # Concentration of OH at the TOP of sediment column
 HCO30 = 2.2360098054873194E-03 # mmol cm^-3 # Concentration of HCO3 at the TOP of sediment column
-CO30 = 4.0322146597767730E-05 # mmol cm^-3 # Concentration of CO3 at the TOP of sediment column
-CO20 = 6.8668047914912883E-05 # mmol cm^-3 # Concentration of CO2 at the TOP of sediment column
-H2S0 = 3.7022702176678322E-17 # mmol cm^-3 # Concentration of H2S at the TOP of sediment column
-HS0 = 1.8502190274835269E-16 # mmol cm^-3 # Concentration of HS at the TOP of sediment column
+CO30 = 4.0322146597767723E-05 # mmol cm^-3 # Concentration of CO3 at the TOP of sediment column
+CO20 = 6.8668047914912896E-05 # mmol cm^-3 # Concentration of CO2 at the TOP of sediment column
+H2S0 = 3.7022702176678310E-17 # mmol cm^-3 # Concentration of H2S at the TOP of sediment column
+HS0 = 1.8502190274835271E-16 # mmol cm^-3 # Concentration of HS at the TOP of sediment column
 
 #----------------------------------------------
 # assemble boundary conditions
@@ -156,10 +156,10 @@ AmTFe_ads = fvcf(phis, Ds, us, dx, Ngrid) #  # Interior transport matrix of TFe_
 #----------------------------------------------
 # Acid dissociation constants
 #----------------------------------------------
-KH2O = 7.9445878598109790E-15 #  # H 1th dissociation constant
-KCO2 = 8.3698755808176183E-07 #  # TCO2 1th dissociation constant
-KHCO3 = 4.6352156109843975E-10 #  # TCO2 2th dissociation constant
-KH2S = 1.2845618784784923E-07 #  # TH2S 1th dissociation constant
+KH2O = 7.9445878598109806E-15 #  # H 1th dissociation constant
+KCO2 = 8.3698755808176172E-07 #  # TCO2 1th dissociation constant
+KHCO3 = 4.6352156109843970E-10 #  # TCO2 2th dissociation constant
+KH2S = 1.2845618784784929E-07 #  # TH2S 1th dissociation constant
 
 #----------------------------------------------
 # Reaction parameters

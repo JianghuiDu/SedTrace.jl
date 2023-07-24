@@ -69,6 +69,7 @@ IncludeFiles(modelconfig)
 
 # initial values
 C0 = Param.C0;
+C0 = ifelse.(C0.==0.0,1e-9,C0);
 # initalize parameters
 parm = Param.ParamStruct();
 # initialize cache and ODE function
@@ -79,13 +80,13 @@ JacPrototype = JacType(SedTrace.Param.IDdict);
 # test the ODE function
 TestOdeFun(OdeFun, C0, parm)
 # test if the Jacobian is correct
-TestJacobian(JacPrototype, OdeFun, parm)
+TestJacobian(JacPrototype, OdeFun, C0, parm)
 # benchmark the ODE function performance
 BenchmarkReactran(OdeFun, C0, parm)
 # benchmark the Jacobian performance
-BenchmarkJacobian(JacPrototype, OdeFun, parm)
+BenchmarkJacobian(JacPrototype, OdeFun, C0, parm)
 # benchmark the preconditioner performance
-BenchmarkPreconditioner(JacPrototype, OdeFun, parm,:ILU0)
+BenchmarkPreconditioner(JacPrototype, OdeFun, C0, parm,:ILU0)
 
 # configure the solver
 
@@ -94,15 +95,16 @@ sol = load(modeldirectory*"sol.$modelname.jld2", "sol");
 # configure the solution
 solutionconfig = SolutionConfig(
     # C0,
-    sol,
+    # sol,
+    solution.sol[end],
     (0.0, 1E6),
-    reltol = 1e-6,
+    reltol = 1e-8,
     abstol = 1e-20,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );
 
-solverconfig = SolverConfig(:GMRES, :ILU0, 2)
+solverconfig = SolverConfig(:GMRES, :ILU, 2)
 
 # run the model
 @time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
@@ -113,7 +115,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
-    site = "HH3000",
+    site = ["HH3000"],
     EnableList = EnableList,
     showplt = true,
 )

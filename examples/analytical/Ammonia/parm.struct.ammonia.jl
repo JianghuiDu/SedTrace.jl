@@ -1,6 +1,6 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
-using Parameters, LinearAlgebra, SpecialFunctions
+using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\analytical\\Ammonia\\parm.ammonia.jl",
 )
@@ -8,7 +8,7 @@ include(
 #---------------------------------------------------------------
 # assemble parameter struct
 #---------------------------------------------------------------
-@with_kw mutable struct ParamStruct{T}
+@with_kw struct ParamStruct{T}
     N_orgID::StepRange{Int64,Int64} = N_orgID
     TNH4ID::StepRange{Int64,Int64} = TNH4ID
     AmN_org::Tridiagonal{T,Vector{T}} = AmN_org

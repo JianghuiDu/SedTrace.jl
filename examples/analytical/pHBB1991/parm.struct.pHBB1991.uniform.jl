@@ -1,6 +1,6 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
-using Parameters, LinearAlgebra, SpecialFunctions
+using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\analytical\\pHBB1991\\parm.pHBB1991.uniform.jl",
 )
@@ -8,7 +8,7 @@ include(
 #---------------------------------------------------------------
 # assemble parameter struct
 #---------------------------------------------------------------
-@with_kw mutable struct ParamStruct{T}
+@with_kw struct ParamStruct{T}
     O2ID::StepRange{Int64,Int64} = O2ID
     HID::StepRange{Int64,Int64} = HID
     TCO2ID::StepRange{Int64,Int64} = TCO2ID
