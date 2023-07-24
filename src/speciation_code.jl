@@ -2,6 +2,7 @@ function speciation_model(substance_spec, speciation, adsorption)
     speciation_df = @subset(speciation, :substance .== substance_spec)
     adsorption_df = @subset(adsorption, :substance .== substance_spec)
 
+    spec_in_code = vcat(speciation_df.dissolved[.!ismissing.(speciation_df.code)],"$(substance_spec)_dis")
 
     if isempty(speciation_df) & isempty(adsorption_df)
         speciation_Str = String[]
@@ -62,17 +63,23 @@ function speciation_model(substance_spec, speciation, adsorption)
                 formula_ = "",
                 type = "dissolved",
                 comment = "Total dissolved",
+                # code = "1"
             ),
         )
         speciation_Str = String[]
-        cache = [base_species_name, TDissolved]
+        cache = [TDissolved]
         speciation_expr =
             DataFrame(var = SymPy.Sym[], expr = SymPy.Sym[])
 
 
         @subset!(speciation_Eq, :dissolved .!= base_species_name)
 
-        if !isempty(speciation_Eq)
+        if isempty(speciation_Eq)
+            speciation_Str = ["$base_species_name = $TDissolved"]
+            cache = [TDissolved,base_species_name]
+            speciation_expr =
+                DataFrame(var = SymPy.Sym[base_species_name], expr = SymPy.Sym[TDissolved])    
+        else
         @transform!(
             speciation_Eq,
             :species_eq =
@@ -114,10 +121,13 @@ function speciation_model(substance_spec, speciation, adsorption)
         )
         base_expr = SymPy.elements(base_expr)[1]
 
+        if in(base_species_name,spec_in_code)
+            append!(cache,[base_species_name])
         append!(speciation_Str , [base_species_name * "=" * string(base_expr)])
 
         append!(speciation_expr,
             DataFrame(var = SymPy.sympify(base_species_name), expr = base_expr))
+        end
 
         for i in eachrow(speciation_Eq_sys)
             res = SymPy.solveset(
@@ -125,6 +135,7 @@ function speciation_model(substance_spec, speciation, adsorption)
                 SymPy.symbols(i.dissolved),
             )
             res = SymPy.elements(res)[1]
+            if in(i.dissolved,spec_in_code)
             push!(speciation_Str, i.dissolved * "=" * string(res))
             push!(cache, i.dissolved)
             push!(
@@ -134,6 +145,7 @@ function speciation_model(substance_spec, speciation, adsorption)
                     res(SymPy.sympify(base_species_name) => base_expr),
                 ],
             )
+            end
         end
     end
 
@@ -324,9 +336,23 @@ function speciation_code(substances, speciation, adsorption)
         formula_ = String[],
         type = String[],
         comment = String[],
+        # code = Bool[]
     )
     for i in substances_speciation.substance
         expr, cache, parse_df = speciation_model(i, speciation, adsorption)
+        # df = @subset(speciation,:substance.==i,.!ismissing.(:code))
+        # spec_in_code = vcat(df.dissolved,"$(i)_dis")
+        # @transform!(parse_df,:code = ifelse.(((in.(:name,Ref(spec_in_code))) .&& (:type .=="dissolved")),true,false))
+        # filter!(x -> in(x,spec_in_code),cache)
+        # ss = split.(expr,"=")
+        # idx = zeros(length(expr))
+        # for ii in 1:length(expr)
+        #     if in(ss[ii][1],spec_in_code)
+        #         idx[ii]=1
+        #     end
+        # end
+
+        # expr = expr[idx.==1]
         append!(spec_expr, expr)
         append!(spec_cache, cache)
         append!(speciation_parse, @transform!(parse_df, :substance = i))
