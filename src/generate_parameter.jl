@@ -409,7 +409,7 @@ subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
         path = (@__DIR__)*"//"
         KH2O,KH3BO3,KCO2,KHCO3,KHF,KHSO4,KH2S,KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4 = JLD2.load(path*"dissociation_constants.jld2","K_diss");
 
-        SAL = 0:0.5:40
+        SAL = 0:0.5:37
         TEM = 0:0.5:40
         PRE = 0:75:6000
                 
@@ -716,6 +716,7 @@ subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
     reactionParam = @subset(param_model, :class .== "Reaction")
     RmCol!(reactionParam)
 
+    codeParam = @subset(param_model, :class .== "Code")
 
     param_str = String[]
 
@@ -737,7 +738,10 @@ subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
         appendtostr!(param_str, KpHParam, "Acid dissociation constants", assemble)
     end
     appendtostr!(param_str, reactionParam, "Reaction parameters", assemble)
-    
+    # if isempty(codeParam)
+        appendtostr!(param_str, codeParam, "User code parameters", assemble,false)
+    # end
+
 
     initialvec = String[]
     vecid = "[1]"
