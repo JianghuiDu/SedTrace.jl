@@ -53,7 +53,7 @@ gr(; size = (400, 800))
 generate_output(
     modelconfig,
     solution,
-    site = "analytical",
+    site = ["analytical"],
     showplt = true,
 )
 
