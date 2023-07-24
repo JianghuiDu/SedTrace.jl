@@ -161,7 +161,7 @@ function pHError(Param, modelconfig)
     HS = solver[(2Ngrid+1):3Ngrid]
     H3BO3 = solver[(3Ngrid+1):4Ngrid]
 
-    OH = Param.KH2O / H
+    OH = Param.KH2O ./ H
     CO2 = H .* HCO3 ./ Param.KCO2
     CO3 = Param.KHCO3 .* HCO3 ./ H
     H2S = H .* HS ./ Param.KH2S

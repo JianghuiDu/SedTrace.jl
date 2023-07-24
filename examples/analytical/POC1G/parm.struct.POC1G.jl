@@ -1,6 +1,6 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
-using Parameters, LinearAlgebra, SpecialFunctions
+using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\analytical\\POC1G\\parm.POC1G.jl",
 )
@@ -8,7 +8,7 @@ include(
 #---------------------------------------------------------------
 # assemble parameter struct
 #---------------------------------------------------------------
-@with_kw mutable struct ParamStruct{T}
+@with_kw struct ParamStruct{T}
     POCID::StepRange{Int64,Int64} = POCID
     AmPOC::Tridiagonal{T,Vector{T}} = AmPOC
     BcAmPOC::Vector{T} = BcAmPOC

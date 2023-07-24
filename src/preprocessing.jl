@@ -244,16 +244,14 @@ function preprocessSubstances!(substances::DataFrame, EnableList::Dict = Dict())
     )
     checkerrorSubstance!(substances)
 
-    # ord = [
-    #     "dissolved_speciation",
-    #     "solid",
-    #     "dissolved",
-    #     "dissolved_adsorbed",
-    #     "dissolved_summed",
-    #     "dissolved_pH",
-    # ]
-    # orderdict = Dict(x => i for (i, x) in enumerate(ord))
-    # sort!(substances, :type, by = x -> orderdict[x])
+    ord = [
+        "solid",
+        "dissolved",
+        "dissolved_speciation",
+        "dissolved_pH",
+    ]
+    orderdict = Dict(x => i for (i, x) in enumerate(ord))
+    sort!(substances, :type, by = x -> orderdict[x])
     insertcols!(substances, :order => 1:length(substances.substance))
     select!(
         substances,
@@ -308,7 +306,7 @@ function preprocessSpeciation!(
     substances::DataFrame,
     EnableList::Dict = Dict(),
 )
-    for i in ["substance", "dissolved", "formula", "equation", "logK", "include"]
+    for i in ["substance", "dissolved", "formula", "equation", "logK", "include","code"]
         if !(i in names(speciation))
             throw(error("Column $i is not found in Sheet speciation."))
         end
@@ -340,7 +338,7 @@ function preprocessSpeciation!(
     insertcols!(speciation, :K => 10.0 .^ parse.(Float64, speciation.logK))
     select!(speciation, Not(:logK))
     insertcols!(speciation, :check .=> 1)
-    select!(speciation, :check, :substance, :dissolved, :formula, :formula_, :equation, :K)
+    select!(speciation, :check, :code,:substance, :dissolved, :formula, :formula_, :equation, :K)
 
     for i in eachrow(speciation)
         if !in(i.substance, substances.substance)
@@ -535,7 +533,7 @@ function preprocessParameters!(
         renamecols = false,
     )
 
-    check_illegal_char(select(parameters, :class, :type, :parameter, :value))
+    check_illegal_char(@subset!(select(parameters, :class, :type, :parameter, :value),:class .!="Code"))
 
     checkerrorParameters!(parameters)
     select!(parameters, :class, :type, :parameter, :value, :unit, :comment)
@@ -590,6 +588,8 @@ function preprocessDiffusion!(diffusion::DataFrame, substances::DataFrame)
             throw(error("Column $i is not found in Sheet diffusion."))
         end
     end
+    subset!(diffusion, :include => ByRow(!ismissing))
+    select!(diffusion, Not(:include))
 
     df_str_replace!(diffusion, [r"\s", r"[\u2212\u2014\u2013]"], ["", "\u002D"])
 

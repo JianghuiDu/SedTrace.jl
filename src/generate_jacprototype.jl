@@ -39,18 +39,18 @@ function generate_jacprototype(substances::DataFrame, adsorption::DataFrame,reac
                         "append!(
                colID,getindex($(j)ID,1:Ngrid))",
                     )
-                    if cf && i.type == "solid"
-                        push!(
-                            jp_str,
-                            "append!(
-                   rowID,getindex($(i.substance)ID,vcat(1:(Ngrid-1),2:Ngrid)))",
-                        )
-                        push!(
-                            jp_str,
-                            "append!(
-                   colID,getindex($(j)ID,vcat(2:Ngrid,1:(Ngrid-1))))",
-                        )
-                    end
+                #     if cf && i.type == "solid"
+                #         push!(
+                #             jp_str,
+                #             "append!(
+                #    rowID,getindex($(i.substance)ID,vcat(1:(Ngrid-1),2:Ngrid)))",
+                #         )
+                #         push!(
+                #             jp_str,
+                #             "append!(
+                #    colID,getindex($(j)ID,vcat(2:Ngrid,1:(Ngrid-1))))",
+                #         )
+                #     end
                 end
             end
             if i.type == "dissolved_pH" && i.substance != "H"

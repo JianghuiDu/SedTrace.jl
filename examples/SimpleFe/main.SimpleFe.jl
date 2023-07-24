@@ -27,13 +27,13 @@ JacPrototype = JacType(Param.IDdict);
 # test the ODE function
 TestOdeFun(OdeFun, C0, parm)
 # test if the Jacobian is correct
-TestJacobian(JacPrototype, OdeFun, parm)
+TestJacobian(JacPrototype, OdeFun, C0,parm)
 # benchmark the ODE function performance
 BenchmarkReactran(OdeFun, C0, parm)
 # benchmark the Jacobian performance
-BenchmarkJacobian(JacPrototype, OdeFun, parm)
+BenchmarkJacobian(JacPrototype, OdeFun, C0,parm)
 # benchmark the preconditioner performance
-BenchmarkPreconditioner(JacPrototype, OdeFun, parm,:ILU0)
+BenchmarkPreconditioner(JacPrototype, OdeFun, C0,parm,:ILU0)
 
 # configure the solver
 solverconfig = SolverConfig(:GMRES, :ILU0, 2)
@@ -55,5 +55,5 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(size = (400, 800))
 # generate output and plot
-generate_output(modelconfig, solution, showplt = true,saveplt=true)
+generate_output(modelconfig, solution,site=[], showplt = true,saveplt=true)
 

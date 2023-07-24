@@ -2,8 +2,8 @@ module SedTrace
 
 using Reexport
 using SciMLBase,OrdinaryDiffEq,Sundials
-using DiffEqOperators
-# using ODEInterfaceDiffEq,LSODA
+# using DiffEqOperators
+using ODEInterfaceDiffEq #,LSODA
 using Dierckx
 # using Krylov,LinearSolve
 using ILUZero,IncompleteLU
@@ -14,18 +14,21 @@ using ILUZero,IncompleteLU
 # using BandedMatrices
 @reexport using DiffEqCallbacks
 @reexport using ForwardDiff
+using Preferences
+set_preferences!(ForwardDiff, "nansafe_mode" => true)
 
 @reexport using BenchmarkTools
-@reexport using SparseDiffTools
+@reexport using SparseDiffTools,FiniteDiff
 @reexport using FastBroadcast
 @reexport using PreallocationTools
 @reexport using SparseArrays
 @reexport import LinearAlgebra:Tridiagonal,mul!,ldiv!,I
 
 
-using DataFrames
-using DataFramesMeta
+@reexport using DataFrames
+@reexport using DataFramesMeta
 @reexport using XLSX
+@reexport using DelimitedFiles
 @reexport using Chain
 import Printf:@sprintf
 import JuliaFormatter:format_file

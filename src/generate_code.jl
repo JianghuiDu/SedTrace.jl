@@ -1,6 +1,7 @@
 module CodeGeneration
 using SedTrace: ModelConfig
 import XLSX
+using ForwardDiff
 using JLD2,Interpolations
 import SymPy
 using DataFrames,
@@ -120,14 +121,15 @@ function generate_code(
         param_struct_code = vcat(
             "module Param",
             "using SedTrace: fvcf,fvcf_bc",
-            "using Parameters, LinearAlgebra,SpecialFunctions",
+            "using Parameters, LinearAlgebra,SpecialFunctions,DelimitedFiles",
             "include(\"$(escape_string(pfile))\")",
             "",
             "#---------------------------------------------------------------",
             "# assemble parameter struct",
             "#---------------------------------------------------------------",
-            "@with_kw mutable struct ParamStruct{T}",
-            ParamDict,
+            # "@with_kw mutable struct ParamStruct{T}",
+            "@with_kw struct ParamStruct{T}",
+                    ParamDict,
             "end",
             "end",
         )
@@ -141,7 +143,8 @@ function generate_code(
     #---------------------------------------------------------------------------
     # cache code 
     #---------------------------------------------------------------------------
-
+    # Ngrid = getval!(parameters, :parameter, "Ngrid", :value)
+    # chunk_size = ForwardDiff.pickchunksize(Ngrid)
     cache = unique(vcat(spec_cache,tran_cache, react_cache))
     cache_code = vcat(
         "module Cache",

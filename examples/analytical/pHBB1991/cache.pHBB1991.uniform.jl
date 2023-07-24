@@ -1,6 +1,6 @@
 module Cache
 using PreallocationTools, ForwardDiff
-mutable struct Reactran{T}
+struct Reactran{T}
     OH::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     HCO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
     CO3::PreallocationTools.DiffCache{Array{T,1},Array{T,1}}
@@ -31,33 +31,33 @@ mutable struct Reactran{T}
 end
 
 function init(u0::Array{T,1}, Ngrid::Int) where {T}
-    OH = PreallocationTools.dualcache(zeros(T, Ngrid))
-    HCO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    CO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    CO2 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H2S = PreallocationTools.dualcache(zeros(T, Ngrid))
-    HS = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H3BO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H4BO4 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    OH_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    HCO3_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    CO3_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    CO2_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H2S_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    HS_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H3BO3_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    H4BO4_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    TA_tran = PreallocationTools.dualcache(zeros(T, Ngrid))
-    dTA_dH = PreallocationTools.dualcache(zeros(T, Ngrid))
-    dTA_dTCO2 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    dTA_dTH2S = PreallocationTools.dualcache(zeros(T, Ngrid))
-    dTA_dTH3BO3 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    ROS = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_O2 = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_TH2S = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_TA = PreallocationTools.dualcache(zeros(T, Ngrid))
-    S_H = PreallocationTools.dualcache(zeros(T, Ngrid))
+    OH = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    HCO3 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    CO3 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    CO2 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H2S = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    HS = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H3BO3 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H4BO4 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    OH_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    HCO3_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    CO3_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    CO2_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H2S_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    HS_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H3BO3_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    H4BO4_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    TA_tran = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    dTA_dH = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    dTA_dTCO2 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    dTA_dTH2S = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    dTA_dTH3BO3 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    ROS = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_O2 = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_TH2S = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_TA = PreallocationTools.DiffCache(zeros(T, Ngrid))
+    S_H = PreallocationTools.DiffCache(zeros(T, Ngrid))
 
     cache = Reactran(
         OH,
