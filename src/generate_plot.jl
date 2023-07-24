@@ -18,17 +18,24 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
     speciation = DataFrame(XLSX.gettable(model_config["speciation"]))
     plotting = DataFrame(XLSX.gettable(model_config["output"]))
 
-    SedTrace.preprocessSubstances!(substances,EnableList)
-    SedTrace.preprocessReactions!(reactions,EnableList)
-    SedTrace.preprocessSpeciation!(speciation,substances,EnableList)
-    SedTrace.preprocessAdsorption!(adsorption,substances,speciation,EnableList)
-    SedTrace.preprocessOutput!(plotting,EnableList)
+    preprocessSubstances!(substances,EnableList)
+    preprocessReactions!(reactions,EnableList)
+    preprocessSpeciation!(speciation,substances,EnableList)
+    preprocessAdsorption!(adsorption,substances,speciation,EnableList)
+    preprocessOutput!(plotting,EnableList)
 
 
     leftjoin!(plotting,select(substances, :substance, :type), on = [:name => :substance])
 
-    _,_,_,speciation_df = SedTrace.speciation_code(substances,speciation,adsorption)
+    _,_,_,speciation_df = speciation_code(substances,speciation,adsorption)
+    @transform!(speciation_df,:code = true)
 
+    for i in eachrow(speciation_df)
+        if i.type == "dissolved" && in(i.name,speciation.dissolved[ismissing.(speciation.code)])
+            i.code = false
+        end
+    end
+    @subset!(speciation_df,:code)
 
     # if !isempty(vars)
     #     plotting = @subset(plotting,:name .∈ Ref(vars))
@@ -36,7 +43,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
 
     data = @chain begin
         DataFrame(XLSX.gettable(model_config["data"]))
-        @subset(:site .== site)
+        @subset(:site .∈ Ref(site))
         sort!([:substance, :depth])
         @subset(:depth .<= L)
     end
@@ -47,7 +54,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
 
     summedspecies = @subset(substances, :type .== "dissolved_pH").substance
 
-    OutputProfile, OutputFlux = SedTrace.get_required_vars(
+    OutputProfile, OutputFlux = get_required_vars(
         substances,
         plotting,
         ModelledProfile,
@@ -162,7 +169,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
 
 
 
-        p = SedTrace.secplot(
+        p = secplot(
             site,
             solution.sol.t,
             x,
@@ -189,6 +196,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
 
     end
 end
+# return output
 end
 
 
@@ -219,26 +227,26 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
             push!(
                 flux_top_raw_expr,
                 "($(i.substance)) ->
-                calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
+                calc_flux_top(phis[1],dx[1],$(i.substance),BcAm$(i.substance)[1],BcCm$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
         elseif i.type in ["dissolved"]
             push!(
                 flux_top_raw_expr,
                 "($(i.substance)) ->
-                calc_flux_top(phif[1],D$(i.substance)[1],uf[1],x[1:3],$(i.substance),Bc$(i.substance)[1])",
+                calc_flux_top(phif[1],dx[1],$(i.substance),BcAm$(i.substance)[1],BcCm$(i.substance)[1])",
             )
             push!(flux_top_raw_name, i.substance)
         elseif i.type == "dissolved_pH"
-            EqInv = SedTrace.EquilibriumInvariant(i.substance)
+            EqInv = EquilibriumInvariant(i.substance)
             append!(pH_species, EqInv.species)
             push!(EI_names, EqInv.name)
             append!(flux_top_raw_name, EqInv.species)
             append!(
                 flux_top_raw_expr,
                 "(" .* EqInv.species .* ")->
-                  calc_flux_top(phif[1],D" .* EqInv.species .* "[1],uf[1],x[1:3]," .*
-                EqInv.species .* ",Bc" .* EqInv.species .* "[1])",
+                calc_flux_top(phif[1],dx[1]," .*
+                EqInv.species .* ",BcAm" .* EqInv.species .* "[1],BcCm" .* EqInv.species .* "[1])",
             )
         elseif i.type == "dissolved_speciation"
             spec_df = @subset(speciation_df,:substance .== i.substance)
@@ -250,7 +258,7 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
             push!(
                 flux_top_raw_expr,
                 "($(dis_sp.name[1])) ->
-                calc_flux_top_adsorbed(phif[1],D$(dis_sp.name[1])[1],uf[1],x[1:5],$(dis_sp.name[1])[1:5],Bc$(dis_sp.name[1])[1])",
+                calc_flux_top(phif[1],dx[1],$(dis_sp.name[1]),BcAm$(dis_sp.name[1])[1],BcCm$(dis_sp.name[1])[1])",
             )
             end
 
@@ -260,7 +268,8 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
                 push!(
                         flux_top_raw_expr,
                         "($(i)) ->
-                        calc_flux_top(phis[1],Ds[1],us[1],x[1:3],$(i),Bc$(i)[1])",
+                        calc_flux_top(phis[1],dx[1],$(i),BcAm$(i)[1],BcCm$(i)[1])",
+
                 )
             end
         end
@@ -283,7 +292,7 @@ function get_all_flux_top(substances, speciation_df, OutputDict,nt)
 
     for i in eachrow(substances)
         if i.type == "dissolved_pH"
-            EqInv = SedTrace.EquilibriumInvariant(i.substance)
+            EqInv = EquilibriumInvariant(i.substance)
             nsub = length(EqInv.species)
             fun_expr = eval(Meta.parse("("*join("x".*string.(collect(1:nsub)),",")*")->"*join("x".*string.(collect(1:nsub)),"+")))
             input = Tuple(SpecFluxTop[j] for j in EqInv.species)
@@ -322,7 +331,7 @@ function compute_output_vars(OutputDict, var_df, summed_species)
         args = Tuple(OutputDict[k] for k in args_name)
         return Base.invokelatest.(fun_expr, args...)
     elseif !ismissing(var_df.expression)
-        args_name = SedTrace.myeachmatch(r"\b[a-zA-Z]\w*\b(?!\()", var_df.expression)
+        args_name = myeachmatch(r"\b[a-zA-Z]\w*\b(?!\()", var_df.expression)
         args_name = intersect(args_name, keys(OutputDict))
         fun_expr = eval(Meta.parse("(" * join(args_name, ",") * ")->" * var_df.expression))
         args = Tuple(OutputDict[k] for k in args_name)
@@ -347,7 +356,7 @@ function get_required_vars(
 
     for i in eachrow(plotting)
         plotvarval[i.name] .=
-            SedTrace.compute_output_vars(OutputDict, i, summed_species) .*
+            compute_output_vars(OutputDict, i, summed_species) .*
             eval(Meta.parse(i.conversion_profile))
     end
 
@@ -364,49 +373,63 @@ function get_required_vars(
 end
 
 # computing benthic flux
-function calc_flux_top(φ, D, u, x, C, BC)
-    α⁰, β⁰, γ⁰ = BC
-    x1, x2, x3 = x
-    c1, c2, c3 = C[1:3]
-    c0 = c3 * (x1^3 * x2^2 * β⁰ - x1^2 * x2^3 * β⁰)
-    c0 += c2 * (-x1^3 * x3^2 * β⁰ + x1^2 * x3^3 * β⁰)
-    c0 += c1 * (x2^3 * x3^2 * β⁰ - x2^2 * x3^3 * β⁰)
-    c0 +=
-        (
-            -x1^3 * x2^2 * x3 + x1^2 * x2^3 * x3 + x1^3 * x2 * x3^2 - x1 * x2^3 * x3^2 -
-            x1^2 * x2 * x3^3 + x1 * x2^2 * x3^3
-        ) * γ⁰
-    c0 /=
-        (x1 - x2) *
-        (x2 - x3) *
-        (-x1 + x3) *
-        (x1 * x2 * x3 * α⁰ - x1 * x2 * β⁰ - x1 * x3 * β⁰ - x2 * x3 * β⁰)
+# function calc_flux_top(φ, D, u, x, C, BC)
+#     α⁰, β⁰, γ⁰ = BC
+#     x1, x2, x3 = x
+#     c1, c2, c3 = C[1:3]
+#     c0 = c3 * (x1^3 * x2^2 * β⁰ - x1^2 * x2^3 * β⁰)
+#     c0 += c2 * (-x1^3 * x3^2 * β⁰ + x1^2 * x3^3 * β⁰)
+#     c0 += c1 * (x2^3 * x3^2 * β⁰ - x2^2 * x3^3 * β⁰)
+#     c0 +=
+#         (
+#             -x1^3 * x2^2 * x3 + x1^2 * x2^3 * x3 + x1^3 * x2 * x3^2 - x1 * x2^3 * x3^2 -
+#             x1^2 * x2 * x3^3 + x1 * x2^2 * x3^3
+#         ) * γ⁰
+#     c0 /=
+#         (x1 - x2) *
+#         (x2 - x3) *
+#         (-x1 + x3) *
+#         (x1 * x2 * x3 * α⁰ - x1 * x2 * β⁰ - x1 * x3 * β⁰ - x2 * x3 * β⁰)
 
-    dCdz0 = c3 * (x1^3 * x2^2 * α⁰ - x1^2 * x2^3 * α⁰)
-    dCdz0 += c2 * (-x1^3 * x3^2 * α⁰ + x1^2 * x3^3 * α⁰)
-    dCdz0 += c1 * (x2^3 * x3^2 * α⁰ - x2^2 * x3^3 * α⁰)
-    dCdz0 +=
-        (
-            -x1^3 * x2^2 + x1^2 * x2^3 + x1^3 * x3^2 - x2^3 * x3^2 - x1^2 * x3^3 +
-            x2^2 * x3^3
-        ) * γ⁰
-    dCdz0 /=
-        (x1 - x2) *
-        (x2 - x3) *
-        (x1 - x3) *
-        (x1 * x2 * x3 * α⁰ - x1 * x2 * β⁰ - x1 * x3 * β⁰ - x2 * x3 * β⁰)
+#     dCdz0 = c3 * (x1^3 * x2^2 * α⁰ - x1^2 * x2^3 * α⁰)
+#     dCdz0 += c2 * (-x1^3 * x3^2 * α⁰ + x1^2 * x3^3 * α⁰)
+#     dCdz0 += c1 * (x2^3 * x3^2 * α⁰ - x2^2 * x3^3 * α⁰)
+#     dCdz0 +=
+#         (
+#             -x1^3 * x2^2 + x1^2 * x2^3 + x1^3 * x3^2 - x2^3 * x3^2 - x1^2 * x3^3 +
+#             x2^2 * x3^3
+#         ) * γ⁰
+#     dCdz0 /=
+#         (x1 - x2) *
+#         (x2 - x3) *
+#         (x1 - x3) *
+#         (x1 * x2 * x3 * α⁰ - x1 * x2 * β⁰ - x1 * x3 * β⁰ - x2 * x3 * β⁰)
 
-    return φ * D * dCdz0 - φ * u * c0
+#     return φ * D * dCdz0 - φ * u * c0
+# end
+
+
+# function calc_flux_top_adsorbed(φ, D, u, x, C, BC)
+#     spl = Spline1D(x, C,k=3,bc="extrapolate")
+#     dCdz0 = derivative(spl, 0; nu=1)
+#     c0 = spl(0.0)
+#     return φ * D * dCdz0 - φ * u * c0
+# end
+
+# function calc_flux_top(φ, D, u, x, C, BC)
+#     spl = Spline1D(x, C,k=3,bc="extrapolate")
+#     dCdz0 = derivative(spl, 0; nu=1)
+#     c0 = spl(0.0)
+#     return φ * D * dCdz0 - φ * u * c0
+# end
+
+function calc_flux_top(φ, dx, C, BCAm,BcCm)
+    # spl = Spline1D(x, C,k=3,bc="extrapolate")
+    # dCdz0 = derivative(spl, 0; nu=1)
+    # c0 = spl(0.0)
+    return (BCAm * C[1]+ BcCm)*dx*φ
+   
 end
-
-
-function calc_flux_top_adsorbed(φ, D, u, x, C, BC)
-    spl = Spline1D(x, C,k=3,bc="extrapolate")
-    dCdz0 = derivative(spl, 0; nu=1)
-    c0 = spl(0.0)
-    return φ * D * dCdz0 - φ * u * c0
-end
-
 # plot
 function secplot(
     site,
@@ -506,13 +529,14 @@ function secplot(
                 markershape = :circle,
                 markersize = 2,
                 markerstrokewidth = 0.5,
-                markercolor = "blue",
-                markerstrokecolor = "blue",
+                # markercolor = "blue",
+                # markerstrokecolor = "blue",
                 yflip = true,
                 ylims = y_lim,
                 yscale = yscale,
                 orientation = :vertical,
                 formatter=:plain,
+                color_palette=[:brown,:blue]
                 # legend_position = :none,
             )
         else
@@ -526,12 +550,13 @@ function secplot(
                 markershape = :circle,
                 markersize = 2,
                 markerstrokewidth = 0.5,
-                markerstrokecolor = "blue",
+                # markerstrokecolor = "blue",
                 yflip = true,
                 ylims = y_lim,
                 yscale = yscale,
                 orientation = :vertical,
                 formatter=:plain,
+                color_palette=[:brown,:blue]
                 # legend_position = :best,
             )
         end
