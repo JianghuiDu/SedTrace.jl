@@ -28,10 +28,10 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 JacPrototype = JacType(Param.IDdict);
 
 TestOdeFun(OdeFun,C0,parm)
-TestJacobian(JacPrototype,OdeFun,parm)
+TestJacobian(JacPrototype,OdeFun,C0, parm)
 BenchmarkReactran(OdeFun,C0,parm)
-BenchmarkJacobian(JacPrototype,OdeFun,parm)
-BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
+BenchmarkJacobian(JacPrototype,OdeFun,C0, parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,C0, parm,:ILU0)
 
 # configure the solver
 solverconfig = SolverConfig(:GMRES, :ILU0, 2)
