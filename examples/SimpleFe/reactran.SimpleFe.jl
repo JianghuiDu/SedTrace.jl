@@ -77,12 +77,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
-    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     TFe_dis = PreallocationTools.get_tmp(f.TFe_dis, C)
-    FeCl_aq = PreallocationTools.get_tmp(f.FeCl_aq, C)
-    FeSO4_aq = PreallocationTools.get_tmp(f.FeSO4_aq, C)
-    FeCO3_aq = PreallocationTools.get_tmp(f.FeCO3_aq, C)
-    FeHS_aq = PreallocationTools.get_tmp(f.FeHS_aq, C)
+    Fe_aq = PreallocationTools.get_tmp(f.Fe_aq, C)
     Fe_ads = PreallocationTools.get_tmp(f.Fe_ads, C)
     TFe_ads_POC = PreallocationTools.get_tmp(f.TFe_ads_POC, C)
     TFe_ads = PreallocationTools.get_tmp(f.TFe_ads, C)
@@ -222,26 +218,6 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. TFe_dis = TFe / (KFe_ads ⊗ POC ⊗ dstopw ⊕ 1)
     @.. Fe_aq =
         3.98107170553497e-6 ⊗ TFe_dis / (
-            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
-            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
-        )
-    @.. FeCl_aq =
-        3.019951720402014e-6 ⊗ Cl ⊗ TFe_dis / (
-            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
-            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
-        )
-    @.. FeSO4_aq =
-        3.630780547701011e-5 ⊗ SO4 ⊗ TFe_dis / (
-            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
-            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
-        )
-    @.. FeCO3_aq =
-        0.01778279410038921 ⊗ CO3 ⊗ TFe_dis / (
-            0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
-            3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
-        )
-    @.. FeHS_aq =
-        1.0 ⊗ HS ⊗ TFe_dis / (
             0.01778279410038921 ⊗ CO3 ⊕ 3.019951720402014e-6 ⊗ Cl ⊕ 1.0 ⊗ HS ⊕
             3.630780547701011e-5 ⊗ SO4 ⊕ 3.98107170553497e-6
         )

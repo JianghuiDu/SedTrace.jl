@@ -49,18 +49,18 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 JacPrototype = JacType(Param.IDdict);
 
 TestOdeFun(OdeFun,C0,parm)
-TestJacobian(JacPrototype,OdeFun,parm)
+TestJacobian(JacPrototype,OdeFun,C0,parm)
 BenchmarkReactran(OdeFun,C0,parm)
-BenchmarkJacobian(JacPrototype,OdeFun,parm)
-BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU0)
+BenchmarkJacobian(JacPrototype,OdeFun,C0,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,:ILU0)
 
 # configure the solver
 
 sol = load(modeldirectory*"sol.SBB_case1.jld2","sol");
 
 solutionconfig = SolutionConfig(
-    # C0,
-    sol,
+    C0,
+    # sol,
     # solution.sol[end],
     (0.0, 1000.0),
     reltol = 1e-6,
@@ -78,7 +78,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
-    site = "SBB",
+    site = ["SBB"],
     showplt = true,
     saveplt=true,
     # vars = ["Mo_pw","Mo_sed"],
@@ -106,7 +106,7 @@ IncludeFiles(modelconfig)
 
 
 # initial values
-C0 = Param.C0;
+# C0 = Param.C0;
 # initalize parameters
 parm = Param.ParamStruct();
 # initialize cache and ODE function
@@ -142,7 +142,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
-    site = "SBB",
+    site = ["SBB"],
     showplt = true,
     saveplt=true,
     vars = ["Mo_pw","Mo_sed"],

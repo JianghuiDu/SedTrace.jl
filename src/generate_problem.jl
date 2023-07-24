@@ -1,4 +1,4 @@
-function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,solutionconfig::SolutionConfig,parm)
+function generate_ODESolver(OdeFun,JacFun,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,solutionconfig::SolutionConfig,parm)
 
 
     # if solverconfig.linsolve in [:Band, :LapackBand]
@@ -15,8 +15,8 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
     end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR,:BCG]
-        JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
-        JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
+        # JacFun = generate_jacobian(OdeFun, JacPrototype,parm)
+        # JacFun(JacPrototype,solutionconfig.u0,parm,0.0)
         p_prec = generate_preconditioner(solverconfig.Precondition, JacPrototype)
         psetup = default_psetup(p_prec, JacPrototype, JacFun,solverconfig.Precondition)
         prec = default_prec(p_prec)
@@ -187,24 +187,31 @@ function generate_ODESolver(OdeFun,JacPrototype::SparseMatrixCSC,solverconfig::S
     #     end
     # end
 
-    # if solverconfig.linsolve == :radau
-    #     Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-    #     return radau(jac_upper=Upbdwth,jac_lower=Lwbdwth)
-    # end
+    if solverconfig.linsolve in [:radau,:radau5]
+        # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+        return radau()
+    end
 
 
 end
 
-function generate_ODEFun(OdeFun,parm,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
+function generate_ODEFun(OdeFun,JacFun,parm,JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig)
 colorvec = matrix_colors(JacPrototype)
 
     # if solverconfig.linsolve in [:Band, :LapackBand]
     #     return ODEFunction{true,true}(OdeFun,colorvec=colorvec)
     # end
 
-    if solverconfig.linsolve == :KLU
-        JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun; jac = JacFun, jac_prototype = JacPrototype,colorvec=colorvec)
+    if solverconfig.linsolve in [:KLU]
+        # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
+        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun; jac = JacFun, jac_prototype = JacPrototype)
+
+    end
+    
+
+    if solverconfig.linsolve in [:radau,:radau5]
+        # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
+        return  ODEFunction(OdeFun; jac = JacFun)
 
     end
 
@@ -212,10 +219,10 @@ colorvec = matrix_colors(JacPrototype)
         # return  ODEFunction{true,true}(OdeFun,colorvec=colorvec,jac_prototype = JacVec(OdeFun, ones(size(JacPrototype,1))))
         # JVP = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0,autodiff =true)
         # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        JVP = JacVec(OdeFun,ones(size(JacPrototype,1)))
+        JVP = JacVec((du, u) -> OdeFun(du,u,parm,0.0),ones(size(JacPrototype,1)),parm)
         # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac = JacFun)
         # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JacPrototype,jac = JacFun)
-        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP)
+        return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JVP)
         # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun)
         # return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JVP)
 
@@ -233,9 +240,10 @@ end
 
 function modelrun(OdeFun,parm, JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,solutionconfig::SolutionConfig)
 
-    solver = generate_ODESolver(OdeFun, JacPrototype, solverconfig,solutionconfig,parm);
-    OdeFunction = generate_ODEFun(OdeFun,parm, JacPrototype, solverconfig)
-    prob = ODEProblem{true,SciMLBase.AutoSpecialize}(OdeFunction, solutionconfig.u0, solutionconfig.tspan, parm)
+   @time JacFun = generate_jacobian(OdeFun, JacPrototype,solutionconfig.u0)
+   @time solver = generate_ODESolver(OdeFun,JacFun, JacPrototype, solverconfig,solutionconfig,parm);
+   @time OdeFunction = generate_ODEFun(OdeFun,JacFun,parm, JacPrototype, solverconfig)
+   @time prob = ODEProblem{true,SciMLBase.AutoSpecialize}(OdeFunction, solutionconfig.u0, solutionconfig.tspan, parm)
 
     saveat = isnothing(solutionconfig.saveat) ? [] : vcat(1e-12,(solutionconfig.tspan[1]+solutionconfig.saveat):solutionconfig.saveat:solutionconfig.tspan[2])
 

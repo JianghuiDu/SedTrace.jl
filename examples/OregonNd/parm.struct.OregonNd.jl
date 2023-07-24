@@ -1,6 +1,6 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
-using Parameters, LinearAlgebra, SpecialFunctions
+using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\OregonNd\\parm.OregonNd.jl",
 )
@@ -8,7 +8,7 @@ include(
 #---------------------------------------------------------------
 # assemble parameter struct
 #---------------------------------------------------------------
-@with_kw mutable struct ParamStruct{T}
+@with_kw struct ParamStruct{T}
     MnO2ID::StepRange{Int64,Int64} = MnO2ID
     FeOOHID::StepRange{Int64,Int64} = FeOOHID
     POCID::StepRange{Int64,Int64} = POCID
@@ -27,14 +27,14 @@ include(
     BasaltID::StepRange{Int64,Int64} = BasaltID
     O2ID::StepRange{Int64,Int64} = O2ID
     NO3ID::StepRange{Int64,Int64} = NO3ID
-    TMnID::StepRange{Int64,Int64} = TMnID
-    TFeID::StepRange{Int64,Int64} = TFeID
     CH4ID::StepRange{Int64,Int64} = CH4ID
     NO2ID::StepRange{Int64,Int64} = NO2ID
     CaID::StepRange{Int64,Int64} = CaID
+    SO4ID::StepRange{Int64,Int64} = SO4ID
+    TMnID::StepRange{Int64,Int64} = TMnID
+    TFeID::StepRange{Int64,Int64} = TFeID
     AlID::StepRange{Int64,Int64} = AlID
     TNH4ID::StepRange{Int64,Int64} = TNH4ID
-    SO4ID::StepRange{Int64,Int64} = SO4ID
     TNdnrID::StepRange{Int64,Int64} = TNdnrID
     TNdrID::StepRange{Int64,Int64} = TNdrID
     TH4SiO4ID::StepRange{Int64,Int64} = TH4SiO4ID

@@ -9,6 +9,7 @@ function generate_parameter_struct(tran_param,react_param,parameters)
     end
 
     parameters_func = @subset(parameters,:type.=="function")
+    parameters_code_func = @subset(parameters,:class.=="Code",:type .=="function")
 
     for i in eachrow(param_required)
         if i.parameter == "Ngrid"
@@ -23,6 +24,10 @@ function generate_parameter_struct(tran_param,react_param,parameters)
             i.jtype = "::Tridiagonal{T, Vector{T}}"
         elseif i.type == "boundary condition"
             i.jtype = "::Vector{T}"
+        elseif i.parameter in parameters_code_func.parameter
+            i.jtype = "::Vector{T}"
+        elseif i.parameter in parameters.parameter
+            i.jtype = "::T"
         else
             i.jtype = "::T"
         end

@@ -35,10 +35,10 @@ OdeFun = Cache.init(C0, parm.Ngrid);
 JacPrototype = JacType(Param.IDdict);
 
 TestOdeFun(OdeFun,C0,parm)
-TestJacobian(JacPrototype,OdeFun,parm)
+TestJacobian(JacPrototype,OdeFun,C0,parm)
 BenchmarkReactran(OdeFun,C0,parm)
-BenchmarkJacobian(JacPrototype,OdeFun,parm)
-BenchmarkPreconditioner(JacPrototype,OdeFun,parm,:ILU)
+BenchmarkJacobian(JacPrototype,OdeFun,C0,parm)
+BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,:ILU0)
 
 # configure the solver
 
@@ -57,7 +57,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site="JR", showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 pHError(Param,modelconfig)
 
@@ -103,7 +103,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site="JR", showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)
@@ -151,7 +151,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site="JR", showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)
@@ -201,7 +201,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site="JR", showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)

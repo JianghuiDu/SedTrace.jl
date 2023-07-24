@@ -1,6 +1,6 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
-using Parameters, LinearAlgebra, SpecialFunctions
+using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
     "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\analytical\\Phosphate\\parm.Phosphate.jl",
 )
@@ -8,7 +8,7 @@ include(
 #---------------------------------------------------------------
 # assemble parameter struct
 #---------------------------------------------------------------
-@with_kw mutable struct ParamStruct{T}
+@with_kw struct ParamStruct{T}
     PorgID::StepRange{Int64,Int64} = PorgID
     TH3PO4ID::StepRange{Int64,Int64} = TH3PO4ID
     AmPorg::Tridiagonal{T,Vector{T}} = AmPorg
