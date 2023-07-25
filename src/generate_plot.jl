@@ -143,7 +143,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
     for (key, value) in output
         if in(key,select_var)
         data_select = @subset(data, :substance .== key)
-        @subset!(data_select,(:depth.>=ylim[1]) .& (:depth.<=ylim[2]))
+        @subset!(data_select,(:depth.>=ylim[1]) .&& (:depth.<=ylim[2]))
 
         if size(data_select, 1) != 0
             if value.unit_profile != data_select.unit[1]

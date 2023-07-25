@@ -135,7 +135,7 @@ function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
     bcParam = newdf()
 
     option_beta = any(
-        (substances.type .∈ Ref(["dissolved", "dissolved_pH"])) .&
+        (substances.type .∈ Ref(["dissolved", "dissolved_pH"])) .&&
         (substances.top_bc_type .== "robin"),
     )
 

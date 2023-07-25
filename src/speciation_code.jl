@@ -4,7 +4,7 @@ function speciation_model(substance_spec, speciation, adsorption)
 
     spec_in_code = vcat(speciation_df.dissolved[.!ismissing.(speciation_df.code)],"$(substance_spec)_dis")
 
-    if isempty(speciation_df) & isempty(adsorption_df)
+    if isempty(speciation_df) && isempty(adsorption_df)
         speciation_Str = String[]
         cache = String[]
         speciation_parse = DataFrame(
