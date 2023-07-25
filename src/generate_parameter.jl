@@ -406,7 +406,7 @@ subset!(bioturbationParam, :parameter => x -> x .!= "Dbt")
         #---------------------------------------------------------------------
         # pH calculation of boundary conditions
         #---------------------------------------------------------------------
-        path = (@__DIR__)*"//"
+        path = (@__DIR__)*"\"
         KH2O,KH3BO3,KCO2,KHCO3,KHF,KHSO4,KH2S,KH3PO4,KH2PO4,KHPO4,KNH4,KH4SiO4 = JLD2.load(path*"dissociation_constants.jld2","K_diss");
 
         SAL = 0:0.5:37
