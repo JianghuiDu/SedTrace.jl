@@ -24,7 +24,7 @@ function molecdiff(salinity, temp, pres, species_list)
     diffcoef = fill(NaN, nspec)#Array{Float64}(undef, nspec)
     mdif = Dict(species_list[i] => diffcoef[i] for i = 1:nspec)
 
-    path = (@__DIR__)*"//"
+    path = (@__DIR__)*"\"
 
     D0 =  XLSX.readxlsx(path*"diffusion.xlsx")
     D0_type1 =  DataFrame(XLSX.gettable(D0["type1"]))
