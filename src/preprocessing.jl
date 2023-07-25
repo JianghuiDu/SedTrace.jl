@@ -598,7 +598,7 @@ function preprocessDiffusion!(diffusion::DataFrame, substances::DataFrame)
 
     ads_substance = @subset(substances, :type .== "dissolved_speciation")
     dis_substance =
-        @subset(substances, (:type .!= "solid") .& (:type .!= "dissolved_speciation"))
+        @subset(substances, (:type .!= "solid") .&& (:type .!= "dissolved_speciation"))
 
 
     for i in eachrow(diffusion)
