@@ -10,7 +10,7 @@ function generate_output(
 )
 
     nt = length(sol.sol.t)
-    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    input_path = joinpath(modelconfig.ModelDirectory , modelconfig.ModelFile)
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
         DataFrame(XLSX.gettable(model_config["substances"]))
@@ -241,7 +241,7 @@ function generate_output(
         )
         display(p)
         if saveplt
-            savefig(p, modelconfig.ModelDirectory * "$key.pdf")
+            savefig(p, joinpath(modelconfig.ModelDirectory , "$key.pdf"))
         end
 
     end
@@ -260,7 +260,7 @@ function generate_output(
 )
 
     nt = length(sol.sol.t)
-    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    input_path = joinpath(modelconfig.ModelDirectory , modelconfig.ModelFile)
     model_config = XLSX.readxlsx(input_path)
     substances = @chain begin
         DataFrame(XLSX.gettable(model_config["substances"]))

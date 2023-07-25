@@ -2,13 +2,13 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
     
 
     if modelconfig.AssembleParam
-        include("$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl")
+        include(joinpath(modelconfig.ModelDirectory,"parm.$(modelconfig.ModelName).jl"))
     end
     
     ylim === nothing ? ylim=(minimum(x),maximum(x)) : ylim
 
 
-    input_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    input_path = joinpath(modelconfig.ModelDirectory , modelconfig.ModelFile)
     model_config = XLSX.readxlsx(input_path)
 
     
@@ -103,7 +103,7 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
     
 
     XLSX.writetable(
-        modelconfig.ModelDirectory*"model_output."*modelconfig.ModelName*".xlsx",
+        joinpath(modelconfig.ModelDirectory,"model_output."*modelconfig.ModelName*".xlsx"),
         overwrite = true,
         Substances = (
             collect(DataFrames.eachcol(df_substance)),
@@ -190,8 +190,8 @@ function generate_output(modelconfig, solution;site=nothing,vars=[],EnableList=D
         if saveplt
             # gr()
             # p = plot(p,size=pltsize)
-            mkpath("$(modelconfig.ModelDirectory)/plots/")
-            savefig(p, "$(modelconfig.ModelDirectory)/plots/$key.pdf")
+            mkpath(joinpath(modelconfig.ModelDirectory,"plots"))
+            savefig(p, joinpath(modelconfig.ModelDirectory,"plots/$key.pdf"))
         end
 
     end

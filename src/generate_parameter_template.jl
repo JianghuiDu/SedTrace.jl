@@ -20,7 +20,7 @@ function generate_parameter_template(
     overwrite = false,
 )
     # model_path = modelconfig.ModelDirectory * "model_parameter_template."*modelconfig.ModelName*".xlsx"
-    template_path = modelconfig.ModelDirectory * "model_parameter_template."*modelconfig.ModelName*".xlsx"
+    template_path = joinpath(modelconfig.ModelDirectory , "model_parameter_template."*modelconfig.ModelName*".xlsx")
     if template_path in readdir(modelconfig.ModelDirectory, join = true)
         throw(
             error(
@@ -42,7 +42,7 @@ function generate_parameter_template(
 end
 
 function generate_template(modelconfig::ModelConfig; EnableList::Dict = Dict())
-    model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    model_path = joinpath(modelconfig.ModelDirectory , modelconfig.ModelFile)
 
     model_config = XLSX.readxlsx(model_path)
 

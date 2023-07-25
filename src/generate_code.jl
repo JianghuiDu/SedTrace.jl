@@ -33,7 +33,7 @@ function generate_code(
     #---------------------------------------------------------------------------
     # read Excel sheets and preprocess
     #---------------------------------------------------------------------------
-    model_path = modelconfig.ModelDirectory * modelconfig.ModelFile
+    model_path = joinpath(modelconfig.ModelDirectory , modelconfig.ModelFile)
     model_config = XLSX.readxlsx(model_path)
 
     for i in ["substances", "reactions", "parameters", "speciation", "adsorption"]
@@ -116,7 +116,8 @@ function generate_code(
             push!(ParamDict, "$(i.parameter)$(i.jtype) = $(i.parameter)")
         end
 
-        pfile = "$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl"
+        # pfile = "$(modelconfig.ModelDirectory)parm.$(modelconfig.ModelName).jl"
+        pfile = joinpath(modelconfig.ModelDirectory,"parm.$(modelconfig.ModelName).jl")
 
         param_struct_code = vcat(
             "module Param",
@@ -221,7 +222,7 @@ function generate_code(
     tags = ["parm","parm.struct","cache","reactran","jactype"]
 
     for i in eachindex(allcode)
-        open(modelconfig.ModelDirectory * "$(tags[i]).$(modelconfig.ModelName).jl", "w") do io
+        open(joinpath(modelconfig.ModelDirectory , "$(tags[i]).$(modelconfig.ModelName).jl"), "w") do io
             # for i in vcat(params_code,"# Assmeble parameters",param_assemble)
             for j in allcode[i]
                 write(io, j * "\n")
@@ -229,7 +230,7 @@ function generate_code(
             # write(io, "nothing")
         end
         format_file(
-            modelconfig.ModelDirectory * "$(tags[i]).$(modelconfig.ModelName).jl",
+            joinpath(modelconfig.ModelDirectory , "$(tags[i]).$(modelconfig.ModelName).jl"),
             overwrite = true,
             verbose = true,
             margin = 80,
@@ -241,7 +242,7 @@ function generate_code(
     # write parsing results into excel sheets
     #---------------------------------------------------------------------------
     XLSX.writetable(
-        modelconfig.ModelDirectory * "model_parsing_diagnostics."* modelconfig.ModelName * ".xlsx",
+        joinpath(modelconfig.ModelDirectory , "model_parsing_diagnostics."* modelconfig.ModelName * ".xlsx"),
         overwrite = true,
         species_in_model = (
             collect(DataFrames.eachcol(species_model_df)),

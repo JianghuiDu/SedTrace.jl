@@ -75,15 +75,15 @@ using .TemplateGeneration: generate_parameter_template
 
 function IncludeFiles(modelconfig::ModelConfig)
     if modelconfig.AssembleParam
-        include(modelconfig.ModelDirectory*"parm.struct."*modelconfig.ModelName*".jl");
-        include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
-        include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
-        include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
+        include(joinpath(modelconfig.ModelDirectory,"parm.struct."*modelconfig.ModelName*".jl"));
+        include(joinpath(modelconfig.ModelDirectory,"cache."*modelconfig.ModelName*".jl"));
+        include(joinpath(modelconfig.ModelDirectory,"reactran."*modelconfig.ModelName*".jl")); # ode
+        include(joinpath(modelconfig.ModelDirectory,"jactype."*modelconfig.ModelName*".jl")); # ode
     else
-        include(modelconfig.ModelDirectory*"parm."*modelconfig.ModelName*".jl");
-        include(modelconfig.ModelDirectory*"cache."*modelconfig.ModelName*".jl");
-        include(modelconfig.ModelDirectory*"reactran."*modelconfig.ModelName*".jl"); # ode
-        include(modelconfig.ModelDirectory*"jactype."*modelconfig.ModelName*".jl"); # ode
+        include(joinpath(modelconfig.ModelDirectory,"parm."*modelconfig.ModelName*".jl"));
+        include(joinpath(modelconfig.ModelDirectory,"cache."*modelconfig.ModelName*".jl"));
+        include(joinpath(modelconfig.ModelDirectory,"reactran."*modelconfig.ModelName*".jl")); # ode
+        include(joinpath(modelconfig.ModelDirectory,"jactype."*modelconfig.ModelName*".jl")); # ode
     end
     return nothing
 end

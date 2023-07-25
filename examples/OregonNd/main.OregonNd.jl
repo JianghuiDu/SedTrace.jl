@@ -3,7 +3,7 @@ using SedTrace
 using JLD2
 # set_zero_subnormals(true)
 
-modeldirectory = (@__DIR__)*"/"
+modeldirectory = @__DIR__
 modelfile = "model_config.OregonNd.xlsx"
 modelname = "OregonNd"
 
@@ -91,7 +91,7 @@ BenchmarkPreconditioner(JacPrototype, OdeFun, C0, parm,:ILU0)
 # configure the solver
 
 # load previous model output as the initial values
-sol = load(modeldirectory*"sol.$modelname.jld2", "sol");
+sol = load(joinpath(modeldirectory,"sol.$modelname.jld2"), "sol");
 # configure the solution
 solutionconfig = SolutionConfig(
     # C0,
@@ -120,4 +120,4 @@ generate_output(
     showplt = true,
 )
 
-jldsave(modeldirectory*"sol.$modelname.jld2"; sol = solution.sol[end])
+jldsave(joinpath(modeldirectory,"sol.$modelname.jld2"); sol = solution.sol[end])
