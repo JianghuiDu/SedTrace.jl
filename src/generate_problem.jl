@@ -240,12 +240,17 @@ end
 
 function modelrun(OdeFun,parm, JacPrototype::SparseMatrixCSC,solverconfig::SolverConfig,solutionconfig::SolutionConfig)
 
+   println("Generate Jacobian function:")
    @time JacFun = generate_jacobian(OdeFun, JacPrototype,solutionconfig.u0)
+   println("Generate ODE solver:")
    @time solver = generate_ODESolver(OdeFun,JacFun, JacPrototype, solverconfig,solutionconfig,parm);
+   println("Generate ODE function:")
    @time OdeFunction = generate_ODEFun(OdeFun,JacFun,parm, JacPrototype, solverconfig)
+   println("Generate ODE problem:")
    @time prob = ODEProblem{true,SciMLBase.AutoSpecialize}(OdeFunction, solutionconfig.u0, solutionconfig.tspan, parm)
 
     saveat = isnothing(solutionconfig.saveat) ? [] : vcat(1e-12,(solutionconfig.tspan[1]+solutionconfig.saveat):solutionconfig.saveat:solutionconfig.tspan[2])
+    println("Solving ODE:")
 
     @time sol = SciMLBase.solve(
         prob,
@@ -257,13 +262,15 @@ function modelrun(OdeFun,parm, JacPrototype::SparseMatrixCSC,solverconfig::Solve
         saveat = saveat,
         # dtmax = dtmax,
         maxiters = solutionconfig.maxiters,
-        save_start = false,
+        save_start = true,
         # tstops = tstops
         # dtmin = 1e-10
         # isoutofdomain = (u,p,t)->any(x->x<0,u)
     )
     println("$(sol.retcode) at t = $(sol.t[end]).")
 
+    println("Output model results:")
+    @time begin
     nt = length(sol.t)
     dC0 = similar(ones(size(sol, 1)))
     IntValVarName = fieldnames(typeof(OdeFun))
@@ -276,7 +283,7 @@ function modelrun(OdeFun,parm, JacPrototype::SparseMatrixCSC,solverconfig::Solve
             IntVal[string(j)][i, :] .= getfield(OdeFun, j).du
         end
     end
-
+    end
 
     # println(sol.destats)
     return OutputConfig(sol,IntVal)
