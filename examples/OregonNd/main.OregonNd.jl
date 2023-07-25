@@ -3,7 +3,7 @@ using SedTrace
 using JLD2
 # set_zero_subnormals(true)
 
-modeldirectory = (@__DIR__)*"\\"
+modeldirectory = (@__DIR__)*"/"
 modelfile = "model_config.OregonNd.xlsx"
 modelname = "OregonNd"
 
