@@ -4,13 +4,17 @@ In this page we briefly discuss how to use SedTrace to generate diagenetic model
 
 
 ## Installation
-
-SedTrace is not registered with the Julia package manager. You need to install it directly from the GitHub repository. Your Julia version should be 1.6 or above.
+You should download and install `Julia` first: https://julialang.org/downloads. Your Julia version should be 1.7 or above to use `SedTrace`.
+SedTrace is not registered with the Julia package manager. You need to install it directly from the GitHub repository. 
 From the Julia REPL, type `]` to enter the Pkg REPL mode and run
 
 ```
 pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 ```
+I recommend using `Julia for Visual Studio Code` as the language editor. You can find relevent information at https://www.julia-vscode.org.
+
+## First example
+Now you can use the preincluded examples to see how `SedTrace` works. You should copy the `./SedTrace/examples` folder inside the `Julia` installation to a directory of your own choice (`./mydirector`), otherwise you won't be able to execute the examples. Now use `Visual Studio Code` to open the folder containing the example you want to check, for example, `./mydirectory/examples/SimpleFe`. Now open the 
 
 ## Workflow
 The workflow of using SedTrace to generate and run diagenetic models is shown in the following figure. We will discuss each step in the sections below.
