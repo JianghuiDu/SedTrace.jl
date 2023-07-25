@@ -130,7 +130,7 @@ function getvalALL!(df, coltoindex, rowtoindex, coltogetval)
 end
 
 
-function appendtostr!(str, df, comment,assemble=false,broadcast=true)
+function appendtostr!(str, df, comment,assemble=false,bcast=true)
     if isempty(df)
         return nothing
     else
@@ -141,13 +141,8 @@ function appendtostr!(str, df, comment,assemble=false,broadcast=true)
         header = assemble ? "" : "const "
         append!(
             str,
-            header .* df.parameter .*
-            # ifelse.(df.type .== "function"," "," = ") .*
-            # string.(df.value) .*
-            # ifelse.(df.type .== "function"," end","") .*
-            " = " .*
-            ifelse.(
-                df.type .== "function" .&& broadcast,
+            header .* df.parameter .* " = " .* ifelse.(
+                df.type .== "function" .&& bcast,
                 "broadcast(x->" .* string.(df.value) .* ",x)",
                 string.(df.value),
             ) .* " # " .* string.(df.unit) .* " # " .* string.(df.comment),
