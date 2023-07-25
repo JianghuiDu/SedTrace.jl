@@ -1,7 +1,7 @@
 
 using SedTrace
 
-modeldirectory = (@__DIR__)*"\\"
+modeldirectory = (@__DIR__)*"/"
 modelfile = "model_config.SulfateReduction.xlsx" 
 modelname = "SulfateReduction"
 
