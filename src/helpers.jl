@@ -142,7 +142,7 @@ function appendtostr!(str, df, comment,assemble=false,bcast=true)
         append!(
             str,
             header .* df.parameter .* " = " .* ifelse.(
-                df.type .== "function" .&& bcast,
+                (df.type .== "function") .&& bcast,
                 "broadcast(x->" .* string.(df.value) .* ",x)",
                 string.(df.value),
             ) .* " # " .* string.(df.unit) .* " # " .* string.(df.comment),
