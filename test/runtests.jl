@@ -2,7 +2,7 @@ using SedTrace
 using Test
 
 @testset "SedTrace.jl" begin
-    modeldirectory = (@__DIR__)*"/POC1G/"
+    modeldirectory = joinpath(@__DIR__,"POC1G")
     modelfile = "model_config.POC1G.xlsx" 
     modelname = "POC1G"
     
@@ -11,29 +11,29 @@ using Test
         modelfile,
         modelname,
     )
-    if isfile(modeldirectory*"model_parameter_template.POC1G.xlsx")
-        rm(modeldirectory*"model_parameter_template.POC1G.xlsx",force=true)
+    if isfile(joinpath(modeldirectory,"model_parameter_template.POC1G.xlsx"))
+        rm(joinpath(modeldirectory,"model_parameter_template.POC1G.xlsx"),force=true)
     end
-    if isfile(modeldirectory*"model_parsing_diagnostics.POC1G.xlsx")
-        rm(modeldirectory*"model_parsing_diagnostics.POC1G.xlsx",force=true)
+    if isfile(joinpath(modeldirectory,"model_parsing_diagnostics.POC1G.xlsx"))
+        rm(joinpath(modeldirectory,"model_parsing_diagnostics.POC1G.xlsx"),force=true)
     end
-    if isfile(modeldirectory*"model_output.POC1G.xlsx")
-        rm(modeldirectory*"model_output.POC1G.xlsx",force=true)
+    if isfile(joinpath(modeldirectory,"model_output.POC1G.xlsx"))
+        rm(joinpath(modeldirectory,"model_output.POC1G.xlsx"),force=true)
     end
-    if isfile(modeldirectory*"parm.POC1G.jl")
-        rm(modeldirectory*"parm.POC1G.jl",force=true)
+    if isfile(joinpath(modeldirectory,"parm.POC1G.jl"))
+        rm(joinpath(modeldirectory,"parm.POC1G.jl"),force=true)
     end
-    if isfile(modeldirectory*"parm.struct.POC1G.jl")
-        rm(modeldirectory*"parm.struct.POC1G.jl",force=true)
+    if isfile(joinpath(modeldirectory,"parm.struct.POC1G.jl"))
+        rm(joinpath(modeldirectory,"parm.struct.POC1G.jl"),force=true)
     end
-    if isfile(modeldirectory*"cache.POC1G.jl")
-        rm(modeldirectory*"cache.POC1G.jl",force=true)
+    if isfile(joinpath(modeldirectory,"cache.POC1G.jl"))
+        rm(joinpath(modeldirectory,"cache.POC1G.jl"),force=true)
     end
-    if isfile(modeldirectory*"jactype.POC1G.jl")
-        rm(modeldirectory*"jactype.POC1G.jl",force=true)
+    if isfile(joinpath(modeldirectory,"jactype.POC1G.jl"))
+        rm(joinpath(modeldirectory,"jactype.POC1G.jl"),force=true)
     end
-    if isfile(modeldirectory*"reactran.POC1G.jl")
-        rm(modeldirectory*"reactran.POC1G.jl",force=true)
+    if isfile(joinpath(modeldirectory,"reactran.POC1G.jl"))
+        rm(joinpath(modeldirectory,"reactran.POC1G.jl"),force=true)
     end
 
     generate_parameter_template(modelconfig)
