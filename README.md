@@ -12,14 +12,14 @@
 
 ## Installation
 Download and install `Julia` at https://julialang.org/downloads. Julia version should be 1.7 or above to use `SedTrace`.
-`SedTrace` is not registered with the Julia package manager. Install it directly from the GitHub repository. From the Julia terminal (aka the REPL), type `]` to enter the `Pkg`  mode and run
+`SedTrace` is not registered with the Julia package manager. Install it directly from the GitHub repository. From the Julia terminal (aka the REPL), type `]` to enter the package management mode and run
 
 ```
 pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 ```
 This will also install all the dependency packages. I also suggest installing the [`MKL`](https://github.com/JuliaLinearAlgebra/MKL.jl) package if you want to accelerate model simulation (at the moment this may not work on macOS with Apple silicon chips).
 
-I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `File/Preferences/Settings` and search for `Julia: Executable Path`. To find the path of Julia executable, you can enter `Sys.BINDIR` from the Julia REPL. The output is the directory containing the executable. You need to append the name of the executable when writing the path, for example `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS.
+I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `File/Preferences/Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
 
 ## First example
 Now you can use the pre-included examples to see how `SedTrace` works. Go to the directory where Julia packages are installed. Normally this should be `/users/username/.julia/packages/SedTrace`. Copy the sub-directory `/SedTrace/examples` to a directory of your own choice (`/mydirector/examples`), otherwise you won't be able to execute the examples. Make sure you don't modify anything in the `/.julia` directory. 
