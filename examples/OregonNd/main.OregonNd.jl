@@ -1,6 +1,5 @@
 using MKL
 using SedTrace
-using JLD2
 # set_zero_subnormals(true)
 
 modeldirectory = @__DIR__
