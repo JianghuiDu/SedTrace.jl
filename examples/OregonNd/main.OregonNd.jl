@@ -94,8 +94,8 @@ sol = load(joinpath(modeldirectory,"sol.$modelname.jld2"), "sol");
 # configure the solution
 solutionconfig = SolutionConfig(
     # C0,
-    # sol,
-    solution.sol[end],
+    sol,
+    # solution.sol[end],
     (0.0, 1E6),
     reltol = 1e-8,
     abstol = 1e-20,
