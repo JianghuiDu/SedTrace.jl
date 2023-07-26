@@ -6,6 +6,6 @@
 
 The [User Guide](@ref) provides a tutorial explaining how to get started using SedTrace.
 
-Some examples of generating diagenetic modles using SedTrace can be found on the [Examples](@ref) page.
+Some examples of generating diagenetic models using SedTrace can be found on the [Examples](@ref) page.
 
 Details of the model description can be found in our paper Du et al., (2022).
