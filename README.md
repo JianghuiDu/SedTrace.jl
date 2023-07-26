@@ -21,6 +21,8 @@ This will also install all the dependency packages. I also suggest installing th
 
 I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `File/Preferences/Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
 
+`SedTrace` has been tested on Windows, Linux and macOS (X86 only). It has not been tested on Cygwin or other virtual machines.
+
 ## First example
 Now you can use the pre-included examples to see how `SedTrace` works. Go to the directory where Julia packages are installed. Normally this should be `/users/username/.julia/packages/SedTrace`. Copy the sub-directory `/SedTrace/examples` to a directory of your own choice (`/mydirector/examples`), otherwise you won't be able to execute the examples. Make sure you don't modify anything in the `/.julia` directory. 
 
