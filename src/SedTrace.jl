@@ -41,7 +41,8 @@ import JuliaFormatter:format_file
 import SymPy
 
 using Parameters, UnPack, OrderedCollections
-using JLD2, Interpolations
+@reexport using JLD2
+using Interpolations
 
 # heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)
 
