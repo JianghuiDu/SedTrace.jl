@@ -151,3 +151,69 @@ generate_output(
 jldsave(joinpath(modeldirectory,"sol.$modelname.jld2"); sol = solution.sol[end])
 
 
+###################################################################################
+# use Heavisde rather than Logistic approximation when computing dissolution/precipitation rates, otherwise same as case1
+modelname = "SBB_case3"
+
+modelconfig = ModelConfig(
+    modeldirectory,
+    modelfile,
+    modelname,
+    AllowDiscontinuity = true
+)
+
+EnableList = Dict("parameters"=>["kMo_rm2"],"reactions"=>["RMol_rm2","RMoh_rm2"])
+
+# @time generate_parameter_template(modelconfig)
+
+@time generate_code(modelconfig,ParamDict=ParamList,EnableList=EnableList)
+
+IncludeFiles(modelconfig)
+
+
+# initial values
+# C0 = Param.C0;
+# initalize parameters
+parm = Param.ParamStruct();
+# initialize cache and ODE function
+OdeFun = Cache.init(C0, parm.Ngrid);
+# initialize Jacobian 
+JacPrototype = JacType(Param.IDdict);
+
+
+# TestOdeFun(OdeFun,C0,parm)
+# TestJacobian(JacPrototype,OdeFun,parm)
+# BenchmarkReactran(OdeFun,C0,parm)
+# BenchmarkJacobian(JacPrototype,OdeFun,parm)
+# BenchmarkPreconditioner(JacPrototype,OdeFun,parm)
+
+# configure the solver
+# solverconfig = SolverConfig(:GMRES, :ILU, 2)
+
+# solution = load(joinpath(modeldirectory,"sol.SBB.jld2"),"sol");
+solutionconfig = SolutionConfig(
+    # C0,
+    solution.sol[end],
+    (0.0, 1000.0),
+    reltol = 1e-6,
+    abstol = 1e-18,
+    saveat = 100.0,
+    callback = TerminateSteadyState(1e-16, 1e-6),
+);
+
+solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
+
+gr(; size = (400, 650))
+
+generate_output(
+    modelconfig,
+    solution,
+    site = ["SBB"],
+    showplt = true,
+    saveplt=true,
+    vars = ["pH"],
+    EnableList = EnableList
+    )
+
+jldsave(joinpath(modeldirectory,"sol.$modelname.jld2"); sol = solution.sol[end])
+
