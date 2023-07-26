@@ -187,10 +187,10 @@ function generate_ODESolver(OdeFun,JacFun,JacPrototype::SparseMatrixCSC,solverco
     #     end
     # end
 
-    if solverconfig.linsolve in [:radau,:radau5]
-        # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
-        return radau()
-    end
+    # if solverconfig.linsolve in [:radau,:radau5]
+    #     # Lwbdwth,Upbdwth = bandwidths(JacPrototype)
+    #     return radau()
+    # end
 
 
 end
@@ -209,11 +209,11 @@ colorvec = matrix_colors(JacPrototype)
     end
     
 
-    if solverconfig.linsolve in [:radau,:radau5]
-        # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        return  ODEFunction(OdeFun; jac = JacFun)
+    # if solverconfig.linsolve in [:radau,:radau5]
+    #     # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
+    #     return  ODEFunction(OdeFun; jac = JacFun)
 
-    end
+    # end
 
     if solverconfig.linsolve in [:GMRES, :FGMRES, :TFQMR,:BCG]
         # return  ODEFunction{true,true}(OdeFun,colorvec=colorvec,jac_prototype = JacVec(OdeFun, ones(size(JacPrototype,1))))
