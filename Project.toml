@@ -1,7 +1,7 @@
 name = "SedTrace"
 uuid = "0b159db6-2024-4e32-bf0c-bc27db10b4ed"
 authors = ["Jianghui Du <31140772+JianghuiDu@users.noreply.github.com> and contributors"]
-version = "1.2.0"
+version = "1.2.2"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
