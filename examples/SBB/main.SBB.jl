@@ -1,6 +1,5 @@
 using MKL
 using SedTrace
-using JLD2
 
 modeldirectory = @__DIR__
 modelfile = "model_config.SBB.xlsx"
@@ -59,8 +58,8 @@ BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,:ILU0)
 sol = load(joinpath(modeldirectory,"sol.SBB_case1.jld2"),"sol");
 
 solutionconfig = SolutionConfig(
-    C0,
-    # sol,
+    # C0,
+    sol,
     # solution.sol[end],
     (0.0, 1000.0),
     reltol = 1e-6,
