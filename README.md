@@ -1,5 +1,5 @@
 # SedTrace
-*A Julia code generator for marine sediment diagenetic models.*
+*A Julia package to generate and run models of marine sediment diagenesis.*
 
 | **Documentation**                            | **Build Status**                                                                                |
 |:----------------------------------------:|:-----------------------:|
@@ -26,6 +26,7 @@ Now use `Visual Studio Code` to open the directory containing the example that y
 
 Now open `main.SimpleFe.jl`, this is where you call `SedTrace` to generate code and run model simulations based on the inputs from `model_config.SimpleFe.xlxs`. Excute the code in the script line by line. Model code and output will be generated and saved in the `/mydirectory/examples/SimpleFe` directory (i.e., the same ones you just deleted).
 
+For more information, see `Documentation` below.
 
 ## Documentation
 
