@@ -190,8 +190,7 @@ function pHError(Param, modelconfig)
 
     XLSX.writetable(
         joinpath(modelconfig.ModelDirectory ,
-        modelconfig.ModelName ,
-        "_analytical.solution.xlsx"),
+        modelconfig.ModelName*"_analytical.solution.xlsx"),
         overwrite = true,
         analytical = (
             collect(DataFrames.eachcol(analytical)),
