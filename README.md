@@ -19,7 +19,7 @@ pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
 ```
 This will also install all the dependency packages. I also suggest installing the [`MKL`](https://github.com/JuliaLinearAlgebra/MKL.jl) package if you want to accelerate model simulation (at the moment this may not work on macOS with Apple silicon chips).
 
-I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `File/Preferences/Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
+I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
 
 `SedTrace` has been tested on Windows, Linux and macOS (X86 only). It has not been tested on Cygwin or other virtual machines.
 
