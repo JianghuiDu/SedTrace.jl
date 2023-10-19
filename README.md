@@ -43,8 +43,7 @@ The manuscript describing this package is under review at [<strong>Geoscientific
 The released versions with citable doi links are available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7225861).
 
 ## Funding information
+<img src='https://github.com/JianghuiDu/SedTrace.jl/blob/master/docs/normal-reproduction-high-resolution.jpg' width='150'>
 This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 891489.
 This work was supported by an ETH Zurich Postdoctoral Fellowship 19-2 FEL-32.
-![](/doc/img/normal-reproduction-high-resolution.jpg)
-
 
