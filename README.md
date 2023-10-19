@@ -45,3 +45,6 @@ The released versions with citable doi links are available at the [<strong>Zenod
 ## Funding information
 This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 891489.
 This work was supported by an ETH Zurich Postdoctoral Fellowship 19-2 FEL-32.
+![](/doc/img/normal-reproduction-high-resolution.jpg)
+
+
