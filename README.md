@@ -38,7 +38,7 @@ For more information, see `Documentation` below.
 
 ## Project Status
 
-The manuscript describing this package is under review at [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
+The paper describing this package is published on [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/articles/16/5865/2023/).
 
 The released versions with citable doi links are available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7225861).
 
