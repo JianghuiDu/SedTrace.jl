@@ -17,7 +17,6 @@ modelconfig = ModelConfig(
 
 IncludeFiles(modelconfig)
 
-
 # initial values
 C0 = Param.C0;
 # initalize parameters
@@ -34,7 +33,7 @@ BenchmarkJacobian(JacPrototype,OdeFun,C0,parm)
 BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,:ILU0)
 
 # configure the solver
-solverconfig = SolverConfig(:GMRES, :ILU0, 2)
+solverconfig = SolverConfig(:TRBDF2, :NO, 2)
 
 solutionconfig = SolutionConfig(
     C0,

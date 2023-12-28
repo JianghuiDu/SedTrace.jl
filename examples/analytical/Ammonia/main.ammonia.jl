@@ -34,13 +34,13 @@ BenchmarkJacobian(JacPrototype,OdeFun,C0,parm)
 BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,:ILU)
 
 # configure the solver
-solverconfig = SolverConfig(:GMRES, :ILU, 2)
+solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
 
 
 solutionconfig = SolutionConfig(
     C0,
-    (0.0, 1E5),
+    (0.0, 1E6),
     reltol = 1e-6,
     abstol = 1e-12,
     saveat = 100.0,

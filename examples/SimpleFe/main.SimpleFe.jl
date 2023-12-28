@@ -5,7 +5,7 @@ using SedTrace
 modeldirectory = @__DIR__
 modelfile = "model_config.SimpleFe.xlsx"
 modelname = "SimpleFe"
-modelconfig = ModelConfig(modeldirectory, modelfile, modelname)
+modelconfig = ModelConfig(modeldirectory, modelfile, modelname, AllowDiscontinuity = true)
 
 # generate a parameter sheet template
 @time generate_parameter_template(modelconfig)
