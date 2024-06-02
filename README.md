@@ -38,6 +38,12 @@ For more information, see `Documentation` below.
 
 ## Project Status
 
-The manuscript describing this package is under review at [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/preprints/gmd-2022-281/).
+The paper describing this package is published on [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/articles/16/5865/2023/).
 
 The released versions with citable doi links are available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7225861).
+
+## Funding information
+<img src='https://github.com/JianghuiDu/SedTrace.jl/blob/master/docs/normal-reproduction-high-resolution.jpg' width='150'>
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 891489.
+This work was supported by an ETH Zurich Postdoctoral Fellowship 19-2 FEL-32.
+
