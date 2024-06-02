@@ -54,6 +54,7 @@ gr(; size = (400, 800))
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["analytical"],
     showplt = true,
 )

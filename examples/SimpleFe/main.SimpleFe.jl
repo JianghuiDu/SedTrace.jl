@@ -55,5 +55,5 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(size = (400, 800))
 # generate output and plot
-generate_output(modelconfig, solution,site=[], showplt = true,saveplt=true)
+generate_output(modelconfig, solution,parm,site=[], showplt = true,saveplt=true)
 
