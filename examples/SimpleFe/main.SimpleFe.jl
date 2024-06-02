@@ -5,7 +5,7 @@ using SedTrace
 modeldirectory = @__DIR__
 modelfile = "model_config.SimpleFe.xlsx"
 modelname = "SimpleFe"
-modelconfig = ModelConfig(modeldirectory, modelfile, modelname)
+modelconfig = ModelConfig(modeldirectory, modelfile, modelname, AllowDiscontinuity = true)
 
 # generate a parameter sheet template
 @time generate_parameter_template(modelconfig)
@@ -55,5 +55,5 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(size = (400, 800))
 # generate output and plot
-generate_output(modelconfig, solution,site=[], showplt = true,saveplt=true)
+generate_output(modelconfig, solution,parm,site=[], showplt = true,saveplt=true)
 
