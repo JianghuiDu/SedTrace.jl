@@ -72,8 +72,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     KFeOOH,
     k_POC,
     KSO4,
-    kFeOOHH2S,
-    kFeSpre = parms
+    kFeOOHH2S = parms
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
@@ -243,7 +242,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. RSO4POC = SO4 / (KSO4 ⊕ SO4) ⊗ KFeOOH / (KFeOOH ⊕ FeOOH) ⊗ k_POC ⊗ POC
     @.. RFeOOHH2S = kFeOOHH2S ⊗ FeOOH ⊗ TH2S
     @.. RFeS_pre =
-        (tanh(1e3 ⊗ (Omega_RFeS_pre - 1.0)) / 2 ⊕ 0.5) ⊗
+        ifelse(Omega_RFeS_pre >= 1.0, 1.0, 0.0) ⊗
         (kFeSpre ⊗ (Omega_RFeS_pre - 1))
 
     # Summed rates for model substances

@@ -80,6 +80,5 @@ include(
     k_POC::T = k_POC
     KSO4::T = KSO4
     kFeOOHH2S::T = kFeOOHH2S
-    kFeSpre::T = kFeSpre
 end
 end
