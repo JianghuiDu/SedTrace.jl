@@ -219,7 +219,8 @@ colorvec = matrix_colors(JacPrototype)
         # return  ODEFunction{true,true}(OdeFun,colorvec=colorvec,jac_prototype = JacVec(OdeFun, ones(size(JacPrototype,1))))
         # JVP = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0,autodiff =true)
         # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
-        JVP = JacVec((du, u) -> OdeFun(du,u,parm,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm)
+        # JVP = JacVec((du, u) -> OdeFun(du,u,parm,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm)
+        JVP = JacVec((du, u, p) -> OdeFun(du,u,p,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm,nothing)
         # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JVP,jac = JacFun)
         # return  ODEFunction{true,SciMLBase.FullSpecialize}(OdeFun,colorvec=colorvec,sparsity =JacPrototype,jac_prototype=JacPrototype,jac = JacFun)
         return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JacPrototype,jvp=JVP)
@@ -232,7 +233,8 @@ colorvec = matrix_colors(JacPrototype)
         # JacFun = generate_jacobian(OdeFun, JacPrototype, parm)
         # jv = JacVecOperator(OdeFun,ones(size(JacPrototype,1)),parm,0.0)
         # jvp = (Jv,v,u,p,t)-> mul!(Jv,jv(OdeFun,u,p,t),v)
-        JVP = JacVec((du, u) -> OdeFun(du,u,parm,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm)
+        # JVP = JacVec((du, u) -> OdeFun(du,u,parm,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm)
+        JVP = JacVec((du, u, p) -> OdeFun(du,u,p,zero(eltype(JacPrototype))),ones(size(JacPrototype,1)),parm,nothing)
         return  ODEFunction{true,SciMLBase.AutoSpecialize}(OdeFun,jac_prototype=JacPrototype,jvp=JVP,jac = JacFun)
     end
 
@@ -277,7 +279,7 @@ function modelrun(OdeFun,parm, JacPrototype::SparseMatrixCSC,solverconfig::Solve
     IntVal = Dict(string(i) => Matrix{Float64}(undef, nt,  parm.Ngrid) for i in IntValVarName)
 
     for i in 1:nt
-        Base.@invokelatest OdeFun(dC0, sol[i], parm, zero(eltype(JacPrototype)))
+        Base.@invokelatest OdeFun(dC0, sol.u[i], parm, zero(eltype(JacPrototype)))
         for j in IntValVarName
             IntVal[string(j)][i, :] .= getfield(OdeFun, j).du
         end
