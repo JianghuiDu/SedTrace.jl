@@ -115,103 +115,104 @@ function default_prec(p_prec_cache::Base.RefValue)
     return (z, r, p, t, y, fy, gamma, delta, lr) -> ldiv!(z, p_prec_cache[], r)
 end
 
-# function generate_preconditioner2(
-#     PrecType::Symbol,
-#     PrecSide::Int,
-#     p_sparse::SparseMatrixCSC,
-# )
-#     if PrecType == :ILU
-#         if PrecSide == 1
-#             return function incompletelu1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing || newW
-#                     Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
-#                 else
-#                     Pl = Plprev
-#                 end
-#                 Pl, nothing
-#             end
-#         elseif PrecSide == 2
-#             return function incompletelu2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing || newW
-#                     Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
-#                 else
-#                     Pl = Prprev
-#                 end
-#                 nothing, Pl
-#             end
-#         else
-#             throw(
-#                 error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
-#             )
-#         end
-#     elseif PrecType == :AMG
-#         if PrecSide == 1
-#             return function algebraicmultigrid1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing || newW
-#                     A = convert(AbstractMatrix, W)
-#                     Pl = AlgebraicMultigrid.aspreconditioner(
-#                         AlgebraicMultigrid.ruge_stuben(
-#                             A,
-#                             presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
-#                             postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
-#                         ),
-#                     )
-#                 else
-#                     Pl = Plprev
-#                 end
-#                 Pl,nothing
-#             end
-#         elseif PrecSide == 2
-#             return function algebraicmultigrid2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing || newW
-#                     A = convert(AbstractMatrix, W)
-#                     Pl = AlgebraicMultigrid.aspreconditioner(
-#                         AlgebraicMultigrid.ruge_stuben(
-#                             A,
-#                             presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
-#                             postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
-#                         ),
-#                     )
-#                 else
-#                     Pl = Prprev
-#                 end
-#                 nothing, Pl
-#             end
-#         else
-#             throw(
-#                 error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
-#             )
-#         end
+function generate_preconditioner2(
+    PrecType::Symbol,
+    PrecSide::Int,
+    p_sparse::SparseMatrixCSC,
+)
+    if PrecType == :ILU
+        if PrecSide == 1
+            return function incompletelu1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
+                else
+                    Pl = Plprev
+                end
+                Pl, nothing
+            end
+        elseif PrecSide == 2
+            return function incompletelu2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    Pl = ilu(convert(AbstractMatrix, W), τ = 0.5)
+                else
+                    Pl = Prprev
+                end
+                nothing, Pl
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
+    elseif PrecType == :AMG
+        if PrecSide == 1
+            return function algebraicmultigrid1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    A = convert(AbstractMatrix, W)
+                    Pl = AlgebraicMultigrid.aspreconditioner(
+                        AlgebraicMultigrid.ruge_stuben(
+                            A,
+                            presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                            postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                        ),
+                    )
+                else
+                    Pl = Plprev
+                end
+                Pl,nothing
+            end
+        elseif PrecSide == 2
+            return function algebraicmultigrid2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing || newW
+                    A = convert(AbstractMatrix, W)
+                    Pl = AlgebraicMultigrid.aspreconditioner(
+                        AlgebraicMultigrid.ruge_stuben(
+                            A,
+                            presmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                            postsmoother = AlgebraicMultigrid.Jacobi(rand(size(A, 1))),
+                        ),
+                    )
+                else
+                    Pl = Prprev
+                end
+                nothing, Pl
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
 
-#     elseif PrecType == :ILU0
-#         if PrecSide == 1
-#             return function ilu0pre1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing
-#                     return (ilu0(convert(AbstractMatrix, W)),nothing)
-#                 elseif newW
-#                     ilu0!(Plprev, convert(AbstractMatrix, W))
-#                     return (Plprev, nothing)
-#                 else
-#                     return (Plprev, nothing)
-#                 end
-#             end
-#         elseif PrecSide == 2
-#             return function ilu0pre2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
-#                 if newW === nothing
-#                     return (nothing, ilu0(convert(AbstractMatrix, W)))
-#                 elseif newW
-#                     ilu0!(Prprev, convert(AbstractMatrix, W))
-#                     return (nothing, Prprev)
-#                 else
-#                     return (nothing, Prprev)
-#                 end
-#             end
-#         else
-#             throw(
-#                 error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
-#             )
-#         end
+    elseif PrecType == :ILU0
+        if PrecSide == 1
+            return function ilu0pre1(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing
+                    return (ilu0(convert(AbstractMatrix, W)),nothing)
+                elseif newW
+                    ilu0!(Plprev, convert(AbstractMatrix, W))
+                    return (Plprev, nothing)
+                else
+                    return (Plprev, nothing)
+                end
+            end
+        elseif PrecSide == 2
+            return function ilu0pre2(W, du, u, p, t, newW, Plprev, Prprev, solverdata)
+                if newW === nothing
+                    return (nothing, ilu0(convert(AbstractMatrix, W)))
+                elseif newW
+                    ilu0!(Prprev, convert(AbstractMatrix, W))
+                    return (nothing, Prprev)
+                else
+                    return (nothing, Prprev)
+                end
+            end
+        else
+            throw(
+                error("Preconditioner can only be left (1) or right (2) in solverconfig!"),
+            )
+        end
 
 
-#     end
-# end
+    end
+end
+Base.eltype(::IncompleteLU.ILUFactorization{Tv, Ti}) where {Tv, Ti} = Tv
