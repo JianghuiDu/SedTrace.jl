@@ -10,7 +10,7 @@ modelconfig = ModelConfig(modeldirectory, modelfile, modelname)
 # compute the analytical solution
 include("analytical.solution.pHBB1991.jl")
 
-@time generate_parameter_template(modelconfig)
+# @time generate_parameter_template(modelconfig)
 
 # uniform grid
 
@@ -57,7 +57,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution,parm, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 pHError(Param,modelconfig)
 
@@ -103,7 +103,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution,parm, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)
@@ -151,7 +151,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution,parm, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)
@@ -201,7 +201,7 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 gr(; size = (400, 650))
 
-generate_output(modelconfig, solution, site=["JR"], showplt = true,ylim=(-0.1,0.2))
+generate_output(modelconfig, solution,parm, site=["JR"], showplt = true,ylim=(-0.1,0.2))
 
 
 pHError(Param,modelconfig)

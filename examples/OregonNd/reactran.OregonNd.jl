@@ -775,13 +775,13 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. TNdnr_dis =
         TNdnr / (FeOOH ⊗ KNd_ads_Fe ⊗ dstopw ⊕ KNd_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
     @.. Ndnr_aq =
-        1.5848931924611108e-11 ⊗ H ⊗ TNdnr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.1705587843158866e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
+        1.584893192461111e-11 ⊗ H ⊗ TNdnr_dis / (
+            0.057570705746633928 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039939e-6 ⊗ CO3 ⊗ H ⊕
+            5.4404494312614666e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
+            2.511886431509577e-6 ⊗ H ⊗ H3SiO4 ⊕
+            1.1705587843158867e-10 ⊗ H ⊗ HCO3 ⊕
+            8.8776628918825476e-10 ⊗ H ⊗ SO4 ⊕ 1.584893192461111e-11 ⊗ H ⊕
+            1.5261884035337977e-20
         )
     @.. Ndnr_ads_Mn = KNd_ads_Mn ⊗ TNdnr_dis ⊗ MnO2
     @.. Ndnr_ads_Fe = KNd_ads_Fe ⊗ TNdnr_dis ⊗ FeOOH
@@ -791,13 +791,13 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     @.. TNdr_dis =
         TNdr / (FeOOH ⊗ KNd_ads_Fe ⊗ dstopw ⊕ KNd_ads_Mn ⊗ MnO2 ⊗ dstopw ⊕ 1)
     @.. Ndr_aq =
-        1.5848931924611108e-11 ⊗ H ⊗ TNdr_dis / (
-            0.057570705746633922 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039934e-6 ⊗ CO3 ⊗ H ⊕
-            5.440449431261466e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
-            2.5118864315095768e-6 ⊗ H ⊗ H3SiO4 ⊕
-            1.170558784315887e-10 ⊗ H ⊗ HCO3 ⊕
-            8.8776628918825467e-10 ⊗ H ⊗ SO4 ⊕ 1.5848931924611108e-11 ⊗ H ⊕
-            1.5261884035337975e-20
+        1.584893192461111e-11 ⊗ H ⊗ TNdr_dis / (
+            0.057570705746633928 ⊗ CO3^2 ⊗ H ⊕ 4.6030320987039939e-6 ⊗ CO3 ⊗ H ⊕
+            5.4404494312614666e-12 ⊗ Cl ⊗ H ⊕ 1.0 ⊗ H ⊗ H3SiO4^2 ⊕
+            2.511886431509577e-6 ⊗ H ⊗ H3SiO4 ⊕
+            1.1705587843158872e-10 ⊗ H ⊗ HCO3 ⊕
+            8.8776628918825476e-10 ⊗ H ⊗ SO4 ⊕ 1.584893192461111e-11 ⊗ H ⊕
+            1.5261884035337977e-20
         )
     @.. Ndr_ads_Mn = KNd_ads_Mn ⊗ TNdr_dis ⊗ MnO2
     @.. Ndr_ads_Fe = KNd_ads_Fe ⊗ TNdr_dis ⊗ FeOOH

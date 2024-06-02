@@ -114,6 +114,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["HH3000"],
     EnableList = EnableList,
     showplt = true,
