@@ -1,11 +1,11 @@
 module SedTrace
-
+# using Sparspak
 using Reexport
 using SciMLBase,OrdinaryDiffEq,Sundials
 # using DiffEqOperators
-# using ODEInterfaceDiffEq #,LSODA
+using ODEInterfaceDiffEq #,LSODA
 using Dierckx
-# using Krylov,LinearSolve
+using Krylov,LinearSolve
 using ILUZero,IncompleteLU
 # using AlgebraicMultigrid,Preconditioners
 # Base.eltype(::IncompleteLU.ILUFactorization{Tv,Ti}) where {Tv,Ti} = Tv

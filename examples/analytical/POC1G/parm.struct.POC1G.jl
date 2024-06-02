@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "c:\\Users\\Jianghui\\.julia\\dev\\SedTrace\\examples\\analytical\\POC1G\\parm.POC1G.jl",
+    "c:\\Users\\pkudu\\.julia\\dev\\SedTrace\\examples\\analytical\\POC1G\\parm.POC1G.jl",
 )
 
 #---------------------------------------------------------------

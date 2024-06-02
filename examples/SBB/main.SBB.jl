@@ -77,6 +77,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["SBB"],
     showplt = true,
     saveplt=true,
@@ -141,6 +142,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["SBB"],
     showplt = true,
     saveplt=true,
@@ -208,6 +210,7 @@ gr(; size = (400, 650))
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["SBB"],
     showplt = true,
     saveplt=true,
