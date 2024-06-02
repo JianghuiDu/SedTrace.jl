@@ -81,6 +81,7 @@ using Test
     generate_output(
         modelconfig,
         solution,
+        parm,
         site = ["analytical"],
         showplt = false,
     )
