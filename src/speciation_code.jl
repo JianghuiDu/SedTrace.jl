@@ -113,15 +113,15 @@ function speciation_model(substance_spec, speciation, adsorption)
             :sol = SymPy.solveset.(:Eq, SymPy.symbols.(:dissolved))
         )
 
-        # sumvar = SymPy.sum(SymPy.elements.(speciation_Eq_sys.sol))[1]
-        sumvar = SymPy.sum(collect(speciation_Eq_sys.sol))[1]
+        sumvar = SymPy.sum(SymPy.elements.(speciation_Eq_sys.sol))[1]
+        # sumvar = SymPy.sum(collect(speciation_Eq_sys.sol))[1]
 
         base_expr = SymPy.solveset(
             sumvar + SymPy.symbols(base_species_name) - SymPy.symbols(TDissolved),
             SymPy.symbols(base_species_name),
         )
-        # base_expr = SymPy.elements(base_expr)[1]
-        base_expr = collect(base_expr)[1]
+        base_expr = SymPy.elements(base_expr)[1]
+        # base_expr = collect(base_expr)[1]
 
         if in(base_species_name,spec_in_code)
             append!(cache,[base_species_name])
@@ -136,8 +136,8 @@ function speciation_model(substance_spec, speciation, adsorption)
                 i.Eq[1](SymPy.symbols(base_species_name) => base_expr),
                 SymPy.symbols(i.dissolved),
             )
-            # res = SymPy.elements(res)[1]
-            res = collect(res)[1]
+            res = SymPy.elements(res)[1]
+            # res = collect(res)[1]
 
             if in(i.dissolved,spec_in_code)
             push!(speciation_Str, i.dissolved * "=" * string(res))
@@ -180,8 +180,8 @@ function speciation_model(substance_spec, speciation, adsorption)
                 SymPy.symbols(TDissolved),
             )
 
-            # TDissolved_expr = SymPy.elements(SymPy.simplify(TDissolved_expr))[1]
-            TDissolved_expr = collect(SymPy.simplify(TDissolved_expr))[1]
+            TDissolved_expr = SymPy.elements(SymPy.simplify(TDissolved_expr))[1]
+            # TDissolved_expr = collect(SymPy.simplify(TDissolved_expr))[1]
 
 
             speciation_Str = vcat(
@@ -267,8 +267,8 @@ function speciation_model(substance_spec, speciation, adsorption)
             SymPy.symbols(TDissolved),
         )
 
-        # TDissolved_expr = SymPy.elements(SymPy.simplify(TDissolved_expr))[1]
-        TDissolved_expr = collect(SymPy.simplify(TDissolved_expr))[1]
+        TDissolved_expr = SymPy.elements(SymPy.simplify(TDissolved_expr))[1]
+        # TDissolved_expr = collect(SymPy.simplify(TDissolved_expr))[1]
 
 
         speciation_Str = vcat(
