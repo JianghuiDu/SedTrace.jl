@@ -7,7 +7,8 @@ function find_param_in_expr(species_modelled, expr_str, cache_str, type)
         expr_str_split = @chain begin
             expr_str
             replace.(r"\s" => "")
-            split.(r"[\+\-\*\/]?\=")
+            # split.(r"[\+\-\*\/]?\=")
+            split.(r"[\+\-\*\/]?(?<![\>\<])\=")
         end
 
 
