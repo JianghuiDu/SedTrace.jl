@@ -36,7 +36,7 @@ function to_rational(x) # input x is a string expression
     # convert to rational format in symbolic calculations
     x = replace(x, "/" => "//") # escape "/"
     x = eval(Meta.parse(x)) # evaluate x, in case it's a number 
-    if typeof(x) == SymPy.Sym # if x is a symbolic expression
+    if typeof(x) <: SymPy.Sym # if x is a symbolic expression
         y = SymPy.simplify(x, tolerance = 1e-15, rational = false)
         y = "(" * string(y) * ")"
     else
@@ -56,7 +56,7 @@ function str_simplify(str::Array{String})
     # find strings in coefficients and convert to symbolic variables
     coef_vars = filter(!isnothing, myeachmatch.(r"[A-Za-z]+", str))
     if !isempty(coef_vars)
-        coef_sym = Meta.parse("SymPy.@vars " * join(unique(vcat(coef_vars...)), " "))
+        coef_sym = Meta.parse("SymPy.@syms " * join(unique(vcat(coef_vars...)), " "))
         eval(coef_sym)
     end
     return to_rational.(str)
