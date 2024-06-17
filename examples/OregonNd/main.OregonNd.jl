@@ -99,7 +99,7 @@ solutionconfig = SolutionConfig(
     # solution.sol[end],
     (0.0, 1E6),
     reltol = 1e-8,
-    abstol = 1e-20,
+    abstol = 1e-16,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );

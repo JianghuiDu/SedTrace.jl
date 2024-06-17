@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "c:\\Users\\pkudu\\.julia\\dev\\SedTrace\\examples\\analytical\\SulfateRedcution\\parm.SulfateReduction.jl",
+    "/home/julia/project/SedTrace/examples/analytical/SulfateRedcution/parm.SulfateReduction.jl",
 )
 
 #---------------------------------------------------------------
