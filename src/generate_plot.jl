@@ -215,7 +215,7 @@ function generate_output(
             @subset!(data_select, (:depth .>= ylim[1]) .&& (:depth .<= ylim[2]))
 
             if size(data_select, 1) != 0
-                if value.unit_profile != data_select.unit[1]
+                if !isequal(value.unit_profile, data_select.unit[1])
                     throw(
                         error(
                             "Unit of $(value.unit_profile) MUST be the same in plotting and data!",
