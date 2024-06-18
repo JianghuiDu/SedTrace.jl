@@ -52,7 +52,7 @@ EnableList = Dict(
 )
 
 ParamDict = Dict(
-    "Basalt0" => 2,
+    "Basalt0" => 2.0,
     "a_lith0" =>  1e1,
     "rNdSi_lith" =>1.9e-5,
     "Ngrid" => 300
@@ -94,23 +94,24 @@ BenchmarkPreconditioner(JacPrototype, OdeFun, C0, parm,:ILU0)
 sol = load(joinpath(modeldirectory,"sol.$modelname.jld2"), "sol");
 # configure the solution
 solutionconfig = SolutionConfig(
-    # C0,
-    sol,
+    C0,
+    # sol,
     # solution.sol[end],
     (0.0, 1E6),
-    reltol = 1e-8,
-    abstol = 1e-20,
+    reltol = 1e-6,
+    abstol = 1e-14,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );
 
-solverconfig = SolverConfig(:GMRES, :ILU, 2)
+solverconfig = SolverConfig(:KenCarp4, :ILU0, 2)
 
 # run the model
 @time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
 
-gr(; size = (400, 650))
+
+gr(; size = (400, 950))
 
 generate_output(
     modelconfig,

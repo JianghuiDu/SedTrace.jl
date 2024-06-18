@@ -72,7 +72,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     KFeOOH,
     k_POC,
     KSO4,
-    kFeOOHH2S = parms
+    kFeOOHH2S,
+    kFeSpre = parms
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------

@@ -10,7 +10,7 @@ modelconfig = ModelConfig(modeldirectory, modelfile, modelname)
 # compute the analytical solution
 include("analytical.solution.pHBB1991.jl")
 
-# @time generate_parameter_template(modelconfig)
+@time generate_parameter_template(modelconfig)
 
 # uniform grid
 
