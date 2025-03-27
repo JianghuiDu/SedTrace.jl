@@ -1,7 +1,7 @@
 name = "SedTrace"
 uuid = "0b159db6-2024-4e32-bf0c-bc27db10b4ed"
 authors = ["Jianghui Du <31140772+JianghuiDu@users.noreply.github.com> and contributors"]
-version = "1.3.0"
+version = "1.3.2"
 
 [deps]
 AlgebraicMultigrid = "2169fc97-5a83-5252-b627-83903c6c433c"
