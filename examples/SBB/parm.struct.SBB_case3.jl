@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "c:\\Users\\pkudu\\.julia\\dev\\SedTrace\\examples\\SBB\\parm.SBB_case3.jl",
+    "/Users/pkudujianghui/Documents/SedTrace/examples/SBB/parm.SBB_case3.jl",
 )
 
 #---------------------------------------------------------------
@@ -259,6 +259,17 @@ include(
     kMnO2H2S::T = kMnO2H2S
     kFeOOHH2S::T = kFeOOHH2S
     kFeSH2S::T = kFeSH2S
+    kFeSdis::T = kFeSdis
+    kFeSpre::T = kFeSpre
+    kCaCO3dis::T = kCaCO3dis
+    kCaCO3pre::T = kCaCO3pre
+    kMnCO3dis::T = kMnCO3dis
+    kMnCO3pre::T = kMnCO3pre
+    kFeCO3dis::T = kFeCO3dis
+    kFeCO3pre::T = kFeCO3pre
+    kBSidis::Vector{T} = kBSidis
+    kASipre::T = kASipre
+    kCFA_pre::T = kCFA_pre
     kMo_rm2::T = kMo_rm2
 end
 end

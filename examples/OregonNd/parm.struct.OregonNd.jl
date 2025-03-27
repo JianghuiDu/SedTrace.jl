@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "c:\\Users\\pkudu\\Documents\\SedTrace\\examples\\OregonNd\\parm.OregonNd.jl",
+    "/Users/pkudujianghui/Documents/SedTrace/examples/OregonNd/parm.OregonNd.jl",
 )
 
 #---------------------------------------------------------------
