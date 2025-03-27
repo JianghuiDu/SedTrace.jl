@@ -32,7 +32,8 @@ EnableList = Dict(
         "MBasalt",
         "a_lith0"
     ],
-    "reactions" => ["RBasalt_dis", 
+    "reactions" => [
+        "RBasalt_dis", 
     "RBasalt_dis_Nd", 
     "RIllite_pre"
     ],
@@ -59,7 +60,7 @@ ParamDict = Dict(
 )
 
 
-@time generate_parameter_template(modelconfig,EnableList=EnableList)
+# @time generate_parameter_template(modelconfig,EnableList=EnableList)
 
 
 @time generate_code(modelconfig,ParamDict=ParamDict, EnableList=EnableList)
@@ -91,20 +92,22 @@ BenchmarkPreconditioner(JacPrototype, OdeFun, C0, parm,:ILU0)
 # configure the solver
 
 # load previous model output as the initial values
-sol = load(joinpath(modeldirectory,"sol.$modelname.jld2"), "sol");
+# sol = load(joinpath(modeldirectory,"sol.$modelname.jld2"), "sol");
+sol = readdlm(joinpath(modeldirectory,"sol.$modelname.txt"))[:,1];
+
 # configure the solution
 solutionconfig = SolutionConfig(
-    C0,
-    # sol,
+    # C0,
+    sol,
     # solution.sol[end],
     (0.0, 1E6),
-    reltol = 1e-6,
-    abstol = 1e-14,
+    reltol = 1e-8,
+    abstol = 1e-16,
     saveat = 1000.0,
     callback = TerminateSteadyState(1e-16, 1e-6),
 );
 
-solverconfig = SolverConfig(:KenCarp4, :ILU0, 2)
+solverconfig = SolverConfig(:GMRES, :ILU0, 2)
 
 # run the model
 @time solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
@@ -123,3 +126,5 @@ generate_output(
 )
 
 jldsave(joinpath(modeldirectory,"sol.$modelname.jld2"); sol = solution.sol[end])
+
+writedlm(joinpath(modeldirectory,"sol.$modelname.txt"),solution.sol[end])

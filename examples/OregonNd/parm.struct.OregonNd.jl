@@ -1,7 +1,9 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
-include("/home/julia/project/SedTrace/examples/OregonNd/parm.OregonNd.jl")
+include(
+    "c:\\Users\\pkudu\\Documents\\SedTrace\\examples\\OregonNd\\parm.OregonNd.jl",
+)
 
 #---------------------------------------------------------------
 # assemble parameter struct
