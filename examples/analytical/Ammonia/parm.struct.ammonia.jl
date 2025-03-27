@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "/home/julia/project/SedTrace/examples/analytical/Ammonia/parm.ammonia.jl",
+    "/Users/pkudujianghui/Documents/SedTrace/examples/analytical/Ammonia/parm.ammonia.jl",
 )
 
 #---------------------------------------------------------------
