@@ -22,7 +22,7 @@ function ModelConfig(
     CompleteFlux = false,
     AllowDiscontinuity = false,
     FastBroadcast = true,
-    UnflattenOp = true,
+    UnflattenOp = false,
 )
     return ModelConfig(
         ModelDirectory,
