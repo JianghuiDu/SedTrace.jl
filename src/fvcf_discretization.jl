@@ -22,7 +22,7 @@
 
 
 function fvcf(φ, D, u, dx, N)
-    # D.+=eps()
+    D.+=eps()
     Pe = u .* dx ./ D
     Aₗ = zeros(N - 1)
     Aᵤ = zeros(N - 1)
