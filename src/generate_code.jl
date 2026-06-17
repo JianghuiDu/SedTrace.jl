@@ -3,7 +3,7 @@ using SedTrace: ModelConfig
 import XLSX
 using ForwardDiff
 using JLD2,Interpolations
-import SymPy
+import SymPyPythonCall as SymPy
 using DataFrames,
     DataFramesMeta, Chain, Printf, 
     LinearAlgebra, JuliaFormatter, UnPack, Parameters

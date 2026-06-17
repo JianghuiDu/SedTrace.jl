@@ -38,7 +38,7 @@ import JuliaFormatter:format_file
 @reexport import Plots.PlotMeasures:mm
 @reexport import StatsPlots:@df
 
-import SymPy
+import SymPyPythonCall as SymPy
 
 using Parameters, UnPack, OrderedCollections
 @reexport using JLD2
