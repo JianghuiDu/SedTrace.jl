@@ -2,7 +2,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #---------------------------------------------------------------------
     #  Parameters
     #---------------------------------------------------------------------
-    @unpack POCID, AmPOC, BcAmPOC, BcCmPOC, Ngrid, k_POC = parms
+    @unpack POCID, AmPOC, BcAmPOC, BcCmPOC, Ngrid, k_POC=parms
     #---------------------------------------------------------------------
     #  Cache
     #---------------------------------------------------------------------
@@ -18,8 +18,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Transport of solid and dissolved substances
     #---------------------------------------------------------------------
     mul!(dPOC, AmPOC, POC)
-    dPOC[1] += BcAmPOC[1] * POC[1] + BcCmPOC[1]
-    dPOC[Ngrid] += BcAmPOC[2] * POC[Ngrid] + BcCmPOC[2]
+    dPOC[1] += BcAmPOC[1]*POC[1] + BcCmPOC[1]
+    dPOC[Ngrid] += BcAmPOC[2]*POC[Ngrid] + BcCmPOC[2]
     #---------------------------------------------------------------------
     #  pH code
     #---------------------------------------------------------------------
@@ -32,7 +32,7 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Reaction code
     #---------------------------------------------------------------------
     # Individual reaction rates
-    @.. RPOC = k_POC * POC
+    @.. RPOC = k_POC*POC
 
     # Summed rates for model substances
     @.. S_POC = -1 * RPOC

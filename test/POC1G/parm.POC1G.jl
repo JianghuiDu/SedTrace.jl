@@ -23,7 +23,7 @@ L = 500.0 # cm # model sediment section thickness
 Ngrid = 500 # integer # number of model grid
 Nmat = 500 # integer # Jacobian dimension
 ξ = range(0, step = L / (Ngrid), length = Ngrid + 1) # cm # uniform grid
-xᵥ = broadcast(x -> x, ξ) # cm # non-uniform grid transformation
+xᵥ = broadcast(x->x, ξ) # cm # non-uniform grid transformation
 x = (xᵥ[2:(Ngrid+1)] .+ xᵥ[1:Ngrid]) / 2 # cm # cell center
 dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 
@@ -31,7 +31,7 @@ dx = xᵥ[2:(Ngrid+1)] .- xᵥ[1:Ngrid] # cm # cell volume
 # porosity parameters
 #----------------------------------------------
 phi_Inf = 0.8 # dimensionless # porosity at burial depth
-phif = broadcast(x -> 0.8, x) # dimensionless # fluid volume fraction
+phif = broadcast(x->0.8, x) # dimensionless # fluid volume fraction
 phis = 1.0 .- phif # dimensionless # solid volume fraction
 pwtods = phif ./ phis # dimensionless # conversion from pore water to solid sediment volume unit
 dstopw = phis ./ phif # dimensionless # conversion from solid sediment to pore water volume unit
@@ -47,12 +47,12 @@ us = Fsed / ds_rho ./ phis # cm yr^-1 # solid sediment burial velocity
 #----------------------------------------------
 # bioturbation parameters
 #----------------------------------------------
-Ds = broadcast(x -> 10.0, x) # cm^2 yr^-1 # Bioturbation coefficient
+Ds = broadcast(x->10.0, x) # cm^2 yr^-1 # Bioturbation coefficient
 
 #----------------------------------------------
 # bioirrigation parameters
 #----------------------------------------------
-alpha = broadcast(x -> 0.0, x) # yr^-1 # Bioirrigation coefficient
+alpha = broadcast(x->0.0, x) # yr^-1 # Bioirrigation coefficient
 
 #----------------------------------------------
 # boundary fluxes and concentrations
@@ -89,4 +89,4 @@ C0 = repeat(C_ini, outer = Ngrid) # initial conditions
 # Indices
 #----------------------------------------------
 POCID = ((1:Ngrid) .- 1)nspec .+ 1 #  # POC index
-IDdict = Dict(:POCID => POCID)
+IDdict = Dict(:POCID=>POCID)

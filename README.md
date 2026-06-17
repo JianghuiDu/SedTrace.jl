@@ -23,18 +23,6 @@ I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) a
 
 `SedTrace` has been tested on Windows, Linux and macOS (X86 only). It has not been tested on Cygwin or other virtual machines.
 
-### Julia 1.11 / 1.12+ Compatibility Notes (Precompilation Fix)
-
-If you are running **Julia 1.11 or 1.12+**, the registry version of the dependency `ODEInterfaceDiffEq` will fail to precompile. This is due to a registry version conflict between `SparseDiffTools` and `SciMLOperators` that restricts the allowed version of `DiffEqBase` to an older release containing an import bug.
-
-To bypass this issue, this repository bundles a pre-patched version of `ODEInterfaceDiffEq` under `dev/ODEInterfaceDiffEq`.
-
-#### Installation & Setup:
-1. Clone this repository locally.
-2. Activate your simulation project environment (e.g. where your `main.SimpleFe.jl` resides).
-3. Run the automated script from the root of the cloned `SedTrace.jl` repository:
-   ```bash
-   ./develop_patched_dep.sh
 
 ## First example
 Now you can use the pre-included examples to see how `SedTrace` works. Go to the directory where Julia packages are installed. Normally this should be `/users/username/.julia/packages/SedTrace`. Copy the sub-directory `/SedTrace/examples` to a directory of your own choice (`/mydirector/examples`), otherwise you won't be able to execute the examples. Make sure you don't modify anything in the `/.julia` directory. 

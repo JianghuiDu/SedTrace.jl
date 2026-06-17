@@ -18,7 +18,7 @@ using Preferences
 set_preferences!(ForwardDiff, "nansafe_mode" => true)
 
 @reexport using BenchmarkTools
-@reexport using SparseDiffTools,FiniteDiff
+@reexport using DifferentiationInterface, ADTypes, SparseMatrixColorings, FiniteDiff
 @reexport using FastBroadcast
 @reexport using PreallocationTools
 @reexport using SparseArrays
@@ -100,6 +100,10 @@ export SolverConfig, ModelConfig, SolutionConfig,OutputConfig
 export generate_code,generate_parameter_template
 export modelrun
 # export generate_jacobian,generate_ODESolver,generate_ODEFun
+export matrix_colors
+export JacVec
+
+
 
 export fvcf_bc,fvcf
 
