@@ -42,6 +42,7 @@ import SymPyPythonCall as SymPy
 
 using Parameters, UnPack, OrderedCollections
 @reexport using JLD2
+using SharedArrays
 using Interpolations
 
 # heaviside(x::Float64) = ifelse(x>= 0.0, 1.0, 0.0)

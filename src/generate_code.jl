@@ -2,7 +2,7 @@ module CodeGeneration
 using SedTrace: ModelConfig
 import XLSX
 using ForwardDiff
-using JLD2,Interpolations
+using JLD2,Interpolations,SharedArrays
 import SymPyPythonCall as SymPy
 using DataFrames,
     DataFramesMeta, Chain, Printf, 
