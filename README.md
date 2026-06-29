@@ -1,27 +1,21 @@
 # SedTrace
 *A Julia package to generate and run models of marine sediment diagenesis.*
 
-| **Documentation**                            | **Build Status**    |
-|:----------------------------------------:|:-----------------------:|
-| [![][docs-stable-img]][docs-stable-url]  | [![][GHA-img]][GHA-url] |
-
-[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
-[docs-stable-url]: https://jianghuidu.github.io/SedTrace.jl/dev
-[GHA-img]: https://github.com/JianghuiDu/SedTrace.jl/workflows/CI/badge.svg
-[GHA-url]: https://github.com/JianghuiDu/SedTrace.jl/actions
+This is a fork of https://github.com/JianghuiDu/SedTrace.jl which has been patched to work with Julia 1.12. Please see the original version for authorship and documentation.
 
 ## Installation
 Download and install `Julia` at https://julialang.org/downloads. Julia version should be 1.7 or above to use `SedTrace`.
 `SedTrace` is not registered with the Julia package manager. Install it directly from the GitHub repository. From the Julia terminal (aka the REPL), type `]` to enter the package management mode and run
 
 ```
-pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
+pkg> add https:https://github.com/uliw/SedTrace.jl
 ```
 This will also install all the dependency packages. I also suggest installing the [`MKL`](https://github.com/JuliaLinearAlgebra/MKL.jl) package if you want to accelerate model simulation (at the moment this may not work on macOS with Apple silicon chips).
 
 I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
 
 `SedTrace` has been tested on Windows, Linux and macOS (X86 only). It has not been tested on Cygwin or other virtual machines.
+
 
 ## First example
 Now you can use the pre-included examples to see how `SedTrace` works. Go to the directory where Julia packages are installed. Normally this should be `/users/username/.julia/packages/SedTrace`. Copy the sub-directory `/SedTrace/examples` to a directory of your own choice (`/mydirector/examples`), otherwise you won't be able to execute the examples. Make sure you don't modify anything in the `/.julia` directory. 
@@ -41,9 +35,3 @@ For more information, see `Documentation` below.
 The paper describing this package is published on [<strong>Geoscientific Model Development</strong>](https://gmd.copernicus.org/articles/16/5865/2023/).
 
 The released versions with citable doi links are available at the [<strong>Zenodo repository</strong>](https://zenodo.org/record/7225861).
-
-## Funding information
-<img src='https://github.com/JianghuiDu/SedTrace.jl/blob/master/docs/normal-reproduction-high-resolution.jpg' width='150'>
-This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 891489.
-This work was supported by an ETH Zurich Postdoctoral Fellowship 19-2 FEL-32.
-

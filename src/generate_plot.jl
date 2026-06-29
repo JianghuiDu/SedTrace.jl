@@ -1,5 +1,10 @@
 using UnPack
-function generate_output(
+
+function generate_output(args...; kwargs...)
+    Base.invokelatest(_generate_output, args...; kwargs...)
+end
+
+function _generate_output(
     modelconfig,
     solution,
     par;
@@ -18,6 +23,10 @@ function generate_output(
         include(joinpath(modelconfig.ModelDirectory, "parm.$(modelconfig.ModelName).jl"))
     end
 
+    # Retrieve dynamically defined variables to avoid world age issues
+    x = Base.invokelatest(getfield, @__MODULE__, :x)
+    L = Base.invokelatest(getfield, @__MODULE__, :L)
+    Ngrid = Base.invokelatest(getfield, @__MODULE__, :Ngrid)
 
     ylim === nothing ? ylim = (minimum(x), maximum(x)) : ylim
 
@@ -273,6 +282,9 @@ end
 function get_all_vars(substances, solution::OutputConfig)
 
     nt = length(solution.sol.t)
+
+    # Dynamically retrieve IDdict to avoid world age issues
+    IDdict = Base.invokelatest(getfield, @__MODULE__, :IDdict)
 
     OutputDict = Dict(
         i.substance => [
