@@ -48,7 +48,7 @@ solutionconfig = SolutionConfig(
 
 solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 
-gr(; size = (400, 800))
+# gr(; size = (400, 800))
 
 generate_output(
     modelconfig,
