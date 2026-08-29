@@ -2,7 +2,7 @@ module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
 include(
-    "/home/julia/project/SedTrace/examples/analytical/Phosphate/parm.Phosphate.jl",
+    "/Users/pkudujianghui/Library/CloudStorage/OneDrive-北京大学/Documents/SedTrace/examples/analytical/Phosphate/parm.Phosphate.jl",
 )
 
 #---------------------------------------------------------------

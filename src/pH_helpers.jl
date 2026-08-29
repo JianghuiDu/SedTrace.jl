@@ -34,7 +34,7 @@ function EquilibriumInvariant(Tsum)
             "TNH4",
             ["NH3", "NH4"],
             ["","{+}"],
-            ["KNH4 * TNH4 / (H + KNH4)", "KNH4 * TNH4 / (H + KNH4)"],
+            ["KNH4 * TNH4 / (H + KNH4)", "H * TNH4 / (H + KNH4)"],
             ["1", "0"],
             "KNH4/(H + KNH4)",
             "-KNH4 * TNH4 / (H + KNH4)^2",

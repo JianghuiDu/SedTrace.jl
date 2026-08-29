@@ -46,8 +46,8 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Transport of solid and dissolved substances
     #---------------------------------------------------------------------
     mul!(dPorg, AmPorg, Porg)
-    dPorg[1] += BcAmPorg[1] ⊗ Porg[1] ⊕ BcCmPorg[1]
-    dPorg[Ngrid] += BcAmPorg[2] ⊗ Porg[Ngrid] ⊕ BcCmPorg[2]
+    dPorg[1] += BcAmPorg[1] * Porg[1] + BcCmPorg[1]
+    dPorg[Ngrid] += BcAmPorg[2] * Porg[Ngrid] + BcCmPorg[2]
     #---------------------------------------------------------------------
     #  pH code
     #---------------------------------------------------------------------
@@ -55,32 +55,32 @@ function (f::Cache.Reactran)(dC, C, parms::Param.ParamStruct, t)
     #  Speciation code
     #---------------------------------------------------------------------
     #  Concentrations of adsorbed/dissolved species
-    @.. TH3PO4_dis = TH3PO4 / (K_ads ⊗ dstopw ⊕ 1)
-    @.. P_ads = K_ads ⊗ TH3PO4_dis
+    @.. TH3PO4_dis = TH3PO4 / (K_ads * dstopw + 1)
+    @.. P_ads = K_ads * TH3PO4_dis
     @.. TH3PO4_ads_nsf = P_ads
     @.. TH3PO4_ads = P_ads
     #  Transport of adsorbed/dissolved species
     mul!(TH3PO4_dis_tran, AmTH3PO4_dis, TH3PO4_dis)
-    TH3PO4_dis_tran[1] += BcAmTH3PO4_dis[1] ⊗ TH3PO4_dis[1] ⊕ BcCmTH3PO4_dis[1]
+    TH3PO4_dis_tran[1] += BcAmTH3PO4_dis[1] * TH3PO4_dis[1] + BcCmTH3PO4_dis[1]
     TH3PO4_dis_tran[Ngrid] +=
-        BcAmTH3PO4_dis[2] ⊗ TH3PO4_dis[Ngrid] ⊕ BcCmTH3PO4_dis[2]
+        BcAmTH3PO4_dis[2] * TH3PO4_dis[Ngrid] + BcCmTH3PO4_dis[2]
     mul!(TH3PO4_ads_tran, AmTH3PO4_ads, TH3PO4_ads)
-    TH3PO4_ads_tran[1] += BcAmTH3PO4_ads[1] ⊗ TH3PO4_ads[1] ⊕ BcCmTH3PO4_ads[1]
+    TH3PO4_ads_tran[1] += BcAmTH3PO4_ads[1] * TH3PO4_ads[1] + BcCmTH3PO4_ads[1]
     TH3PO4_ads_tran[Ngrid] +=
-        BcAmTH3PO4_ads[2] ⊗ TH3PO4_ads[Ngrid] ⊕ BcCmTH3PO4_ads[2]
-    @.. dTH3PO4 = TH3PO4_dis_tran ⊗ 1 ⊕ TH3PO4_ads_tran ⊗ dstopw
-    @.. dTH3PO4 += alpha ⊗ (TH3PO4_dis0 - TH3PO4_dis)
+        BcAmTH3PO4_ads[2] * TH3PO4_ads[Ngrid] + BcCmTH3PO4_ads[2]
+    @.. dTH3PO4 = TH3PO4_dis_tran * 1 + TH3PO4_ads_tran * dstopw
+    @.. dTH3PO4 += alpha * (TH3PO4_dis0 - TH3PO4_dis)
 
     #---------------------------------------------------------------------
     #  Reaction code
     #---------------------------------------------------------------------
     # Individual reaction rates
-    @.. Rremin = k_P ⊗ Porg
-    @.. Rpre = k_pre ⊗ (TH3PO4_dis - Csat)
+    @.. Rremin = k_P * Porg
+    @.. Rpre = k_pre * (TH3PO4_dis - Csat)
 
     # Summed rates for model substances
-    @.. S_Porg = -1 ⊗ Rremin
-    @.. S_TH3PO4 = 1 ⊗ Rremin ⊗ dstopw ⊕ -1 ⊗ Rpre
+    @.. S_Porg = -1 * Rremin
+    @.. S_TH3PO4 = 1 * Rremin * dstopw + -1 * Rpre
 
     @.. dPorg += S_Porg
     @.. dTH3PO4 += S_TH3PO4

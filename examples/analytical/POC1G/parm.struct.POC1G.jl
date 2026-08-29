@@ -1,7 +1,9 @@
 module Param
 using SedTrace: fvcf, fvcf_bc
 using Parameters, LinearAlgebra, SpecialFunctions, DelimitedFiles
-include("/home/julia/project/SedTrace/examples/analytical/POC1G/parm.POC1G.jl")
+include(
+    "/Users/pkudujianghui/Library/CloudStorage/OneDrive-北京大学/Documents/SedTrace/examples/analytical/POC1G/parm.POC1G.jl",
+)
 
 #---------------------------------------------------------------
 # assemble parameter struct
