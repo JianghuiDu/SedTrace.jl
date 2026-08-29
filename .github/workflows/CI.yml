@@ -9,6 +9,8 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}  - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    env:
+      GR_BACKEND: ${{ matrix.os == 'windows-latest' && 'Null' || 'default' }}
     strategy:
       fail-fast: false
       matrix:
@@ -37,10 +39,5 @@ jobs:
           sudo apt-get install --no-install-recommends gfortran python3-setuptools python3-wheel
           && pip3 install sympy
       - uses: julia-actions/julia-buildpkg@v1
-      - if: matrix.os == 'windows-latest'
-        env:
-          GR_BACKEND: Null
-        uses: julia-actions/julia-runtest@v1
-      - if: matrix.os != 'windows-latest'
-        uses: julia-actions/julia-runtest@v1
+      - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
