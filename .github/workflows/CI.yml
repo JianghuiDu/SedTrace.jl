@@ -38,6 +38,20 @@ jobs:
         run: > 
           sudo apt-get install --no-install-recommends gfortran python3-setuptools python3-wheel
           && pip3 install sympy
+      - name: Repair / prebuild GR on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          julia -e 'using Pkg; Pkg.instantiate(); try
+            import GR
+            try
+              GR.GRPreferences.use_jll_binary()
+            catch
+              GR.GRPreferences.use_upstream_binary()
+            end
+          catch err
+            @warn "GR import/repair attempt failed, building GR" err
+            Pkg.build("GR")
+          end'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
