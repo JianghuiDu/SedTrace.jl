@@ -11,10 +11,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GKSwstype: "100"
+      JULIA_NUM_THREADS: '4'
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.12', '1.8']
+        version: ['1.10', '1'] # Minimum supported and latest stable Julia 1.x
         os:
           - ubuntu-latest
           - windows-latest
@@ -35,9 +36,7 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - if: matrix.os == 'ubuntu-latest'
-        run: > 
-          sudo apt-get install --no-install-recommends gfortran python3-setuptools python3-wheel
-          && pip3 install sympy
+        run: sudo apt-get install --no-install-recommends gfortran
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
