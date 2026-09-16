@@ -14,17 +14,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ['1.11', '1.8']
+        version: ['1.12', '1.8']
         os:
           - ubuntu-latest
           - windows-latest
           - macOS-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         env:
           cache-name: cache-artifacts
         with:
