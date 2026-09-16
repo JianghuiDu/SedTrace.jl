@@ -53,7 +53,9 @@ solution = modelrun(OdeFun, parm, JacPrototype, solverconfig, solutionconfig);
 generate_output(
     modelconfig,
     solution,
+    parm,
     site = ["analytical"],
     showplt = true,
+    pltsize = (600,2000)
 )
 
