@@ -51,7 +51,7 @@ SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
-GR = "28eba36b-bbe2-5cb4-9efc-e9382383b3d0"
+GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 
 [compat]
 AlgebraicMultigrid = "0.5, 1.0"
