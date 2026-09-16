@@ -16,10 +16,8 @@ jobs:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
         with:
-          version: '1.9'
-      - run: > 
-          sudo apt-get install --no-install-recommends gfortran python3-setuptools python3-wheel
-          && pip3 install sympy
+          version: '1.10'
+      - run: sudo apt-get install --no-install-recommends gfortran
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg;Pkg.add("Documenter"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy

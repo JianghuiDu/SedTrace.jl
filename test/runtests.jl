@@ -1,8 +1,14 @@
 using SedTrace
 using Test
 
+include("jacobian.jl")
+include("solvers.jl")
+
 @testset "SedTrace.jl" begin
-    modeldirectory = joinpath(@__DIR__,"POC1G")
+    # Code generation and output tests write into a disposable model directory.
+    modeldirectory = mktempdir()
+    cp(joinpath(@__DIR__, "POC1G", "model_config.POC1G.xlsx"),
+        joinpath(modeldirectory, "model_config.POC1G.xlsx"))
     modelfile = "model_config.POC1G.xlsx" 
     modelname = "POC1G"
     

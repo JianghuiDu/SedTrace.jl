@@ -11,15 +11,17 @@
 [GHA-url]: https://github.com/JianghuiDu/SedTrace.jl/actions
 
 ## Installation
-Download and install `Julia` at https://julialang.org/downloads. Julia version should be 1.7 or above to use `SedTrace`.
+Download and install `Julia` at https://julialang.org/downloads. This development branch requires Julia 1.10 or a later Julia 1.x release. See [the migration notes](MIGRATION.md) for breaking changes planned for SedTrace 2.0.
 `SedTrace` is not registered with the Julia package manager. Install it directly from the GitHub repository. From the Julia terminal (aka the REPL), type `]` to enter the package management mode and run
 
 ```
-pkg> add https://github.com/JianghuiDu/SedTrace.jl.git
+pkg> add https://github.com/JianghuiDu/SedTrace.jl.git#codex/master-dependency-updates
 ```
 This will also install all the dependency packages. I also suggest installing the [`MKL`](https://github.com/JuliaLinearAlgebra/MKL.jl) package if you want to accelerate model simulation (at the moment this may not work on macOS with Apple silicon chips).
 
-I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. After installation, make sure you tell the path of Julia executable to `Visual Studio Code`. To do so, open `Visual Studio Code`, go to `Settings` and search for `Julia: Executable Path`. The  path should look like `C:/Users/username/AppData/Local/Programs/julia-1.9.2/bin/julia.exe` on Windows, or `/Applications/Julia-1.9.app/Contents/Resources/julia/bin/julia` on macOS, if you have chosen the default settings when installing Julia.
+This installs the proposed breaking-change development branch. Omit the `#codex/master-dependency-updates` suffix to install the stable `master` branch instead.
+
+I suggest using [`Julia for Visual Studio Code`](https://www.julia-vscode.org) as the language editor. Check the link to see how to install and configure the Julia language extension in `Visual Studio Code`. In `Settings`, search for `Julia: Executable Path` and select the executable for your installed Julia version (1.10 or later within Julia 1.x).
 
 `SedTrace` has been tested on Windows, Linux and macOS (X86 only). It has not been tested on Cygwin or other virtual machines.
 
@@ -46,4 +48,3 @@ The released versions with citable doi links are available at the [<strong>Zenod
 <img src='https://github.com/JianghuiDu/SedTrace.jl/blob/master/docs/normal-reproduction-high-resolution.jpg' width='150'>
 This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 891489.
 This work was supported by an ETH Zurich Postdoctoral Fellowship 19-2 FEL-32.
-

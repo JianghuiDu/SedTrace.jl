@@ -2,11 +2,15 @@ module SedTrace
 # using Sparspak
 using Reexport
 using SciMLBase,OrdinaryDiffEq,Sundials
+using OrdinaryDiffEqBDF: QNDF, QBDF
+using OrdinaryDiffEqRosenbrock: Rodas4P
+using OrdinaryDiffEqSDIRK: KenCarp4, TRBDF2
 # using DiffEqOperators
-# using ODEInterfaceDiffEq #,LSODA
+# using ODEInterfaceDiffEq
 using Dierckx
 using Krylov,LinearSolve
 using ILUZero,IncompleteLU
+import AlgebraicMultigrid
 # using AlgebraicMultigrid,Preconditioners
 # Base.eltype(::IncompleteLU.ILUFactorization{Tv,Ti}) where {Tv,Ti} = Tv
 # Base.eltype(::AlgebraicMultigrid.Preconditioner) = Float64
@@ -18,7 +22,7 @@ using Preferences
 set_preferences!(ForwardDiff, "nansafe_mode" => true)
 
 @reexport using BenchmarkTools
-@reexport using SparseDiffTools,FiniteDiff
+@reexport using DifferentiationInterface, ADTypes, SparseMatrixColorings, FiniteDiff
 @reexport using FastBroadcast
 @reexport using PreallocationTools
 @reexport using SparseArrays
@@ -38,7 +42,7 @@ import JuliaFormatter:format_file
 @reexport import Plots.PlotMeasures:mm
 @reexport import StatsPlots:@df
 
-import SymPy
+import SymPyPythonCall as SymPy
 
 using Parameters, UnPack, OrderedCollections
 @reexport using JLD2
@@ -99,6 +103,7 @@ export SolverConfig, ModelConfig, SolutionConfig,OutputConfig
 
 export generate_code,generate_parameter_template
 export modelrun
+export matrix_colors, JacVec
 # export generate_jacobian,generate_ODESolver,generate_ODEFun
 
 export fvcf_bc,fvcf

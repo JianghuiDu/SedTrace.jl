@@ -1,7 +1,7 @@
 module TemplateGeneration
 using SedTrace: ModelConfig
 import XLSX
-import SymPy
+import SymPyPythonCall as SymPy
 using DataFrames, DataFramesMeta, Chain, UnPack
 
 include("helpers.jl")

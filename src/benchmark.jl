@@ -7,8 +7,8 @@ function TestJacobian(JacPrototype,OdeFun,C0,parm)
     jacp1 = similar(JacPrototype)
     jacp2 = Matrix(similar(JacPrototype))
 
-    jac1 = SedTrace.generate_jacobian(OdeFun,jacp1,C0);
-    jac2 = SedTrace.generate_jacobian(OdeFun,jacp2,C0);
+    jac1 = SedTrace.generate_jacobian(OdeFun,jacp1,C0,parm,0.0);
+    jac2 = SedTrace.generate_jacobian(OdeFun,jacp2,C0,parm,0.0);
     
     for i in 1:6
         u0 = rand(size(JacPrototype,1)).*10^(i-1)
@@ -29,14 +29,14 @@ end
 
 function BenchmarkJacobian(JacPrototype,OdeFun,C0,parm)
     jac = similar(JacPrototype)
-    jacfun = SedTrace.generate_jacobian(OdeFun,jac,C0)
+    jacfun = SedTrace.generate_jacobian(OdeFun,jac,C0,parm,0.0)
     # u0 = rand(size(JacPrototype,1))
     BenchmarkTools.@benchmark $jacfun($jac,$C0,$parm,0.0)
 end
 
 function BenchmarkPreconditioner(JacPrototype,OdeFun,C0,parm,PrecType)
     jac = similar(JacPrototype)
-    jacfun = SedTrace.generate_jacobian(OdeFun,jac,C0)
+    jacfun = SedTrace.generate_jacobian(OdeFun,jac,C0,parm,0.0)
 
     p_prec = SedTrace.generate_preconditioner(PrecType, JacPrototype)
     psetup = SedTrace.default_psetup(p_prec, JacPrototype, jacfun,PrecType)
