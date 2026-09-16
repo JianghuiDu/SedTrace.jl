@@ -18,6 +18,13 @@ function generate_output(
         include(joinpath(modelconfig.ModelDirectory, "parm.$(modelconfig.ModelName).jl"))
     end
 
+    # Julia 1.12 applies world-age semantics to newly created global bindings.
+    # The generated parameter file is included while this method is running, so
+    # retrieve its bindings from the latest world and keep them local below.
+    x = Base.invokelatest(getfield, @__MODULE__, :x)
+    L = Base.invokelatest(getfield, @__MODULE__, :L)
+    Ngrid = Base.invokelatest(getfield, @__MODULE__, :Ngrid)
+    IDdict = Base.invokelatest(getfield, @__MODULE__, :IDdict)
 
     ylim === nothing ? ylim = (minimum(x), maximum(x)) : ylim
 
@@ -78,7 +85,7 @@ function generate_output(
     end
 
     nt = length(solution.sol.t)
-    ModelledProfile = get_all_vars(substances, solution)
+    ModelledProfile = get_all_vars(substances, solution, IDdict)
     ModelledFlux, pH_species, EI_names =
         get_all_flux_top(substances, speciation_df, ModelledProfile, nt)
 
@@ -270,7 +277,7 @@ function generate_output(
 end
 
 # get the profiles of all modelled substances and species
-function get_all_vars(substances, solution::OutputConfig)
+function get_all_vars(substances, solution::OutputConfig, IDdict)
 
     nt = length(solution.sol.t)
 
